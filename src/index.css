@@ -1,45 +1,45 @@
 :root, [data-theme="dark"] {
-  /* NBG-inspired dark theme */
-  --bg-primary: #0B7B8A;
-  --bg-secondary: #1E2A3B;
-  --bg-tertiary: #2A3A4F;
-  --bg-card: #1E2A3B;
+  /* Dark blue theme inspired by the header */
+  --bg-primary: #1a2332;
+  --bg-secondary: #222d42;
+  --bg-tertiary: #2a3752;
+  --bg-card: #222d42;
   --text-primary: #FFFFFF;
-  --text-secondary: #B8D4D8;
-  --text-tertiary: #7A9FA5;
-  --accent-primary: #5EC3D0;
-  --accent-secondary: #FF6B35;
-  --accent-purple: #7B68EE;
-  --accent-blue: #4ECDC4;
-  --accent-green: #10b981;
-  --accent-yellow: #FFD23F;
-  --accent-red: #FF6B6B;
-  --border-color: rgba(94, 195, 208, 0.2);
+  --text-secondary: #B8C5D6;
+  --text-tertiary: #8B95A7;
+  --accent-primary: #5B8BC9;
+  --accent-secondary: #FF8C5A;
+  --accent-purple: #8B7BEE;
+  --accent-blue: #6FA7E6;
+  --accent-green: #52C77E;
+  --accent-yellow: #FFD666;
+  --accent-red: #FF7B7B;
+  --border-color: rgba(91, 139, 201, 0.2);
   --shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  --gradient-primary: linear-gradient(135deg, #0B7B8A 0%, #0A5F6C 100%);
-  --gradient-card: linear-gradient(135deg, #1E2A3B 0%, #2A3A4F 100%);
+  --gradient-primary: linear-gradient(135deg, #1a2332 0%, #2a3752 100%);
+  --gradient-card: linear-gradient(135deg, #222d42 0%, #2a3752 100%);
 }
 
 [data-theme="light"] {
-  /* NBG-inspired light theme */
-  --bg-primary: #F5FAFB;
+  /* Light theme with blue accents */
+  --bg-primary: #F5F8FB;
   --bg-secondary: #FFFFFF;
-  --bg-tertiary: #E8F4F6;
+  --bg-tertiary: #E8EFF6;
   --bg-card: #FFFFFF;
-  --text-primary: #1E2A3B;
+  --text-primary: #1a2332;
   --text-secondary: #4A5568;
   --text-tertiary: #718096;
-  --accent-primary: #0B7B8A;
-  --accent-secondary: #FF6B35;
-  --accent-purple: #7B68EE;
-  --accent-blue: #0A5F6C;
-  --accent-green: #059669;
+  --accent-primary: #345085;
+  --accent-secondary: #FF8C5A;
+  --accent-purple: #8B7BEE;
+  --accent-blue: #5B8BC9;
+  --accent-green: #52C77E;
   --accent-yellow: #F59E0B;
   --accent-red: #EF4444;
-  --border-color: rgba(11, 123, 138, 0.1);
+  --border-color: rgba(52, 80, 133, 0.15);
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  --gradient-primary: linear-gradient(135deg, #E8F4F6 0%, #F5FAFB 100%);
-  --gradient-card: linear-gradient(135deg, #FFFFFF 0%, #F5FAFB 100%);
+  --gradient-primary: linear-gradient(135deg, #E8EFF6 0%, #F5F8FB 100%);
+  --gradient-card: linear-gradient(135deg, #FFFFFF 0%, #F5F8FB 100%);
 }
 
 * {
@@ -148,8 +148,8 @@ input, textarea {
 /* Glow effects */
 .glow {
   box-shadow: 
-    0 0 20px rgba(94, 195, 208, 0.2),
-    0 0 40px rgba(94, 195, 208, 0.1);
+    0 0 20px rgba(91, 139, 201, 0.2),
+    0 0 40px rgba(91, 139, 201, 0.1);
 }
 
 /* Smooth transitions */
