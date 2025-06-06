@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Filter } from 'lucide-react';
 import { Conversation, FilterOptions } from '../../types/conversation';
 import { format } from 'date-fns';
 import { FilterPanel } from '../FilterPanel/FilterPanel';
+import { DataControls } from '../DataControls/DataControls';
 import './ConversationList.css';
 
 interface ConversationListProps {
@@ -52,11 +53,12 @@ export function ConversationList({
             ({conversations.length}, Q&As: {totalQAPairs})
           </span>
         </h2>
-        <button className="filter-btn" onClick={() => setIsFilterPanelOpen(true)}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <path d="M2 4h12M4 8h8M6 12h4" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-          </svg>
-        </button>
+        <div className="header-controls">
+          <DataControls />
+          <button className="filter-btn" onClick={() => setIsFilterPanelOpen(true)}>
+            <Filter size={16} />
+          </button>
+        </div>
       </div>
       
       <div className="search-container">
@@ -71,7 +73,13 @@ export function ConversationList({
       </div>
 
       <div className="conversations">
-        {conversations.map(conv => (
+        {conversations.length === 0 ? (
+          <div className="no-conversations">
+            <p>No conversations available</p>
+            <p className="no-conversations-hint">Upload a JSON file to get started</p>
+          </div>
+        ) : (
+          conversations.map(conv => (
           <div
             key={conv.id}
             className={`conversation-item ${selectedId === conv.id ? 'selected' : ''}`}
@@ -120,7 +128,8 @@ export function ConversationList({
               </div>
             </div>
           </div>
-        ))}
+        ))
+        )}
       </div>
       
       <FilterPanel

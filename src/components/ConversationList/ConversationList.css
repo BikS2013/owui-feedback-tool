@@ -7,11 +7,13 @@
 }
 
 .conversation-list-header {
-  padding: 20px;
+  padding: 20px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
   border-bottom: 1px solid var(--border-color);
+  height: 65px;
+  box-sizing: border-box;
 }
 
 .conversation-list-header h2 {
@@ -29,6 +31,12 @@
   color: var(--text-secondary);
 }
 
+.header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .filter-btn {
   background: none;
   border: none;
@@ -36,6 +44,9 @@
   padding: 8px;
   border-radius: 4px;
   transition: background-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .filter-btn:hover {
@@ -103,22 +114,40 @@
 }
 
 .conversation-item.selected {
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-blue));
+  background: var(--bg-tertiary);
   border-color: var(--accent-primary);
-  color: white;
+  border-width: 2px;
   box-shadow: 0 4px 12px rgba(94, 195, 208, 0.3);
+  position: relative;
 }
 
-[data-theme="light"] .conversation-item.selected {
+.conversation-item.selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-blue));
-  color: white;
 }
 
-[data-theme="light"] .conversation-item.selected .conversation-id,
-[data-theme="light"] .conversation-item.selected .conversation-meta,
-[data-theme="light"] .conversation-item.selected .user-info,
-[data-theme="light"] .conversation-item.selected .confidence-info {
-  color: rgba(255, 255, 255, 0.9);
+/* Dark theme selected state */
+[data-theme="dark"] .conversation-item.selected {
+  background: rgba(94, 195, 208, 0.1);
+  border-color: var(--accent-primary);
+}
+
+/* Light theme selected state */
+[data-theme="light"] .conversation-item.selected {
+  background: rgba(94, 195, 208, 0.05);
+  border-color: var(--accent-primary);
+}
+
+.conversation-item.selected .conversation-id,
+.conversation-item.selected .conversation-meta,
+.conversation-item.selected .user-info,
+.conversation-item.selected .confidence-info {
+  color: var(--text-primary);
 }
 
 .conversation-id {
@@ -206,4 +235,34 @@
 
 .confidence-label {
   white-space: nowrap;
+}
+
+/* Ensure stats and other text remain visible in selected state */
+.conversation-item.selected .stat-item {
+  color: var(--text-primary);
+}
+
+.conversation-item.selected .models-info {
+  color: var(--text-secondary);
+}
+
+/* No conversations message */
+.no-conversations {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.no-conversations p {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+}
+
+.no-conversations-hint {
+  font-size: 14px;
+  color: var(--text-tertiary);
 }

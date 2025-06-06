@@ -132,7 +132,6 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
               title={showRawJson ? "Show formatted view" : "Show raw JSON"}
             >
               {showRawJson ? <Eye size={16} /> : <Code size={16} />}
-              <span>{showRawJson ? "Formatted View" : "Raw JSON"}</span>
             </button>
             <div className="download-button-container">
             <button 
@@ -144,8 +143,6 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
               }}
             >
               <Download size={16} />
-              <span>Download</span>
-              <ChevronDown size={14} />
             </button>
             {showDownloadMenu && (
               <div className="download-menu">
