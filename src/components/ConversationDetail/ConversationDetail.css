@@ -19,7 +19,7 @@
 
 .conversation-header {
   border-bottom: 1px solid var(--border-color);
-  background: var(--bg-secondary);
+  background: #345085;
   backdrop-filter: blur(10px);
   position: relative;
   z-index: 100;
@@ -39,14 +39,14 @@
   font-size: 18px;
   font-weight: 600;
   margin: 0;
-  color: var(--text-primary);
+  color: #FFFFFF;
 }
 
 .conversation-stats {
   display: flex;
   gap: 24px;
   font-size: 14px;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.8);
   padding: 0 24px 12px 24px;
 }
 
@@ -283,14 +283,14 @@
   background: none;
   border: none;
   border-radius: 4px;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
   transition: all 0.2s;
 }
 
 .view-toggle-button:hover {
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
 }
 
 /* Raw JSON container */
@@ -336,7 +336,7 @@
   background: none;
   border: none;
   border-radius: 4px;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.8);
   cursor: pointer;
   transition: all 0.2s;
   position: relative;
@@ -344,8 +344,8 @@
 }
 
 .download-button:hover {
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
 }
 
 .download-menu {

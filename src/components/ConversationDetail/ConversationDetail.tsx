@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { format } from 'date-fns';
-import { User, Bot, ThumbsUp, ThumbsDown, Download, FileJson, FileText, ChevronDown, Code, Eye } from 'lucide-react';
+import { User, Bot, ThumbsUp, ThumbsDown, Download, FileJson, FileText, Code, Eye } from 'lucide-react';
 import { Conversation, QAPair } from '../../types/conversation';
 import { Message } from '../../types/feedback';
 import { 

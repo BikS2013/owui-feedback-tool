@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { ConversationList } from './components/ConversationList/ConversationList';
 import { ConversationDetail } from './components/ConversationDetail/ConversationDetail';
 import { ThemeToggle } from './components/ThemeToggle/ThemeToggle';

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Search, Filter } from 'lucide-react';
 import { Conversation, FilterOptions } from '../../types/conversation';
 import { format } from 'date-fns';
@@ -47,17 +47,17 @@ export function ConversationList({
   return (
     <div className="conversation-list">
       <div className="conversation-list-header">
-        <h2>
-          Conversations
-          <span className="counts">
-            ({conversations.length}, Q&As: {totalQAPairs})
-          </span>
-        </h2>
-        <div className="header-controls">
-          <DataControls />
-          <button className="filter-btn" onClick={() => setIsFilterPanelOpen(true)}>
-            <Filter size={16} />
-          </button>
+        <div className="conversation-list-header-top">
+          <h2>Conversations</h2>
+          <div className="header-controls">
+            <DataControls />
+            <button className="filter-btn" onClick={() => setIsFilterPanelOpen(true)}>
+              <Filter size={16} />
+            </button>
+          </div>
+        </div>
+        <div className="conversation-counts">
+          {conversations.length} conversations, {totalQAPairs} Q&As
         </div>
       </div>
       

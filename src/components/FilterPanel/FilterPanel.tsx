@@ -1,4 +1,3 @@
-import React from 'react';
 import { Calendar, Sliders, X, Bot } from 'lucide-react';
 import { FilterOptions } from '../../types/conversation';
 import './FilterPanel.css';

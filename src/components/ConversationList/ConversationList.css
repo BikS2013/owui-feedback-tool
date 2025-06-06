@@ -7,11 +7,16 @@
 }
 
 .conversation-list-header {
+  border-bottom: 1px solid var(--border-color);
+  background: #345085;
+  backdrop-filter: blur(10px);
+}
+
+.conversation-list-header-top {
   padding: 20px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border-bottom: 1px solid var(--border-color);
   height: 65px;
   box-sizing: border-box;
 }
@@ -19,16 +24,14 @@
 .conversation-list-header h2 {
   font-size: 18px;
   font-weight: 600;
-  color: var(--text-primary);
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  color: #FFFFFF;
+  margin: 0;
 }
 
-.conversation-list-header .counts {
+.conversation-counts {
   font-size: 14px;
-  font-weight: 400;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.8);
+  padding: 0 24px 12px 24px;
 }
 
 .header-controls {
@@ -40,7 +43,7 @@
 .filter-btn {
   background: none;
   border: none;
-  color: var(--text-secondary);
+  color: rgba(255, 255, 255, 0.8);
   padding: 8px;
   border-radius: 4px;
   transition: background-color 0.2s;
@@ -50,7 +53,8 @@
 }
 
 .filter-btn:hover {
-  background-color: var(--bg-tertiary);
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
 }
 
 .search-container {

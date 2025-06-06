@@ -51,7 +51,7 @@ export function formatConversationForDownload(conversation: Conversation, qaPair
       qaPairCount: conversation.qaPairCount,
       totalRatings: conversation.totalRatings,
       averageRating: conversation.averageRating,
-      models: conversation.models
+      modelsUsed: conversation.modelsUsed
     },
     messages: conversation.messages.map(msg => ({
       id: msg.id,

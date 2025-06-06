@@ -7,7 +7,13 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "docker:build": "docker build -t athena-feedback-explorer:latest .",
+    "docker:run": "docker run -p 8080:80 --name athena-feedback-explorer --rm athena-feedback-explorer:latest",
+    "docker:stop": "docker stop athena-feedback-explorer",
+    "docker:compose:up": "docker-compose up -d",
+    "docker:compose:down": "docker-compose down",
+    "docker:compose:build": "docker-compose build"
   },
   "dependencies": {
     "@types/react-router-dom": "^5.3.3",
