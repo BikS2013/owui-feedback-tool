@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { format } from 'date-fns';
-import { User, Bot, ThumbsUp, ThumbsDown, Download, FileJson, FileText, ChevronDown } from 'lucide-react';
+import { User, Bot, ThumbsUp, ThumbsDown, Download, FileJson, FileText, ChevronDown, Code, Eye } from 'lucide-react';
 import { Conversation, QAPair } from '../../types/conversation';
 import { Message } from '../../types/feedback';
 import { 
@@ -20,6 +20,7 @@ interface ConversationDetailProps {
 export function ConversationDetail({ conversation, qaPairs }: ConversationDetailProps) {
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [qaDownloadMenus, setQaDownloadMenus] = useState<{ [key: string]: boolean }>({});
+  const [showRawJson, setShowRawJson] = useState(false);
   const downloadRef = useRef<HTMLDivElement>(null);
 
   // Close menus when clicking outside
@@ -123,7 +124,17 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
       <div className="conversation-header">
         <div className="conversation-header-top">
           <h2>{conversation.title}</h2>
-          <div className="download-button-container">
+          <div className="header-actions">
+            <button
+              type="button"
+              className="view-toggle-button"
+              onClick={() => setShowRawJson(!showRawJson)}
+              title={showRawJson ? "Show formatted view" : "Show raw JSON"}
+            >
+              {showRawJson ? <Eye size={16} /> : <Code size={16} />}
+              <span>{showRawJson ? "Formatted View" : "Raw JSON"}</span>
+            </button>
+            <div className="download-button-container">
             <button 
               type="button"
               className="download-button"
@@ -165,6 +176,7 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
               </div>
             )}
           </div>
+          </div>
         </div>
         <div className="conversation-stats">
           <span>Q&A pairs: {conversation.qaPairCount}</span>
@@ -175,8 +187,15 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
         </div>
       </div>
 
-      <div className="messages-container">
-        {conversation.messages.map((message, index) => {
+      {showRawJson ? (
+        <div className="raw-json-container">
+          <pre className="raw-json-content">
+            {JSON.stringify(conversation, null, 2)}
+          </pre>
+        </div>
+      ) : (
+        <div className="messages-container">
+          {conversation.messages.map((message, index) => {
           const ratingInfo = message.role === 'assistant' ? getRatingInfo(message) : null;
           
           return (
@@ -246,6 +265,7 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
           );
         })}
       </div>
+      )}
     </div>
   );
 }
