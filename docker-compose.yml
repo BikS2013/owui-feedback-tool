@@ -1,12 +1,12 @@
 version: '3.8'
 
 services:
-  athena-feedback-explorer:
+  owui-feedback:
     build:
       context: .
       dockerfile: Dockerfile
-    image: athena-feedback-explorer:latest
-    container_name: athena-feedback-explorer
+    image: owui-feedback:latest
+    container_name: owui-feedback
     ports:
       - "8080:80"
     restart: unless-stopped
@@ -16,8 +16,8 @@ services:
       # Optional: Mount a local directory for custom feedback data
       # - ./data:/usr/share/nginx/html/data
     networks:
-      - athena-network
+      - owui-network
 
 networks:
-  athena-network:
+  owui-network:
     driver: bridge

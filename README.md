@@ -1,4 +1,4 @@
-# Athena Feedback Explorer
+# OWUI Feedback
 
 A React-based web application for exploring and analyzing user feedback data from an AI assistant system.
 
@@ -21,7 +21,7 @@ A React-based web application for exploring and analyzing user feedback data fro
 
 1. Navigate to the project directory:
 ```bash
-cd athena-feedback-explorer
+cd owui-feedback
 ```
 
 2. Install dependencies:

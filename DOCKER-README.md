@@ -1,6 +1,6 @@
-# Docker Setup for Athena Feedback Explorer
+# Docker Setup for OWUI Feedback
 
-This guide explains how to build and run the Athena Feedback Explorer using Docker.
+This guide explains how to build and run the OWUI Feedback application using Docker.
 
 ## Prerequisites
 
@@ -35,7 +35,7 @@ This guide explains how to build and run the Athena Feedback Explorer using Dock
    ```
    Or directly with Docker:
    ```bash
-   docker build -t athena-feedback-explorer:latest .
+   docker build -t owui-feedback:latest .
    ```
 
 2. Run the container:
@@ -44,7 +44,7 @@ This guide explains how to build and run the Athena Feedback Explorer using Dock
    ```
    Or directly with Docker:
    ```bash
-   docker run -p 8080:80 --name athena-feedback-explorer --rm athena-feedback-explorer:latest
+   docker run -p 8080:80 --name owui-feedback --rm owui-feedback:latest
    ```
 
 3. Access the application at: http://localhost:8080
@@ -60,14 +60,14 @@ This guide explains how to build and run the Athena Feedback Explorer using Dock
 
 To run on a different port, modify the port mapping:
 ```bash
-docker run -p 3000:80 --name athena-feedback-explorer --rm athena-feedback-explorer:latest
+docker run -p 3000:80 --name owui-feedback --rm owui-feedback:latest
 ```
 
 ### Custom Data Volume
 
 To use custom feedback data files, mount a volume:
 ```bash
-docker run -p 8080:80 -v /path/to/your/data:/usr/share/nginx/html/data --name athena-feedback-explorer --rm athena-feedback-explorer:latest
+docker run -p 8080:80 -v /path/to/your/data:/usr/share/nginx/html/data --name owui-feedback --rm owui-feedback:latest
 ```
 
 Or update the docker-compose.yml to uncomment the volume mount.
@@ -99,7 +99,7 @@ For production deployments, consider:
 ## Troubleshooting
 
 1. **Port already in use**: Change the host port in the run command or docker-compose.yml
-2. **Container won't start**: Check logs with `docker logs athena-feedback-explorer`
+2. **Container won't start**: Check logs with `docker logs owui-feedback`
 3. **Can't access the app**: Ensure the container is running with `docker ps`
 
 ## Development vs Production

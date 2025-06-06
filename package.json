@@ -1,5 +1,5 @@
 {
-  "name": "athena-feedback-explorer",
+  "name": "owui-feedback",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -8,9 +8,9 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "docker:build": "docker build -t athena-feedback-explorer:latest .",
-    "docker:run": "docker run -p 8080:80 --name athena-feedback-explorer --rm athena-feedback-explorer:latest",
-    "docker:stop": "docker stop athena-feedback-explorer",
+    "docker:build": "docker build -t owui-feedback:latest .",
+    "docker:run": "docker run -p 8080:80 --name owui-feedback --rm owui-feedback:latest",
+    "docker:stop": "docker stop owui-feedback",
     "docker:compose:up": "docker-compose up -d",
     "docker:compose:down": "docker-compose down",
     "docker:compose:build": "docker-compose build"
