@@ -10,27 +10,26 @@
   border-bottom: 1px solid var(--border-color);
   background: #345085;
   backdrop-filter: blur(10px);
+  overflow: visible;
+  position: relative;
 }
 
 .conversation-list-header-top {
-  padding: 20px 24px;
+  padding: 12px 24px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  height: 65px;
+  height: auto;
   box-sizing: border-box;
 }
 
-.header-title-container {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
 .nbg-logo {
-  height: 24px;
+  height: 40px;
   width: auto;
   flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  display: block;
 }
 
 .conversation-list-header h2 {
@@ -44,7 +43,17 @@
   font-size: 14px;
   color: rgba(255, 255, 255, 0.8);
   padding: 0 24px 12px 24px;
-  text-align: right;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.conversation-counts h2 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin: 0;
 }
 
 .header-controls {
