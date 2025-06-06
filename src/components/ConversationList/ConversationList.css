@@ -178,21 +178,25 @@
   color: var(--text-primary);
 }
 
+.conversation-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
 .conversation-id {
   font-size: 12px;
   font-family: 'Monaco', 'Courier New', monospace;
   color: var(--text-secondary);
-  margin-bottom: 8px;
+  margin-bottom: 0;
 }
 
-.conversation-meta {
-  font-size: 12px;
-  color: var(--text-tertiary);
-  margin-bottom: 12px;
-}
 
 .timestamp {
-  display: inline-block;
+  font-size: 12px;
+  color: var(--text-tertiary);
+  white-space: nowrap;
 }
 
 .conversation-info {
@@ -259,6 +263,9 @@
   height: 8px;
   border-radius: 50%;
   flex-shrink: 0;
+  display: inline-block;
+  margin-right: 6px;
+  vertical-align: middle;
 }
 
 .confidence-label {

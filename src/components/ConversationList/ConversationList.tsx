@@ -39,10 +39,6 @@ export function ConversationList({
     return 'var(--accent-red)';
   };
 
-  const formatConfidence = (rating: number | null) => {
-    if (rating === null) return 'Unrated';
-    return `${Math.round(rating * 10)}%`;
-  };
 
   return (
     <div className="conversation-list">
@@ -86,11 +82,10 @@ export function ConversationList({
             className={`conversation-item ${selectedId === conv.id ? 'selected' : ''}`}
             onClick={() => onSelect(conv.id)}
           >
-            <div className="conversation-id">
-              {conv.id.substring(0, 8)}...{conv.id.substring(conv.id.length - 4)}
-            </div>
-            
-            <div className="conversation-meta">
+            <div className="conversation-item-header">
+              <div className="conversation-id">
+                {conv.id.substring(0, 8)}...{conv.id.substring(conv.id.length - 4)}
+              </div>
               <span className="timestamp">
                 {format(new Date(conv.updatedAt * 1000), 'yyyy-MM-dd')}
                 {' '}
@@ -114,18 +109,14 @@ export function ConversationList({
                 <span className="stat-item">Q&As: {conv.qaPairCount}</span>
                 <span className="stat-item">Rated: {conv.totalRatings}</span>
                 {conv.averageRating !== null && (
-                  <span className="stat-item">Avg: {conv.averageRating.toFixed(1)}/10</span>
+                  <span className="stat-item">
+                    <span 
+                      className="confidence-dot"
+                      style={{ backgroundColor: getRatingColor(conv.averageRating) }}
+                    />
+                    Avg: {conv.averageRating.toFixed(1)}/10
+                  </span>
                 )}
-              </div>
-              
-              <div className="confidence-info">
-                <span 
-                  className="confidence-dot"
-                  style={{ backgroundColor: getRatingColor(conv.averageRating) }}
-                />
-                <span className="confidence-label">
-                  Confidence: {formatConfidence(conv.averageRating)}
-                </span>
               </div>
             </div>
           </div>
