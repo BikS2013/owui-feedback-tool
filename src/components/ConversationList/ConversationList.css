@@ -17,21 +17,24 @@
 .conversation-list-header-top {
   padding: 12px 24px;
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-end;
   align-items: center;
   height: auto;
   box-sizing: border-box;
+  min-height: 48px;
 }
 
 .nbg-logo {
-  height: 40px;
+  height: 60px;
   width: auto;
   flex-shrink: 0;
   margin: 0;
   padding: 0;
   display: block;
-  position: relative;
-  top: -5px;
+  position: absolute;
+  top: 3px;
+  left: 24px;
+  z-index: 10;
 }
 
 .conversation-list-header h2 {
@@ -44,11 +47,12 @@
 .conversation-counts {
   font-size: 14px;
   color: rgba(255, 255, 255, 0.8);
-  padding: 0 24px 12px 24px;
+  padding: 5px 24px 12px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  position: relative;
 }
 
 .conversation-counts h2 {
