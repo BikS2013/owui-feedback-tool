@@ -21,6 +21,18 @@
   box-sizing: border-box;
 }
 
+.header-title-container {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.nbg-logo {
+  height: 24px;
+  width: auto;
+  flex-shrink: 0;
+}
+
 .conversation-list-header h2 {
   font-size: 18px;
   font-weight: 600;
@@ -32,6 +44,7 @@
   font-size: 14px;
   color: rgba(255, 255, 255, 0.8);
   padding: 0 24px 12px 24px;
+  text-align: right;
 }
 
 .header-controls {

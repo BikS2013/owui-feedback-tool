@@ -48,7 +48,10 @@ export function ConversationList({
     <div className="conversation-list">
       <div className="conversation-list-header">
         <div className="conversation-list-header-top">
-          <h2>Conversations</h2>
+          <div className="header-title-container">
+            <img src="/nbg-tech-hub-logo.svg" alt="NBG Technology Hub" className="nbg-logo" />
+            <h2>Conversations</h2>
+          </div>
           <div className="header-controls">
             <DataControls />
             <button className="filter-btn" onClick={() => setIsFilterPanelOpen(true)}>
