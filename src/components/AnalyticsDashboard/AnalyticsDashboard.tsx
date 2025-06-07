@@ -287,6 +287,16 @@ export function AnalyticsDashboard({
               )}
             </div>
           </div>
+
+          <div className="metric-card">
+            <h4>Rated vs Unrated</h4>
+            <CircularProgress
+              percentage={(conversationMetrics.ratedCount / conversationMetrics.totalCount) * 100}
+              ratedCount={conversationMetrics.ratedCount}
+              unratedCount={conversationMetrics.unratedCount}
+              label="Rated"
+            />
+          </div>
           
           <div className="metric-card">
             <h4>Rating Distribution</h4>
@@ -329,17 +339,6 @@ export function AnalyticsDashboard({
               </div>
             </div>
           </div>
-
-          <div className="metric-card">
-            <h4>Rated vs Unrated</h4>
-            <CircularProgress
-              percentage={(conversationMetrics.ratedCount / conversationMetrics.totalCount) * 100}
-              ratedCount={conversationMetrics.ratedCount}
-              unratedCount={conversationMetrics.unratedCount}
-              label="Rated"
-            />
-          </div>
-
         </div>
 
         <div className="metrics-section">
@@ -357,6 +356,16 @@ export function AnalyticsDashboard({
                 <span className="no-data">No ratings available</span>
               )}
             </div>
+          </div>
+
+          <div className="metric-card">
+            <h4>Q&A Rated vs Unrated</h4>
+            <CircularProgress
+              percentage={(qaMetrics.ratedCount / qaMetrics.totalCount) * 100}
+              ratedCount={qaMetrics.ratedCount}
+              unratedCount={qaMetrics.unratedCount}
+              label="Rated"
+            />
           </div>
           
           <div className="metric-card">
@@ -395,17 +404,6 @@ export function AnalyticsDashboard({
               </div>
             </div>
           </div>
-
-          <div className="metric-card">
-            <h4>Q&A Rated vs Unrated</h4>
-            <CircularProgress
-              percentage={(qaMetrics.ratedCount / qaMetrics.totalCount) * 100}
-              ratedCount={qaMetrics.ratedCount}
-              unratedCount={qaMetrics.unratedCount}
-              label="Rated"
-            />
-          </div>
-
         </div>
       </div>
     </div>

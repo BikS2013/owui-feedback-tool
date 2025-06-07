@@ -276,6 +276,11 @@
   margin-top: 4px;
 }
 
+/* Light theme fix for models info */
+[data-theme="light"] .models-info {
+  color: var(--text-secondary);
+}
+
 .models-label {
   font-family: 'Monaco', 'Courier New', monospace;
 }
@@ -294,6 +299,15 @@
   border: none !important;
   padding: 0 !important;
   color: var(--text-secondary) !important;
+}
+
+/* Light theme fix for stats info */
+[data-theme="light"] .stats-info {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .stats-info > span {
+  color: var(--text-primary) !important;
 }
 
 .stat-item {
