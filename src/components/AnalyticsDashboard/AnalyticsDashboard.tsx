@@ -1,0 +1,317 @@
+import { useMemo } from 'react';
+import { Conversation, QAPair } from '../../types/conversation';
+import { useFeedbackStore } from '../../store/feedbackStore';
+import './AnalyticsDashboard.css';
+
+interface AnalyticsDashboardProps {
+  conversations: Conversation[];
+  qaPairs: QAPair[];
+  selectedConversationId: string | null;
+}
+
+interface RatingDistribution {
+  rating: number;
+  count: number;
+  conversationIds: string[];
+}
+
+export function AnalyticsDashboard({ 
+  conversations, 
+  qaPairs,
+  selectedConversationId 
+}: AnalyticsDashboardProps) {
+  const { selectedAnalyticsModel, setSelectedAnalyticsModel } = useFeedbackStore();
+  
+  // Get unique models from conversations
+  const availableModels = useMemo(() => {
+    const models = new Set<string>();
+    conversations.forEach(conv => {
+      conv.modelsUsed?.forEach(model => models.add(model));
+    });
+    return Array.from(models).sort();
+  }, [conversations]);
+
+  // Filter conversations by selected model
+  const filteredConversations = useMemo(() => {
+    if (!selectedAnalyticsModel || selectedAnalyticsModel === 'all') {
+      return conversations;
+    }
+    return conversations.filter(conv => 
+      conv.modelsUsed?.includes(selectedAnalyticsModel)
+    );
+  }, [conversations, selectedAnalyticsModel]);
+
+  // Calculate conversation-based metrics
+  const conversationMetrics = useMemo(() => {
+    const ratingDistribution: RatingDistribution[] = [];
+    let ratedCount = 0;
+    let unratedCount = 0;
+    let totalRating = 0;
+    let ratingCount = 0;
+
+    // Initialize rating distribution (1-10)
+    for (let i = 1; i <= 10; i++) {
+      ratingDistribution.push({ rating: i, count: 0, conversationIds: [] });
+    }
+
+    filteredConversations.forEach(conv => {
+      if (conv.averageRating !== null) {
+        ratedCount++;
+        const roundedRating = Math.round(conv.averageRating);
+        const ratingIndex = roundedRating - 1;
+        if (ratingIndex >= 0 && ratingIndex < 10) {
+          ratingDistribution[ratingIndex].count++;
+          ratingDistribution[ratingIndex].conversationIds.push(conv.id);
+        }
+        totalRating += conv.averageRating;
+        ratingCount++;
+      } else {
+        unratedCount++;
+      }
+    });
+
+    const overallAverage = ratingCount > 0 ? totalRating / ratingCount : null;
+
+    return {
+      ratingDistribution,
+      ratedCount,
+      unratedCount,
+      overallAverage,
+      totalCount: filteredConversations.length
+    };
+  }, [filteredConversations]);
+
+  // Calculate Q&A-based metrics
+  const qaMetrics = useMemo(() => {
+    const ratingDistribution: RatingDistribution[] = [];
+    let ratedCount = 0;
+    let unratedCount = 0;
+    let totalRating = 0;
+
+    // Initialize rating distribution (1-10)
+    for (let i = 1; i <= 10; i++) {
+      ratingDistribution.push({ rating: i, count: 0, conversationIds: [] });
+    }
+
+    // Filter Q&A pairs by selected model
+    const filteredQAPairs = selectedAnalyticsModel && selectedAnalyticsModel !== 'all'
+      ? qaPairs.filter(qa => {
+          const conv = conversations.find(c => c.id === qa.conversationId);
+          return conv?.modelsUsed?.includes(selectedAnalyticsModel);
+        })
+      : qaPairs;
+
+    filteredQAPairs.forEach(qa => {
+      if (qa.rating !== null) {
+        ratedCount++;
+        const ratingIndex = qa.rating - 1;
+        if (ratingIndex >= 0 && ratingIndex < 10) {
+          ratingDistribution[ratingIndex].count++;
+          if (!ratingDistribution[ratingIndex].conversationIds.includes(qa.conversationId)) {
+            ratingDistribution[ratingIndex].conversationIds.push(qa.conversationId);
+          }
+        }
+        totalRating += qa.rating;
+      } else {
+        unratedCount++;
+      }
+    });
+
+    const overallAverage = ratedCount > 0 ? totalRating / ratedCount : null;
+
+    return {
+      ratingDistribution,
+      ratedCount,
+      unratedCount,
+      overallAverage,
+      totalCount: filteredQAPairs.length
+    };
+  }, [qaPairs, conversations, selectedAnalyticsModel]);
+
+  // Check if selected conversation matches current model filter
+  const isSelectedConversationHighlighted = useMemo(() => {
+    if (!selectedConversationId || !selectedAnalyticsModel || selectedAnalyticsModel === 'all') {
+      return false;
+    }
+    const selectedConv = conversations.find(c => c.id === selectedConversationId);
+    return selectedConv?.modelsUsed?.includes(selectedAnalyticsModel) || false;
+  }, [selectedConversationId, conversations, selectedAnalyticsModel]);
+
+  // Get selected conversation's metrics position
+  const selectedConversationMetrics = useMemo(() => {
+    if (!selectedConversationId || !isSelectedConversationHighlighted) {
+      return null;
+    }
+    
+    const selectedConv = conversations.find(c => c.id === selectedConversationId);
+    if (!selectedConv) return null;
+
+    const avgRating = selectedConv.averageRating;
+    const ratingBucket = avgRating !== null ? Math.round(avgRating) : null;
+    const isRated = avgRating !== null;
+
+    return {
+      conversationId: selectedConversationId,
+      ratingBucket,
+      isRated,
+      averageRating: avgRating
+    };
+  }, [selectedConversationId, conversations, isSelectedConversationHighlighted]);
+
+  return (
+    <div className="analytics-dashboard">
+      <div className="analytics-header">
+        <div className="analytics-header-top">
+          <h2>Analytics Dashboard</h2>
+        </div>
+        <div className="analytics-stats">
+          <div className="stats-info">
+            <span>Total conversations: {filteredConversations.length}</span>
+            <span>Rated: {conversationMetrics.ratedCount}</span>
+            <span>Unrated: {conversationMetrics.unratedCount}</span>
+          </div>
+          <div className="model-selector">
+            <label htmlFor="model-select">Model:</label>
+            <select 
+              id="model-select"
+              value={selectedAnalyticsModel || 'all'} 
+              onChange={(e) => setSelectedAnalyticsModel(e.target.value === 'all' ? null : e.target.value)}
+            >
+              <option value="all">All Models</option>
+              {availableModels.map(model => (
+                <option key={model} value={model}>{model}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div className="analytics-content">
+        <div className="metrics-section">
+          <h3>Conversation Metrics</h3>
+          
+          <div className="metric-card">
+            <h4>Rating Distribution</h4>
+            <div className="rating-chart">
+              {conversationMetrics.ratingDistribution.map(item => (
+                <div 
+                  key={item.rating} 
+                  className={`rating-bar-container ${
+                    selectedConversationMetrics?.ratingBucket === item.rating ? 'highlighted' : ''
+                  }`}
+                >
+                  <div className="rating-label">{item.rating}</div>
+                  <div className="rating-bar-wrapper">
+                    <div 
+                      className="rating-bar" 
+                      style={{ 
+                        width: `${(item.count / Math.max(...conversationMetrics.ratingDistribution.map(r => r.count), 1)) * 100}%` 
+                      }}
+                    />
+                    <span className="rating-count">{item.count}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <h4>Rated vs Unrated</h4>
+            <div className="pie-chart-container">
+              <div className="pie-stats">
+                <div className={`stat-item rated ${selectedConversationMetrics?.isRated === true ? 'highlighted' : ''}`}>
+                  <span className="stat-label">Rated:</span>
+                  <span className="stat-value">{conversationMetrics.ratedCount}</span>
+                  <span className="stat-percent">
+                    ({((conversationMetrics.ratedCount / conversationMetrics.totalCount) * 100).toFixed(1)}%)
+                  </span>
+                </div>
+                <div className={`stat-item unrated ${selectedConversationMetrics?.isRated === false ? 'highlighted' : ''}`}>
+                  <span className="stat-label">Unrated:</span>
+                  <span className="stat-value">{conversationMetrics.unratedCount}</span>
+                  <span className="stat-percent">
+                    ({((conversationMetrics.unratedCount / conversationMetrics.totalCount) * 100).toFixed(1)}%)
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <h4>Overall Average Rating</h4>
+            <div className="average-rating">
+              {conversationMetrics.overallAverage !== null ? (
+                <>
+                  <span className="rating-value">{conversationMetrics.overallAverage.toFixed(2)}</span>
+                  <span className="rating-scale">/ 10</span>
+                </>
+              ) : (
+                <span className="no-data">No ratings available</span>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div className="metrics-section">
+          <h3>Q&A Metrics</h3>
+          
+          <div className="metric-card">
+            <h4>Q&A Rating Distribution</h4>
+            <div className="rating-chart">
+              {qaMetrics.ratingDistribution.map(item => (
+                <div key={item.rating} className="rating-bar-container">
+                  <div className="rating-label">{item.rating}</div>
+                  <div className="rating-bar-wrapper">
+                    <div 
+                      className="rating-bar qa-rating-bar" 
+                      style={{ 
+                        width: `${(item.count / Math.max(...qaMetrics.ratingDistribution.map(r => r.count), 1)) * 100}%` 
+                      }}
+                    />
+                    <span className="rating-count">{item.count}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <h4>Q&A Rated vs Unrated</h4>
+            <div className="pie-chart-container">
+              <div className="pie-stats">
+                <div className="stat-item rated">
+                  <span className="stat-label">Rated:</span>
+                  <span className="stat-value">{qaMetrics.ratedCount}</span>
+                  <span className="stat-percent">
+                    ({((qaMetrics.ratedCount / qaMetrics.totalCount) * 100).toFixed(1)}%)
+                  </span>
+                </div>
+                <div className="stat-item unrated">
+                  <span className="stat-label">Unrated:</span>
+                  <span className="stat-value">{qaMetrics.unratedCount}</span>
+                  <span className="stat-percent">
+                    ({((qaMetrics.unratedCount / qaMetrics.totalCount) * 100).toFixed(1)}%)
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <h4>Q&A Overall Average Rating</h4>
+            <div className="average-rating">
+              {qaMetrics.overallAverage !== null ? (
+                <>
+                  <span className="rating-value">{qaMetrics.overallAverage.toFixed(2)}</span>
+                  <span className="rating-scale">/ 10</span>
+                </>
+              ) : (
+                <span className="no-data">No ratings available</span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}

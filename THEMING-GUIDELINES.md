@@ -173,8 +173,11 @@ Used for:
 #### Headers
 - Primary header: `padding: 20px 24px`
 - Secondary header: `padding: 12px 24px`
-- Minimum height: 48px
-- Maximum height: 65px
+- Standard header height: `min-height: 105px` (All main panel headers must use this)
+- Header structure: Two-part design
+  - Top row: Title and controls
+  - Bottom row: Statistics/metadata
+- Background: `#345085` (NBG brand blue)
 
 #### Cards & Containers
 - Standard card: `padding: 16px`
@@ -240,7 +243,85 @@ border: 2px solid var(--accent-primary);
 border: 1px solid rgba(0, 0, 0, 0.1);
 ```
 
-### 4. Component States
+### 4. Header Consistency Guidelines
+
+All main panel headers (Conversations, Analytics Dashboard, Chat Details) must follow these specifications:
+
+#### Header Alignment Strategy
+
+The header alignment across panels presented unique challenges due to the NBG logo in the Conversations panel. Our approach ensures visual consistency while accommodating brand elements:
+
+**Challenge:**
+- The Conversations panel includes a 60px tall NBG logo positioned absolutely at `top: 3px`
+- This creates a natural height requirement that other headers must match
+- Simply matching padding and content height was insufficient due to the logo's visual impact
+
+**Solution Strategy:**
+1. **Empirical Height Determination**: Through iterative testing, we determined that 105px provides the optimal height that:
+   - Fully accommodates the NBG logo with proper spacing
+   - Creates visual balance across all headers
+   - Maintains consistent proportions with the two-row content structure
+
+2. **Standardization Approach**:
+   - All headers use `min-height: 105px` rather than calculated heights
+   - This ensures consistency even if content varies
+   - Box-sizing is set to `border-box` for predictable height calculations
+
+3. **Two-Row Structure**: All headers follow a consistent pattern:
+   - **Top row**: Primary title and control buttons (min-height: 48px)
+   - **Bottom row**: Statistics, metadata, or secondary information
+   - This structure provides flexibility while maintaining visual consistency
+
+4. **Visual Hierarchy**:
+   - The NBG logo serves as the primary brand anchor in the Conversations panel
+   - Other panels maintain the same height to create a unified header band
+   - The blue background (#345085) creates a strong visual connection across panels
+
+```css
+.panel-header {
+  background: #345085;              /* NBG brand blue */
+  min-height: 105px;               /* Standard height across all panels */
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
+  box-sizing: border-box;          /* Ensure consistent box model */
+}
+
+.panel-header-top {
+  padding: 12px 24px;
+  min-height: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.panel-header-bottom {
+  padding: 5px 24px 12px 24px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+```
+
+**Implementation Notes:**
+- The 105px height was determined through visual testing rather than pure calculation
+- This height accounts for the logo, padding, line-heights, and visual weight
+- Using min-height allows for content flexibility while maintaining consistency
+
+#### Best Practices for Header Implementation
+
+1. **Always use the standard height**: Even if a header seems to need less space, maintain the 105px minimum
+2. **Consistent padding**: Use the defined padding values (12px 24px for top row, 5px 24px 12px 24px for bottom row)
+3. **Flexible content**: Design header content to work within the standardized structure
+4. **Brand elements**: Only the Conversations panel should display the NBG logo to avoid redundancy
+5. **Testing**: Always verify header alignment visually across all panels when making changes
+
+#### Future Considerations
+
+- If the logo size changes, all header heights must be re-evaluated
+- New panels should follow the same header structure and height
+- Consider creating a shared header component to enforce consistency
+- Document any deviations from the standard in this guide
+
+### 5. Component States
 
 #### Default State
 - Background: `var(--bg-card)`

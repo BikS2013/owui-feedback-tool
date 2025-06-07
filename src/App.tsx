@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ConversationList } from './components/ConversationList/ConversationList';
 import { ConversationDetail } from './components/ConversationDetail/ConversationDetail';
-import { ThemeToggle } from './components/ThemeToggle/ThemeToggle';
+import { AnalyticsDashboard } from './components/AnalyticsDashboard/AnalyticsDashboard';
 import { ResizablePanel } from './components/ResizablePanel/ResizablePanel';
 import { FeedbackProvider, useFeedbackStore } from './store/feedbackStore';
 import { ThemeProvider } from './store/themeStore';
@@ -23,7 +23,8 @@ function AppContent() {
     isLoading, 
     error,
     filters,
-    setFilters
+    setFilters,
+    viewMode
   } = useFeedbackStore();
   
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -116,7 +117,6 @@ function AppContent() {
 
   return (
     <div className="app">
-      <ThemeToggle />
       <ResizablePanel>
         <ConversationList
           conversations={filteredConversations}
@@ -130,10 +130,18 @@ function AppContent() {
         />
       </ResizablePanel>
       <main className="main-content">
-        <ConversationDetail
-          conversation={selectedConversation}
-          qaPairs={filteredQAPairs}
-        />
+        {viewMode === 'details' ? (
+          <ConversationDetail
+            conversation={selectedConversation}
+            qaPairs={filteredQAPairs}
+          />
+        ) : (
+          <AnalyticsDashboard
+            conversations={filteredConversations}
+            qaPairs={qaPairs}
+            selectedConversationId={selectedConversationId}
+          />
+        )}
       </main>
     </div>
   );

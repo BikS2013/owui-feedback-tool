@@ -3,6 +3,8 @@ import { FeedbackEntry } from '../types/feedback';
 import { Conversation, QAPair, FilterOptions } from '../types/conversation';
 import { processRawFeedbackData } from '../utils/dataProcessor';
 
+type ViewMode = 'details' | 'analytics';
+
 interface FeedbackStore {
   rawData: FeedbackEntry[];
   conversations: Conversation[];
@@ -15,6 +17,10 @@ interface FeedbackStore {
   clearData: () => void;
   filters: FilterOptions;
   setFilters: (filters: FilterOptions) => void;
+  viewMode: ViewMode;
+  setViewMode: (mode: ViewMode) => void;
+  selectedAnalyticsModel: string | null;
+  setSelectedAnalyticsModel: (model: string | null) => void;
 }
 
 const FeedbackContext = createContext<FeedbackStore | undefined>(undefined);
@@ -46,6 +52,8 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dataExpiresAt, setDataExpiresAt] = useState<number | null>(null);
+  const [viewMode, setViewMode] = useState<ViewMode>('details');
+  const [selectedAnalyticsModel, setSelectedAnalyticsModel] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterOptions>({
     dateRange: {
       start: null,
@@ -184,7 +192,11 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
     loadFromFile,
     clearData,
     filters,
-    setFilters
+    setFilters,
+    viewMode,
+    setViewMode,
+    selectedAnalyticsModel,
+    setSelectedAnalyticsModel
   };
 
   return (

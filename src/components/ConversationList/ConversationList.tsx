@@ -1,9 +1,11 @@
 import { useState } from 'react';
-import { Search, Filter } from 'lucide-react';
+import { Search, Filter, BarChart2, MessageSquare } from 'lucide-react';
 import { Conversation, FilterOptions } from '../../types/conversation';
 import { format } from 'date-fns';
 import { FilterPanel } from '../FilterPanel/FilterPanel';
 import { DataControls } from '../DataControls/DataControls';
+import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
+import { useFeedbackStore } from '../../store/feedbackStore';
 import './ConversationList.css';
 
 interface ConversationListProps {
@@ -28,6 +30,7 @@ export function ConversationList({
   availableModels
 }: ConversationListProps) {
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
+  const { viewMode, setViewMode } = useFeedbackStore();
   
   // Calculate total Q&A pairs
   const totalQAPairs = conversations.reduce((sum, conv) => sum + conv.qaPairCount, 0);
@@ -46,6 +49,22 @@ export function ConversationList({
         <div className="conversation-list-header-top">
           <img src="/nbg-tech-hub-logo.svg" alt="NBG Technology Hub" className="nbg-logo" />
           <div className="header-controls">
+            <div className="view-toggle">
+              <button 
+                className={`view-toggle-btn ${viewMode === 'details' ? 'active' : ''}`}
+                onClick={() => setViewMode('details')}
+                title="Conversation Details"
+              >
+                <MessageSquare size={16} />
+              </button>
+              <button 
+                className={`view-toggle-btn ${viewMode === 'analytics' ? 'active' : ''}`}
+                onClick={() => setViewMode('analytics')}
+                title="Analytics Dashboard"
+              >
+                <BarChart2 size={16} />
+              </button>
+            </div>
             <DataControls />
             <button className="filter-btn" onClick={() => setIsFilterPanelOpen(true)}>
               <Filter size={16} />
@@ -54,7 +73,8 @@ export function ConversationList({
         </div>
         <div className="conversation-counts">
           <h2>Conversations</h2>
-          <span>{conversations.length} conversations, {totalQAPairs} Q&As</span>
+          <span className="counts-text">{conversations.length} conversations, {totalQAPairs} Q&As</span>
+          <ThemeToggle />
         </div>
       </div>
       

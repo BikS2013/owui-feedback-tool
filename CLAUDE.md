@@ -69,3 +69,10 @@ Check `Issues - Pending Items.md` for current problems. Critical issue: download
 
 ### Build Output
 Production builds go to `dist/` directory. Docker image serves via nginx on port 80 (mapped to 8080).
+
+## Documentation Guidelines
+
+### Analytics Specification
+- The file "Analytics Requirements & Specs.md" must serve as the "source of truth" regarding the design and the specs of the overall analytics offered by the app. 
+- Every new design decision regarding this topic must be registered there.
+- All questions related to the functionality or the technical design in this area must be retrieved from this file.
