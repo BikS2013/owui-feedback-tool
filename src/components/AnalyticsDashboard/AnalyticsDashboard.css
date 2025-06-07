@@ -192,6 +192,9 @@
   border-radius: 8px;
   padding: 1.5rem;
   transition: box-shadow 0.2s;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .metric-card:hover {
@@ -202,63 +205,115 @@
   margin: 0 0 1rem 0;
   font-size: 1rem;
   color: var(--text-primary);
+  text-align: center;
+  width: 100%;
 }
 
 /* Rating Distribution Chart */
 .rating-chart {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 1rem;
+  width: 100%;
 }
 
 .rating-bar-container {
   display: flex;
-  align-items: center;
-  gap: 0.5rem;
+  flex-direction: column;
+  gap: 0.25rem;
   transition: all 0.3s;
+  margin-bottom: 0.75rem;
 }
 
 .rating-bar-container.highlighted {
   background: var(--accent-primary-alpha);
-  border-radius: 4px;
-  padding: 0.25rem;
-  margin: -0.25rem;
+  border-radius: 8px;
+  padding: 0.75rem;
+  margin: -0.25rem -0.25rem 0.75rem -0.25rem;
   box-shadow: 0 0 0 2px var(--accent-primary);
 }
 
-.rating-label {
-  min-width: 1.5rem;
-  text-align: right;
-  font-size: 0.875rem;
-  color: var(--text-secondary);
-}
-
-.rating-bar-wrapper {
-  flex: 1;
+.rating-bar-header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  gap: 0.5rem;
-  background: var(--bg-tertiary);
-  border-radius: 4px;
-  padding: 0.25rem;
-  position: relative;
+  margin-bottom: 0.25rem;
 }
 
-.rating-bar {
-  height: 1.5rem;
-  background: var(--accent-primary);
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
-
-.qa-rating-bar {
-  background: var(--accent-secondary);
+.rating-label {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
 }
 
 .rating-count {
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   color: var(--text-secondary);
-  min-width: 2rem;
+  font-weight: 400;
+}
+
+.rating-percentage {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.rating-bar-wrapper {
+  width: 100%;
+  height: 6px;
+  background: #e0e7f1;
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+}
+
+[data-theme="dark"] .rating-bar-wrapper {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.rating-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+  position: relative;
+}
+
+/* Color palette for rating bars */
+.rating-bar[data-rating="10"] { background: #52C77E; }
+.rating-bar[data-rating="9"] { background: #6FA7E6; }
+.rating-bar[data-rating="8"] { background: #5B8BC9; }
+.rating-bar[data-rating="7"] { background: #8B7BEE; }
+.rating-bar[data-rating="6"] { background: #FF8C5A; }
+.rating-bar[data-rating="5"] { background: #FFD666; }
+.rating-bar[data-rating="4"] { background: #FFB347; }
+.rating-bar[data-rating="3"] { background: #FF9F40; }
+.rating-bar[data-rating="2"] { background: #FF7B7B; }
+.rating-bar[data-rating="1"] { background: #EF4444; }
+
+.qa-rating-bar {
+  /* Q&A bars use same colors as conversation bars */
+}
+
+/* Rating Summary */
+.rating-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.summary-label {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.summary-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--accent-primary);
 }
 
 /* Pie Chart Stats */

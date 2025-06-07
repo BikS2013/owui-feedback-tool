@@ -1,0 +1,147 @@
+.circular-progress-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1rem;
+}
+
+.circular-progress {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.progress-ring {
+  transform: rotate(-90deg);
+}
+
+.progress-ring-background {
+  stroke: #e0e7f1;
+  opacity: 0.3;
+}
+
+.progress-ring-progress {
+  stroke: #52C77E;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.5s ease-in-out;
+}
+
+.progress-text {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.progress-percentage {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.progress-label {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  text-transform: capitalize;
+}
+
+.progress-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 250px;
+}
+
+.stat-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-radius: 8px;
+  background: var(--bg-tertiary);
+  transition: all 0.2s ease;
+}
+
+.stat-box:hover {
+  transform: translateX(4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.stat-box.rated {
+  background: rgba(82, 199, 126, 0.1);
+}
+
+.stat-box.rated .stat-label {
+  color: #52C77E;
+  font-weight: 500;
+}
+
+.stat-box.unrated {
+  background: rgba(255, 198, 102, 0.1);
+}
+
+.stat-box.unrated .stat-label {
+  color: #FFD666;
+  font-weight: 500;
+}
+
+.stat-label {
+  font-size: 0.875rem;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.stat-percent {
+  font-size: 0.875rem;
+  color: var(--text-secondary);
+  margin-left: auto;
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .progress-ring-background {
+  stroke: rgba(255, 255, 255, 0.1);
+}
+
+[data-theme="dark"] .stat-box {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+[data-theme="dark"] .stat-box.rated {
+  background: rgba(82, 199, 126, 0.15);
+}
+
+[data-theme="dark"] .stat-box.unrated {
+  background: rgba(255, 198, 102, 0.15);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .circular-progress-container {
+    padding: 0.5rem;
+  }
+
+  .progress-percentage {
+    font-size: 2rem;
+  }
+
+  .progress-label {
+    font-size: 0.875rem;
+  }
+
+  .stat-box {
+    padding: 0.5rem 1rem;
+  }
+
+  .stat-value {
+    font-size: 1.25rem;
+  }
+}

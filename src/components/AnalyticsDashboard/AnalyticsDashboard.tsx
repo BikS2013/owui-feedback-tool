@@ -7,6 +7,7 @@ import {
   exportAnalyticsAsJSON, 
   exportAnalyticsAsMarkdown 
 } from '../../utils/analyticsExportUtils';
+import { CircularProgress } from '../CircularProgress/CircularProgress';
 import './AnalyticsDashboard.css';
 
 interface AnalyticsDashboardProps {
@@ -276,48 +277,53 @@ export function AnalyticsDashboard({
           <div className="metric-card">
             <h4>Rating Distribution</h4>
             <div className="rating-chart">
-              {conversationMetrics.ratingDistribution.map(item => (
-                <div 
-                  key={item.rating} 
-                  className={`rating-bar-container ${
-                    selectedConversationMetrics?.ratingBucket === item.rating ? 'highlighted' : ''
-                  }`}
-                >
-                  <div className="rating-label">{item.rating}</div>
-                  <div className="rating-bar-wrapper">
-                    <div 
-                      className="rating-bar" 
-                      style={{ 
-                        width: `${(item.count / Math.max(...conversationMetrics.ratingDistribution.map(r => r.count), 1)) * 100}%` 
-                      }}
-                    />
-                    <span className="rating-count">{item.count}</span>
+              {conversationMetrics.ratingDistribution.slice().reverse().map(item => {
+                const percentage = conversationMetrics.totalCount > 0 
+                  ? ((item.count / conversationMetrics.ratedCount) * 100).toFixed(0)
+                  : '0';
+                return (
+                  <div 
+                    key={item.rating} 
+                    className={`rating-bar-container ${
+                      selectedConversationMetrics?.ratingBucket === item.rating ? 'highlighted' : ''
+                    }`}
+                  >
+                    <div className="rating-bar-header">
+                      <span className="rating-label">
+                        Rating {item.rating}
+                        {item.count > 0 && (
+                          <span className="rating-count"> · {item.count} conversation{item.count !== 1 ? 's' : ''}</span>
+                        )}
+                      </span>
+                      <span className="rating-percentage">{percentage}%</span>
+                    </div>
+                    <div className="rating-bar-wrapper">
+                      <div 
+                        className="rating-bar" 
+                        data-rating={item.rating}
+                        style={{ 
+                          width: `${percentage}%` 
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
+              <div className="rating-summary">
+                <span className="summary-label">Total Rated Conversations</span>
+                <span className="summary-value">{conversationMetrics.ratedCount}</span>
+              </div>
             </div>
           </div>
 
           <div className="metric-card">
             <h4>Rated vs Unrated</h4>
-            <div className="pie-chart-container">
-              <div className="pie-stats">
-                <div className={`stat-item rated ${selectedConversationMetrics?.isRated === true ? 'highlighted' : ''}`}>
-                  <span className="stat-label">Rated:</span>
-                  <span className="stat-value">{conversationMetrics.ratedCount}</span>
-                  <span className="stat-percent">
-                    ({((conversationMetrics.ratedCount / conversationMetrics.totalCount) * 100).toFixed(1)}%)
-                  </span>
-                </div>
-                <div className={`stat-item unrated ${selectedConversationMetrics?.isRated === false ? 'highlighted' : ''}`}>
-                  <span className="stat-label">Unrated:</span>
-                  <span className="stat-value">{conversationMetrics.unratedCount}</span>
-                  <span className="stat-percent">
-                    ({((conversationMetrics.unratedCount / conversationMetrics.totalCount) * 100).toFixed(1)}%)
-                  </span>
-                </div>
-              </div>
-            </div>
+            <CircularProgress
+              percentage={(conversationMetrics.ratedCount / conversationMetrics.totalCount) * 100}
+              ratedCount={conversationMetrics.ratedCount}
+              unratedCount={conversationMetrics.unratedCount}
+              label="Rated"
+            />
           </div>
 
           <div className="metric-card">
@@ -341,43 +347,48 @@ export function AnalyticsDashboard({
           <div className="metric-card">
             <h4>Q&A Rating Distribution</h4>
             <div className="rating-chart">
-              {qaMetrics.ratingDistribution.map(item => (
-                <div key={item.rating} className="rating-bar-container">
-                  <div className="rating-label">{item.rating}</div>
-                  <div className="rating-bar-wrapper">
-                    <div 
-                      className="rating-bar qa-rating-bar" 
-                      style={{ 
-                        width: `${(item.count / Math.max(...qaMetrics.ratingDistribution.map(r => r.count), 1)) * 100}%` 
-                      }}
-                    />
-                    <span className="rating-count">{item.count}</span>
+              {qaMetrics.ratingDistribution.slice().reverse().map(item => {
+                const percentage = qaMetrics.totalCount > 0 
+                  ? ((item.count / qaMetrics.ratedCount) * 100).toFixed(0)
+                  : '0';
+                return (
+                  <div key={item.rating} className="rating-bar-container">
+                    <div className="rating-bar-header">
+                      <span className="rating-label">
+                        Rating {item.rating}
+                        {item.count > 0 && (
+                          <span className="rating-count"> · {item.count} Q&A{item.count !== 1 ? 's' : ''}</span>
+                        )}
+                      </span>
+                      <span className="rating-percentage">{percentage}%</span>
+                    </div>
+                    <div className="rating-bar-wrapper">
+                      <div 
+                        className="rating-bar qa-rating-bar" 
+                        data-rating={item.rating}
+                        style={{ 
+                          width: `${percentage}%` 
+                        }}
+                      />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
+              <div className="rating-summary">
+                <span className="summary-label">Total Rated Q&As</span>
+                <span className="summary-value">{qaMetrics.ratedCount}</span>
+              </div>
             </div>
           </div>
 
           <div className="metric-card">
             <h4>Q&A Rated vs Unrated</h4>
-            <div className="pie-chart-container">
-              <div className="pie-stats">
-                <div className="stat-item rated">
-                  <span className="stat-label">Rated:</span>
-                  <span className="stat-value">{qaMetrics.ratedCount}</span>
-                  <span className="stat-percent">
-                    ({((qaMetrics.ratedCount / qaMetrics.totalCount) * 100).toFixed(1)}%)
-                  </span>
-                </div>
-                <div className="stat-item unrated">
-                  <span className="stat-label">Unrated:</span>
-                  <span className="stat-value">{qaMetrics.unratedCount}</span>
-                  <span className="stat-percent">
-                    ({((qaMetrics.unratedCount / qaMetrics.totalCount) * 100).toFixed(1)}%)
-                  </span>
-                </div>
-              </div>
-            </div>
+            <CircularProgress
+              percentage={(qaMetrics.ratedCount / qaMetrics.totalCount) * 100}
+              ratedCount={qaMetrics.ratedCount}
+              unratedCount={qaMetrics.unratedCount}
+              label="Rated"
+            />
           </div>
 
           <div className="metric-card">
