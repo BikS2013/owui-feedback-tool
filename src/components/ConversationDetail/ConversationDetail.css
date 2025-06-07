@@ -45,10 +45,26 @@
 
 .conversation-stats {
   display: flex;
-  gap: 24px;
+  justify-content: space-between;
+  align-items: center;
   font-size: 14px;
   color: rgba(255, 255, 255, 0.8);
   padding: 5px 24px 12px 24px;
+}
+
+.stats-info {
+  display: flex;
+  gap: 24px;
+}
+
+.stats-info span {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
 }
 
 .messages-container {

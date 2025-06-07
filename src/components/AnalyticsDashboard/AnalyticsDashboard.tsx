@@ -1,6 +1,12 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useRef, useEffect } from 'react';
+import { Download, FileJson, FileText } from 'lucide-react';
 import { Conversation, QAPair } from '../../types/conversation';
 import { useFeedbackStore } from '../../store/feedbackStore';
+import { 
+  prepareAnalyticsExportData, 
+  exportAnalyticsAsJSON, 
+  exportAnalyticsAsMarkdown 
+} from '../../utils/analyticsExportUtils';
 import './AnalyticsDashboard.css';
 
 interface AnalyticsDashboardProps {
@@ -20,7 +26,23 @@ export function AnalyticsDashboard({
   qaPairs,
   selectedConversationId 
 }: AnalyticsDashboardProps) {
-  const { selectedAnalyticsModel, setSelectedAnalyticsModel } = useFeedbackStore();
+  const { selectedAnalyticsModel, setSelectedAnalyticsModel, filters } = useFeedbackStore();
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportRef = useRef<HTMLDivElement>(null);
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      
+      if (exportRef.current && !exportRef.current.contains(target)) {
+        setShowExportMenu(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
   
   // Get unique models from conversations
   const availableModels = useMemo(() => {
@@ -158,6 +180,29 @@ export function AnalyticsDashboard({
     };
   }, [selectedConversationId, conversations, isSelectedConversationHighlighted]);
 
+  // Export handlers
+  const handleExport = (format: 'json' | 'markdown') => {
+    try {
+      const exportData = prepareAnalyticsExportData(
+        filteredConversations,
+        qaPairs,
+        conversationMetrics,
+        qaMetrics,
+        selectedAnalyticsModel,
+        filters.searchTerm
+      );
+
+      if (format === 'json') {
+        exportAnalyticsAsJSON(exportData, selectedAnalyticsModel);
+      } else {
+        exportAnalyticsAsMarkdown(exportData, selectedAnalyticsModel);
+      }
+      setShowExportMenu(false);
+    } catch (error) {
+      console.error('Export error:', error);
+    }
+  };
+
   return (
     <div className="analytics-dashboard">
       <div className="analytics-header">
@@ -170,18 +215,56 @@ export function AnalyticsDashboard({
             <span>Rated: {conversationMetrics.ratedCount}</span>
             <span>Unrated: {conversationMetrics.unratedCount}</span>
           </div>
-          <div className="model-selector">
-            <label htmlFor="model-select">Model:</label>
-            <select 
-              id="model-select"
-              value={selectedAnalyticsModel || 'all'} 
-              onChange={(e) => setSelectedAnalyticsModel(e.target.value === 'all' ? null : e.target.value)}
-            >
-              <option value="all">All Models</option>
-              {availableModels.map(model => (
-                <option key={model} value={model}>{model}</option>
-              ))}
-            </select>
+          <div className="stats-actions">
+            <div className="export-button-container" ref={exportRef}>
+              <button 
+                type="button"
+                className="export-button"
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                title="Export analytics"
+              >
+                <Download size={16} />
+              </button>
+              {showExportMenu && (
+                <div className="export-menu">
+                  <button 
+                    type="button"
+                    className="export-menu-item"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleExport('json');
+                    }}
+                  >
+                    <FileJson size={16} />
+                    <span>Export as JSON</span>
+                  </button>
+                  <button 
+                    type="button"
+                    className="export-menu-item"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleExport('markdown');
+                    }}
+                  >
+                    <FileText size={16} />
+                    <span>Export as Markdown</span>
+                  </button>
+                </div>
+              )}
+            </div>
+            <div className="model-selector">
+              <label htmlFor="model-select">Model:</label>
+              <select 
+                id="model-select"
+                value={selectedAnalyticsModel || 'all'} 
+                onChange={(e) => setSelectedAnalyticsModel(e.target.value === 'all' ? null : e.target.value)}
+              >
+                <option value="all">All Models</option>
+                {availableModels.map(model => (
+                  <option key={model} value={model}>{model}</option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
       </div>

@@ -124,6 +124,15 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
       <div className="conversation-header">
         <div className="conversation-header-top">
           <h2>{conversation.title}</h2>
+        </div>
+        <div className="conversation-stats">
+          <div className="stats-info">
+            <span>Q&A pairs: {conversation.qaPairCount}</span>
+            <span>Rated responses: {conversation.totalRatings}</span>
+            {conversation.averageRating && (
+              <span>Average rating: {conversation.averageRating.toFixed(1)}/10</span>
+            )}
+          </div>
           <div className="header-actions">
             <button
               type="button"
@@ -174,13 +183,6 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
             )}
           </div>
           </div>
-        </div>
-        <div className="conversation-stats">
-          <span>Q&A pairs: {conversation.qaPairCount}</span>
-          <span>Rated responses: {conversation.totalRatings}</span>
-          {conversation.averageRating && (
-            <span>Average rating: {conversation.averageRating.toFixed(1)}/10</span>
-          )}
         </div>
       </div>
 

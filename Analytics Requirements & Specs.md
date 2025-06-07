@@ -82,13 +82,150 @@ This document outlines the requirements and specifications for adding an analyti
   - Correlation with numerical ratings
 
 ### 6. Data Export & Reporting
-- **Export Analytics Data**
-  - CSV/JSON export of current view
-  - Include applied filters in export
-  
-- **Shareable Reports**
-  - Generate PDF summaries
-  - Snapshot URLs for specific views
+
+#### 6.1 Export Analytics Functionality (Priority Feature)
+
+**Location**: Analytics Dashboard header, second row, positioned to the left of the model selector
+
+**Export Options**:
+1. **JSON Format**: Machine-readable structured data
+2. **Markdown Format**: Human-readable report with formatting
+
+**Export Content Structure**:
+
+##### JSON Export Format:
+```json
+{
+  "exportDate": "2025-01-06T10:30:00Z",
+  "filters": {
+    "model": "All Models" | "specific-model",
+    "dateRange": { "start": "date", "end": "date" },
+    "searchTerm": "string",
+    "ratingFilter": { "min": 1, "max": 10, "includeUnrated": true }
+  },
+  "summary": {
+    "totalConversations": 69,
+    "ratedConversations": 55,
+    "unratedConversations": 14,
+    "averageRating": 7.2,
+    "totalQAPairs": 140,
+    "ratedQAPairs": 98,
+    "unratedQAPairs": 42
+  },
+  "conversationMetrics": {
+    "ratingDistribution": [
+      {
+        "rating": 1,
+        "count": 3,
+        "percentage": 5.45,
+        "conversationIds": ["id1", "id2", "id3"]
+      },
+      // ... ratings 2-10
+    ],
+    "conversations": [
+      {
+        "id": "conversation-id",
+        "averageRating": 8.5,
+        "qaPairCount": 5,
+        "ratedQAs": 4,
+        "model": "model-name",
+        "updatedAt": "timestamp"
+      }
+      // ... all conversations in current filter
+    ]
+  },
+  "qaPairMetrics": {
+    "ratingDistribution": [
+      {
+        "rating": 1,
+        "count": 5,
+        "percentage": 5.1,
+        "qaPairs": [
+          {
+            "conversationId": "conv-id",
+            "qaPairIndex": 0,
+            "rating": 1
+          }
+        ]
+      }
+      // ... ratings 2-10
+    ]
+  }
+}
+```
+
+##### Markdown Export Format:
+```markdown
+# Analytics Report
+
+**Generated**: January 6, 2025 10:30 AM  
+**Model Filter**: All Models  
+**Date Range**: [start] to [end]
+
+## Executive Summary
+
+- **Total Conversations**: 69 (55 rated, 14 unrated)
+- **Average Rating**: 7.2/10
+- **Total Q&A Pairs**: 140 (98 rated, 42 unrated)
+
+## Conversation Metrics
+
+### Rating Distribution
+
+| Rating | Count | Percentage | Conversation IDs |
+|--------|-------|------------|------------------|
+| 10     | 12    | 21.8%      | abc123, def456... |
+| 9      | 8     | 14.5%      | ghi789, jkl012... |
+| ...    | ...   | ...        | ... |
+
+### Detailed Conversation List
+
+1. **Conversation abc123**
+   - Average Rating: 8.5/10
+   - Q&A Pairs: 5 (4 rated)
+   - Model: gpt-4
+   - Last Updated: 2025-01-05
+
+[... continued for all conversations]
+
+## Q&A Pair Metrics
+
+### Rating Distribution
+
+| Rating | Count | Percentage |
+|--------|-------|------------|
+| 10     | 25    | 25.5%      |
+| 9      | 15    | 15.3%      |
+| ...    | ...   | ...        |
+
+### Q&A Pairs by Rating
+
+#### Rating 10 (25 Q&As)
+- Conversation abc123, Q&A #1
+- Conversation abc123, Q&A #3
+- Conversation def456, Q&A #2
+[... etc]
+```
+
+**Key Features**:
+1. **Traceability**: Every metric links back to specific conversation/Q&A IDs
+2. **Filter Context**: Export includes current filter settings for reproducibility
+3. **Comprehensive Data**: Both summary statistics and detailed breakdowns
+4. **Model-Aware**: Respects current model filter selection
+5. **Time-Stamped**: Includes export timestamp for versioning
+
+**Implementation Considerations**:
+- File naming: `analytics-export-{model}-{timestamp}.{json|md}`
+- Download triggers browser file download
+- No server-side storage required
+- Respects all current filters and search terms
+- Includes visual indicators for which conversations are currently selected
+
+#### 6.2 Future Export Enhancements
+- **CSV Format**: For spreadsheet analysis
+- **PDF Reports**: Formatted documents with charts
+- **Scheduled Exports**: Automated periodic reports
+- **Template System**: Customizable export formats
 
 ### 7. Interactive Features
 - **Drill-Down Capability**
@@ -166,7 +303,7 @@ AnalyticsDashboard/
 1. Q&A-based analytics ✅
 2. Conversation highlighting ✅
 3. Trend analysis ⏳
-4. Export functionality ⏳
+4. Export functionality 🔄 (Specified, awaiting implementation)
 
 ### Phase 3: Advanced Features (Pending)
 1. Sentiment analysis ⏳
