@@ -535,6 +535,308 @@ src/
 - State classes: `.is-active`, `.is-loading`
 - Theme classes: `.theme-dark`, `.theme-light`
 
+### 8. Critical: Text Visibility in Theme Switching
+
+#### Common Issue: Invisible Text in Light Theme
+
+One of the most frequent theming issues is text becoming invisible or barely visible when switching between dark and light themes. This typically occurs when:
+
+1. **Text colors are hardcoded** instead of using CSS variables
+2. **Wrong CSS variable is used** (e.g., using `--text-tertiary` for important content)
+3. **Missing theme-specific overrides** for components with special backgrounds
+
+#### Prevention Guidelines
+
+1. **Always use appropriate CSS variables for text colors:**
+   ```css
+   /* Primary content - always visible */
+   color: var(--text-primary);
+   
+   /* Secondary information - visible but less prominent */
+   color: var(--text-secondary);
+   
+   /* Tertiary/muted text - use sparingly, may be too light in some themes */
+   color: var(--text-tertiary);
+   ```
+
+2. **Test both themes immediately after adding new text elements:**
+   - Switch between light and dark themes
+   - Check all text remains readable
+   - Pay special attention to secondary UI elements (metadata, stats, labels)
+
+3. **Special cases requiring theme-specific rules:**
+   ```css
+   /* Components with colored backgrounds (e.g., blue headers) */
+   .header-with-blue-bg {
+     color: rgba(255, 255, 255, 0.8); /* Always light text on dark bg */
+   }
+   
+   /* Components needing different colors per theme */
+   .subtle-text {
+     color: var(--text-tertiary);
+   }
+   
+   [data-theme="light"] .subtle-text {
+     color: var(--text-secondary); /* Upgrade to more visible in light theme */
+   }
+   ```
+
+#### How to Fix Invisible Text Issues
+
+When text visibility issues are discovered:
+
+1. **Identify the problematic elements:**
+   - Use browser DevTools to inspect the invisible text
+   - Check what color value is being applied
+   - Identify the CSS class and file location
+
+2. **Determine the appropriate fix:**
+   - If using `--text-tertiary`, consider upgrading to `--text-secondary`
+   - If color is hardcoded, replace with appropriate CSS variable
+   - If theme-specific behavior is needed, add theme overrides
+
+3. **Apply the fix using theme-specific rules:**
+   ```css
+   /* Original problematic code */
+   .stats-info {
+     color: var(--text-tertiary); /* Too light in light theme */
+   }
+   
+   /* Fix with theme override */
+   [data-theme="light"] .stats-info {
+     color: var(--text-secondary); /* More visible in light theme */
+   }
+   
+   /* For critical visibility, use !important sparingly */
+   [data-theme="light"] .stats-info > span {
+     color: var(--text-primary) !important;
+   }
+   ```
+
+4. **Common patterns for fixing visibility:**
+   ```css
+   /* Pattern 1: Upgrade text level in light theme */
+   [data-theme="light"] .component {
+     color: var(--text-secondary); /* from tertiary */
+   }
+   
+   /* Pattern 2: Force primary text for critical info */
+   [data-theme="light"] .important-stats {
+     color: var(--text-primary) !important;
+   }
+   
+   /* Pattern 3: Ensure contrast on colored backgrounds */
+   .blue-header .text {
+     color: rgba(255, 255, 255, 0.9); /* Always white on blue */
+   }
+   ```
+
+#### Testing Checklist
+
+Before committing any text-related changes:
+
+- [ ] Toggle between light and dark themes
+- [ ] Check all text elements are visible in both themes
+- [ ] Verify sufficient contrast ratios (WCAG AA minimum)
+- [ ] Test on different screen brightnesses
+- [ ] Check hover and selected states maintain visibility
+
+#### Real Example from This Codebase
+
+The conversation list stats became invisible in light theme. The fix:
+
+```css
+/* Original - invisible in light theme */
+.stats-info {
+  color: var(--text-secondary);
+}
+
+/* Fixed with theme-specific override */
+[data-theme="light"] .stats-info {
+  color: var(--text-primary);
+}
+
+[data-theme="light"] .stats-info > span {
+  color: var(--text-primary) !important;
+}
+
+[data-theme="light"] .models-info {
+  color: var(--text-secondary); /* Upgraded from tertiary */
+}
+```
+
+**Remember:** When in doubt, use `var(--text-primary)` for critical information and always test both themes!
+
+### 9. Critical: CSS Specificity Conflicts Between Components
+
+#### Common Issue: Styles from One Component Affecting Another
+
+A frequent issue in modular CSS architecture is when styles from one component unintentionally override styles in another component. This commonly occurs with:
+
+1. **Generic class names** like `.stats-info`, `.header`, `.content`
+2. **Global selectors** that aren't scoped to their component
+3. **Insufficient specificity** in component styles
+4. **CSS load order** causing later files to override earlier ones
+
+#### Real Example: Header Text Becoming Dark on Dark Backgrounds
+
+In this codebase, the `.stats-info` class was used in multiple components:
+- ConversationList (for list item stats)
+- ConversationDetail header (for header stats)
+- AnalyticsDashboard header (for header stats)
+
+The ConversationList styles were setting text color to `var(--text-secondary)` (dark), which was overriding the light text needed for the blue headers.
+
+#### Prevention Guidelines
+
+1. **Always scope styles to their component:**
+   ```css
+   /* Bad - too generic */
+   .stats-info {
+     color: var(--text-secondary);
+   }
+   
+   /* Good - scoped to component */
+   .conversation-list .stats-info {
+     color: var(--text-secondary);
+   }
+   
+   /* Better - use component root class */
+   .analytics-dashboard .stats-info {
+     color: rgba(255, 255, 255, 0.8);
+   }
+   ```
+
+2. **Use BEM or similar naming conventions to avoid conflicts:**
+   ```css
+   /* Component-specific class names */
+   .conversation-list__stats-info { }
+   .analytics-header__stats-info { }
+   .conversation-header__stats-info { }
+   ```
+
+3. **Increase specificity for critical styles:**
+   ```css
+   /* Headers need extra specificity to ensure white text */
+   .analytics-header .stats-info span {
+     color: rgba(255, 255, 255, 0.8) !important;
+   }
+   ```
+
+4. **Component structure best practice:**
+   ```css
+   /* Each component should have a root class */
+   .my-component {
+     /* Component-level styles */
+   }
+   
+   .my-component .shared-class-name {
+     /* Scoped version of shared classes */
+   }
+   ```
+
+#### How to Debug and Fix Specificity Conflicts
+
+1. **Identify the conflict using DevTools:**
+   - Inspect the element with incorrect styles
+   - Look at the "Styles" panel to see which rules are being applied
+   - Check for crossed-out styles (being overridden)
+   - Note which CSS file/rule is winning
+
+2. **Trace the source of conflicting styles:**
+   ```bash
+   # Search for the class name across all CSS files
+   grep -r "\.stats-info" src/components/
+   
+   # Find all instances of a specific selector
+   grep -r "stats-info.*{" src/
+   ```
+
+3. **Apply the fix with proper specificity:**
+   ```css
+   /* Option 1: Add parent selector for specificity */
+   .analytics-dashboard .stats-info {
+     color: rgba(255, 255, 255, 0.8) !important;
+   }
+   
+   /* Option 2: Use more specific selector chain */
+   .analytics-header .analytics-stats .stats-info span {
+     color: rgba(255, 255, 255, 0.8);
+   }
+   
+   /* Option 3: Add unique class names */
+   .analytics-stats-info { /* Instead of generic .stats-info */
+     color: rgba(255, 255, 255, 0.8);
+   }
+   ```
+
+#### CSS Specificity Quick Reference
+
+Specificity is calculated as: (inline, IDs, classes/attributes/pseudo-classes, elements)
+
+- `span` = (0,0,0,1)
+- `.stats-info` = (0,0,1,0)
+- `.header .stats-info` = (0,0,2,0)
+- `.analytics-dashboard .stats-info span` = (0,0,2,1)
+- `#header .stats-info` = (0,1,1,0)
+- `.stats-info !important` = Always wins (use sparingly)
+
+#### Testing Checklist for Component Styles
+
+Before committing component changes:
+
+- [ ] Check if class names are generic (could conflict)
+- [ ] Verify styles are scoped to component root
+- [ ] Test component in different contexts/pages
+- [ ] Check for style leaking to/from other components
+- [ ] Inspect headers and special backgrounds for text visibility
+- [ ] Use DevTools to verify correct styles are applied
+
+#### Best Practices Summary
+
+1. **Namespace your CSS:** Use component-specific prefixes
+2. **Scope all styles:** Never write global selectors without good reason
+3. **Document shared classes:** If a class must be shared, document it
+4. **Use CSS Modules or CSS-in-JS:** Consider for larger projects
+5. **Maintain a class name registry:** Track commonly used class names
+
+#### Common Conflict-Prone Class Names to Avoid
+
+- `.header`, `.footer`, `.content`, `.container`
+- `.stats`, `.info`, `.data`, `.meta`
+- `.item`, `.list`, `.card`, `.panel`
+- `.primary`, `.secondary`, `.active`
+- `.title`, `.subtitle`, `.description`
+
+Instead, use component-prefixed versions:
+- `.conversation-list__header`
+- `.analytics-dashboard__stats`
+- `.feedback-card__title`
+
+**Fix Applied in This Codebase:**
+
+```css
+/* Original problem - too generic */
+.stats-info {
+  color: var(--text-secondary);
+}
+
+/* Fix - properly scoped */
+.analytics-dashboard .stats-info span {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.analytics-header .stats-info span {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.conversation-header .stats-info span {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+```
+
+This ensures header text remains visible on dark backgrounds while allowing each component to style its own stats differently.
+
 ---
 
 ## Quick Reference

@@ -48,16 +48,21 @@
   justify-content: space-between;
   align-items: center;
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.8) !important;
   padding: 5px 24px 12px 24px;
 }
 
-.stats-info {
+.conversation-detail .stats-info {
   display: flex;
   gap: 24px;
 }
 
-.stats-info span {
+.conversation-detail .stats-info span {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Extra specificity to override any global styles */
+.conversation-header .stats-info span {
   color: rgba(255, 255, 255, 0.8) !important;
 }
 
