@@ -274,6 +274,20 @@ export function AnalyticsDashboard({
         <div className="metrics-section">
           <h3>Conversation Metrics</h3>
           
+          <div className="metric-card average-rating-card">
+            <div className="average-rating-content">
+              <h4>Overall Average Rating</h4>
+              {conversationMetrics.overallAverage !== null ? (
+                <div className="average-rating-display">
+                  <span className="rating-value">{conversationMetrics.overallAverage.toFixed(2)}</span>
+                  <span className="rating-scale">/ 10</span>
+                </div>
+              ) : (
+                <span className="no-data">No ratings available</span>
+              )}
+            </div>
+          </div>
+          
           <div className="metric-card">
             <h4>Rating Distribution</h4>
             <div className="rating-chart">
@@ -326,23 +340,24 @@ export function AnalyticsDashboard({
             />
           </div>
 
-          <div className="metric-card">
-            <h4>Overall Average Rating</h4>
-            <div className="average-rating">
-              {conversationMetrics.overallAverage !== null ? (
-                <>
-                  <span className="rating-value">{conversationMetrics.overallAverage.toFixed(2)}</span>
+        </div>
+
+        <div className="metrics-section">
+          <h3>Q&A Metrics</h3>
+          
+          <div className="metric-card average-rating-card">
+            <div className="average-rating-content">
+              <h4>Q&A Overall Average Rating</h4>
+              {qaMetrics.overallAverage !== null ? (
+                <div className="average-rating-display">
+                  <span className="rating-value">{qaMetrics.overallAverage.toFixed(2)}</span>
                   <span className="rating-scale">/ 10</span>
-                </>
+                </div>
               ) : (
                 <span className="no-data">No ratings available</span>
               )}
             </div>
           </div>
-        </div>
-
-        <div className="metrics-section">
-          <h3>Q&A Metrics</h3>
           
           <div className="metric-card">
             <h4>Q&A Rating Distribution</h4>
@@ -391,19 +406,6 @@ export function AnalyticsDashboard({
             />
           </div>
 
-          <div className="metric-card">
-            <h4>Q&A Overall Average Rating</h4>
-            <div className="average-rating">
-              {qaMetrics.overallAverage !== null ? (
-                <>
-                  <span className="rating-value">{qaMetrics.overallAverage.toFixed(2)}</span>
-                  <span className="rating-scale">/ 10</span>
-                </>
-              ) : (
-                <span className="no-data">No ratings available</span>
-              )}
-            </div>
-          </div>
         </div>
       </div>
     </div>

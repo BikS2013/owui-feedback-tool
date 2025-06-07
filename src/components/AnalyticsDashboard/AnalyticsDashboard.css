@@ -367,26 +367,61 @@
   color: var(--text-secondary);
 }
 
-/* Average Rating */
-.average-rating {
+/* Average Rating Card - Clean, prominent design */
+.average-rating-card {
+  background: linear-gradient(135deg, rgba(91, 139, 201, 0.08), rgba(91, 139, 201, 0.03));
+  border: 2px solid rgba(91, 139, 201, 0.3);
+  padding: 2rem;
+  transition: all 0.3s ease;
+}
+
+.average-rating-card:hover {
+  border-color: var(--accent-primary);
+  box-shadow: 0 4px 16px rgba(91, 139, 201, 0.2);
+}
+
+.average-rating-content {
+  text-align: center;
+}
+
+.average-rating-content h4 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.average-rating-display {
   display: flex;
   align-items: baseline;
   justify-content: center;
-  padding: 1.5rem;
-  background: var(--bg-tertiary);
-  border-radius: 8px;
+  gap: 0.5rem;
 }
 
-.rating-value {
-  font-size: 3rem;
+.average-rating-card .rating-value {
+  font-size: 3.5rem;
   font-weight: 700;
-  color: var(--accent-primary);
+  background: linear-gradient(135deg, var(--accent-primary), #6FA7E6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.rating-scale {
-  font-size: 1.5rem;
+.average-rating-card .rating-scale {
+  font-size: 1.75rem;
   color: var(--text-secondary);
-  margin-left: 0.5rem;
+  font-weight: 400;
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .average-rating-card {
+  background: linear-gradient(135deg, rgba(91, 139, 201, 0.15), rgba(91, 139, 201, 0.05));
+  border-color: rgba(91, 139, 201, 0.4);
+}
+
+[data-theme="dark"] .average-rating-card:hover {
+  border-color: var(--accent-primary);
+  box-shadow: 0 4px 20px rgba(91, 139, 201, 0.3);
 }
 
 .no-data {
