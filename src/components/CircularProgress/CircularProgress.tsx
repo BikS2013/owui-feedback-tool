@@ -1,4 +1,3 @@
-import React from 'react';
 import './CircularProgress.css';
 
 interface CircularProgressProps {
@@ -21,8 +20,6 @@ export function CircularProgress({
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
   const strokeDashoffset = circumference - (percentage / 100) * circumference;
-  const ratedPercentage = percentage;
-  const unratedPercentage = 100 - percentage;
 
   // Calculate position for rated count
   // The circle starts at top (12 o'clock) and goes clockwise
