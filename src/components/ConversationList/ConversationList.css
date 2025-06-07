@@ -289,10 +289,20 @@
   margin-top: 6px;
 }
 
+.stats-info > span {
+  background: none !important;
+  border: none !important;
+  padding: 0 !important;
+  color: var(--text-secondary) !important;
+}
+
 .stat-item {
   display: flex;
   align-items: center;
   white-space: nowrap;
+  background: none;
+  padding: 0;
+  color: var(--text-secondary) !important;
 }
 
 .stat-item:not(:last-child)::after {
@@ -310,11 +320,11 @@
 }
 
 .confidence-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  width: 8px !important;
+  height: 8px !important;
+  border-radius: 50% !important;
   flex-shrink: 0;
-  display: inline-block;
+  display: inline-block !important;
   margin-right: 6px;
   vertical-align: middle;
 }
