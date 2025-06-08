@@ -1,13 +1,14 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { format } from 'date-fns';
-import { User, Bot, ThumbsUp, ThumbsDown, Download, FileJson, FileText, Code, Eye } from 'lucide-react';
+import { User, Bot, ThumbsUp, ThumbsDown, Download, FileJson, FileText, File, Code, Eye } from 'lucide-react';
 import { Conversation, QAPair } from '../../types/conversation';
 import { Message } from '../../types/feedback';
 import { NoLogoHeader } from '../NoLogoHeader/NoLogoHeader';
 import { 
   downloadAsJSON, 
-  downloadAsMarkdown, 
+  downloadAsMarkdown,
+  downloadAsDocx,
   formatConversationForDownload, 
   formatQAPairForDownload 
 } from '../../utils/downloadUtils';
@@ -63,18 +64,21 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     };
   };
 
-  const handleDownloadConversation = (format: 'json' | 'markdown') => {
+  const handleDownloadConversation = async (format: 'json' | 'markdown' | 'docx') => {
     try {
       console.log('Download conversation triggered:', format);
-      const { jsonFilename, jsonData, markdownFilename, markdownContent } = 
-        formatConversationForDownload(conversation, qaPairs);
+      const { jsonFilename, jsonData, markdownFilename, markdownContent, docxFilename, docxBlob } = 
+        await formatConversationForDownload(conversation, qaPairs);
       
       if (format === 'json') {
         console.log('Downloading JSON:', jsonFilename);
         downloadAsJSON(jsonData, jsonFilename);
-      } else {
+      } else if (format === 'markdown') {
         console.log('Downloading Markdown:', markdownFilename);
         downloadAsMarkdown(markdownContent, markdownFilename);
+      } else if (format === 'docx') {
+        console.log('Downloading DOCX:', docxFilename);
+        await downloadAsDocx(docxBlob, docxFilename);
       }
       setShowDownloadMenu(false);
     } catch (error) {
@@ -82,7 +86,7 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     }
   };
 
-  const handleDownloadQAPair = (questionMsg: Message, answerMsg: Message, format: 'json' | 'markdown') => {
+  const handleDownloadQAPair = async (questionMsg: Message, answerMsg: Message, format: 'json' | 'markdown' | 'docx') => {
     const ratingInfo = getRatingInfo(answerMsg);
     const qaPair = {
       question: questionMsg,
@@ -91,13 +95,15 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
       comment: ratingInfo?.comment
     };
     
-    const { jsonFilename, jsonData, markdownFilename, markdownContent } = 
-      formatQAPairForDownload(qaPair, conversation.id);
+    const { jsonFilename, jsonData, markdownFilename, markdownContent, docxFilename, docxBlob } = 
+      await formatQAPairForDownload(qaPair, conversation.id);
     
     if (format === 'json') {
       downloadAsJSON(jsonData, jsonFilename);
-    } else {
+    } else if (format === 'markdown') {
       downloadAsMarkdown(markdownContent, markdownFilename);
+    } else if (format === 'docx') {
+      await downloadAsDocx(docxBlob, docxFilename);
     }
     setQaDownloadMenus({ ...qaDownloadMenus, [answerMsg.id]: false });
   };
@@ -163,7 +169,7 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
               }}
             >
               <FileJson size={16} />
-              <span>Download as JSON</span>
+              <span>Chat as JSON</span>
             </button>
             <button 
               type="button"
@@ -175,7 +181,19 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
               }}
             >
               <FileText size={16} />
-              <span>Download as Markdown</span>
+              <span>Chat as Markdown</span>
+            </button>
+            <button 
+              type="button"
+              className="download-menu-item"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('DOCX button clicked');
+                handleDownloadConversation('docx');
+              }}
+            >
+              <File size={16} />
+              <span>Chat as Word</span>
             </button>
           </div>
         )}
@@ -246,6 +264,13 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
                         >
                           <FileText size={14} />
                           <span>Q&A as Markdown</span>
+                        </button>
+                        <button 
+                          className="download-menu-item"
+                          onClick={() => handleDownloadQAPair(conversation.messages[index - 1], message, 'docx')}
+                        >
+                          <File size={14} />
+                          <span>Q&A as Word</span>
                         </button>
                       </div>
                     )}
