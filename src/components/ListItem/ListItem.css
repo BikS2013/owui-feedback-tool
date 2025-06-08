@@ -1,0 +1,103 @@
+/* Base list item styles */
+.list-item {
+  padding: 16px;
+  margin-bottom: 8px;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: relative;
+  overflow: hidden;
+  outline: none;
+}
+
+/* Hover state */
+.list-item:hover {
+  background: var(--bg-tertiary);
+  border-color: var(--accent-primary);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow);
+}
+
+/* Selected state */
+.list-item.selected {
+  background: var(--bg-tertiary);
+  border-color: var(--accent-primary);
+  border-width: 2px;
+  box-shadow: 0 4px 12px rgba(91, 139, 201, 0.3);
+  position: relative;
+}
+
+/* Selected indicator bar */
+.list-item.selected::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-blue));
+}
+
+/* Dark theme selected state */
+[data-theme="dark"] .list-item.selected {
+  background: rgba(91, 139, 201, 0.1);
+  border-color: var(--accent-primary);
+}
+
+/* Light theme selected state */
+[data-theme="light"] .list-item.selected {
+  background: rgba(52, 80, 133, 0.05);
+  border-color: var(--accent-primary);
+}
+
+/* Header section */
+.list-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+/* Content section */
+.list-item-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* Focus state for accessibility */
+.list-item:focus {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: 2px;
+}
+
+/* Keyboard navigation highlight */
+.list-item:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Animation for selection */
+@keyframes selectPulse {
+  0% {
+    box-shadow: 0 4px 12px rgba(91, 139, 201, 0.3);
+  }
+  50% {
+    box-shadow: 0 4px 16px rgba(91, 139, 201, 0.5);
+  }
+  100% {
+    box-shadow: 0 4px 12px rgba(91, 139, 201, 0.3);
+  }
+}
+
+.list-item.selected {
+  animation: selectPulse 0.3s ease-out;
+}
+
+/* Ensure text remains visible in selected state */
+.list-item.selected .list-item-header,
+.list-item.selected .list-item-content {
+  color: var(--text-primary);
+}

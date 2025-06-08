@@ -1,18 +1,13 @@
-.conversation-list {
-  width: 100%;
-  height: 100%;
-  background-color: transparent;
-  display: flex;
-  flex-direction: column;
-}
+/* ConversationList specific styles that enhance the generic List component */
 
-.conversation-list-header {
+/* Override List header styles for conversation list */
+.conversation-list .list-header {
   border-bottom: 1px solid var(--border-color);
   background: #345085;
   backdrop-filter: blur(10px);
   overflow: visible;
   position: relative;
-  min-height: 105px; /* Standardized header height */
+  min-height: 105px;
   box-sizing: border-box;
 }
 
@@ -132,109 +127,9 @@
   color: #FFFFFF;
 }
 
-.search-container {
-  padding: 16px;
-  position: relative;
-}
+/* Search and conversations container now handled by List component */
 
-.search-icon {
-  position: absolute;
-  left: 28px;
-  top: 50%;
-  transform: translateY(-50%);
-  color: var(--text-tertiary);
-}
-
-.search-input {
-  width: 100%;
-  padding: 10px 12px 10px 36px;
-  background-color: var(--bg-tertiary);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  color: var(--text-primary);
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.2s;
-}
-
-.search-input:focus {
-  border-color: var(--accent-primary);
-  box-shadow: 0 0 0 2px rgba(91, 139, 201, 0.2);
-}
-
-.search-input::placeholder {
-  color: var(--text-tertiary);
-}
-
-.conversations {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px;
-}
-
-.conversation-item {
-  padding: 16px;
-  margin-bottom: 8px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  position: relative;
-  overflow: hidden;
-}
-
-.conversation-item:hover {
-  background: var(--bg-tertiary);
-  border-color: var(--accent-primary);
-  transform: translateY(-2px);
-  box-shadow: var(--shadow);
-}
-
-.conversation-item.selected {
-  background: var(--bg-tertiary);
-  border-color: var(--accent-primary);
-  border-width: 2px;
-  box-shadow: 0 4px 12px rgba(91, 139, 201, 0.3);
-  position: relative;
-}
-
-.conversation-item.selected::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  top: 0;
-  bottom: 0;
-  width: 4px;
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-blue));
-}
-
-/* Dark theme selected state */
-[data-theme="dark"] .conversation-item.selected {
-  background: rgba(91, 139, 201, 0.1);
-  border-color: var(--accent-primary);
-}
-
-/* Light theme selected state */
-[data-theme="light"] .conversation-item.selected {
-  background: rgba(52, 80, 133, 0.05);
-  border-color: var(--accent-primary);
-}
-
-.conversation-item.selected .conversation-id,
-.conversation-item.selected .conversation-meta,
-.conversation-item.selected .user-info,
-.conversation-item.selected .confidence-info {
-  color: var(--text-primary);
-}
-
-.conversation-item-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-}
+/* Conversation-specific styles that work with ListItem component */
 
 .conversation-id {
   font-size: 12px;
@@ -348,11 +243,11 @@
 }
 
 /* Ensure stats and other text remain visible in selected state */
-.conversation-item.selected .stat-item {
+.list-item.selected .stat-item {
   color: var(--text-primary);
 }
 
-.conversation-item.selected .models-info {
+.list-item.selected .models-info {
   color: var(--text-secondary);
 }
 

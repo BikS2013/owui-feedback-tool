@@ -1,0 +1,168 @@
+/* List container styles */
+.list-container {
+  width: 100%;
+  height: 100%;
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+}
+
+/* List header section */
+.list-header {
+  border-bottom: 1px solid var(--border-color);
+  background: #345085;
+  backdrop-filter: blur(10px);
+  overflow: visible;
+  position: relative;
+  min-height: 105px;
+  box-sizing: border-box;
+}
+
+/* Search container */
+.list-search-container {
+  padding: 16px;
+  position: relative;
+}
+
+.list-search-icon {
+  position: absolute;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-tertiary);
+}
+
+.list-search-input {
+  width: 100%;
+  padding: 10px 12px 10px 36px;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  color: var(--text-primary);
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.list-search-input:focus {
+  border-color: var(--accent-primary);
+  box-shadow: 0 0 0 2px rgba(91, 139, 201, 0.2);
+}
+
+.list-search-input::placeholder {
+  color: var(--text-tertiary);
+}
+
+/* List content area */
+.list-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+}
+
+/* List item wrapper for spacing */
+.list-item-wrapper {
+  margin-bottom: 8px;
+}
+
+.list-item-wrapper:last-child {
+  margin-bottom: 0;
+}
+
+/* Empty state styling */
+.list-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 48px 24px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+
+.list-empty-state p {
+  margin: 0 0 8px 0;
+  font-size: 16px;
+}
+
+/* Scrollbar styling */
+.list-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.list-content::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+  border-radius: 4px;
+}
+
+.list-content::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.list-content::-webkit-scrollbar-thumb:hover {
+  background: var(--text-tertiary);
+}
+
+/* Animation for list items appearing */
+@keyframes listItemFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.list-item-wrapper {
+  animation: listItemFadeIn 0.3s ease-out;
+  animation-fill-mode: backwards;
+}
+
+/* Stagger animation delay for items */
+.list-item-wrapper:nth-child(1) { animation-delay: 0.05s; }
+.list-item-wrapper:nth-child(2) { animation-delay: 0.1s; }
+.list-item-wrapper:nth-child(3) { animation-delay: 0.15s; }
+.list-item-wrapper:nth-child(4) { animation-delay: 0.2s; }
+.list-item-wrapper:nth-child(5) { animation-delay: 0.25s; }
+.list-item-wrapper:nth-child(6) { animation-delay: 0.3s; }
+.list-item-wrapper:nth-child(7) { animation-delay: 0.35s; }
+.list-item-wrapper:nth-child(8) { animation-delay: 0.4s; }
+.list-item-wrapper:nth-child(n+9) { animation-delay: 0.45s; }
+
+/* Responsive behavior */
+@media (max-width: 400px) {
+  .list-search-container {
+    padding: 12px;
+  }
+  
+  .list-content {
+    padding: 6px;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .list-search-input {
+    border-width: 2px;
+  }
+  
+  .list-header {
+    border-bottom-width: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .list-item-wrapper {
+    animation: none;
+  }
+  
+  .list-search-input,
+  .list-content::-webkit-scrollbar-thumb {
+    transition: none;
+  }
+}
