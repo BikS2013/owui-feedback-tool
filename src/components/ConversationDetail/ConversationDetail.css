@@ -17,23 +17,10 @@
   font-size: 16px;
 }
 
+/* NoLogoHeader handles the header styling now */
 .conversation-header {
-  border-bottom: 1px solid var(--border-color);
-  background: #345085;
-  backdrop-filter: blur(10px);
   position: relative;
   z-index: 100;
-  min-height: 105px; /* Standardized header height */
-  box-sizing: border-box;
-}
-
-.conversation-header-top {
-  padding: 12px 24px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  min-height: 48px;
-  box-sizing: border-box;
 }
 
 .conversation-header h2 {
@@ -43,33 +30,49 @@
   color: #FFFFFF;
 }
 
-.conversation-stats {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.8) !important;
-  padding: 5px 24px 12px 24px;
-}
-
-.conversation-detail .stats-info {
+.stats-info {
   display: flex;
   gap: 24px;
-}
-
-.conversation-detail .stats-info span {
+  font-size: 14px;
   color: rgba(255, 255, 255, 0.8) !important;
 }
 
-/* Extra specificity to override any global styles */
-.conversation-header .stats-info span {
+.stats-info span {
   color: rgba(255, 255, 255, 0.8) !important;
 }
 
+/* Force stats-info colors in all themes */
+.conversation-header .stats-info,
+.conversation-header .stats-info * {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Header actions styling */
 .header-actions {
   display: flex;
   gap: 8px;
   align-items: center;
+}
+
+/* Override button styles to match previous appearance */
+.conversation-header .view-toggle-button,
+.conversation-header .download-button {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.conversation-header .view-toggle-button:hover,
+.conversation-header .download-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
 }
 
 .messages-container {
@@ -289,31 +292,7 @@
   color: var(--text-primary);
 }
 
-/* Header actions container */
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
 
-/* View toggle button */
-.view-toggle-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  background: none;
-  border: none;
-  border-radius: 4px;
-  color: rgba(255, 255, 255, 0.8);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.view-toggle-button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #FFFFFF;
-}
 
 /* Raw JSON container */
 .raw-json-container {
@@ -350,25 +329,7 @@
   z-index: 1100;
 }
 
-.download-button {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 8px;
-  background: none;
-  border: none;
-  border-radius: 4px;
-  color: rgba(255, 255, 255, 0.8);
-  cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-  pointer-events: auto;
-}
-
-.download-button:hover {
-  background-color: rgba(255, 255, 255, 0.1);
-  color: #FFFFFF;
-}
+/* Download button styling handled by header button styles above */
 
 .download-menu {
   position: absolute;

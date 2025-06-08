@@ -2,6 +2,28 @@
 
 This document describes all reusable components in the OWUI Feedback project, their purposes, use cases, parameters, and limitations.
 
+## Component Overview
+
+The OWUI Feedback project features a modular component architecture with three main categories:
+
+### Generic Components
+- **LogoHeader**: Two-line header with logo and configurable controls
+- **NoLogoHeader**: Two-line header without logo, title on first line
+- **List**: Flexible container with search and item rendering
+- **ListItem**: Consistent styling for selectable list items
+
+### Feature Components
+- **ConversationList**: Main navigation using List, ListItem, and LogoHeader
+- **ConversationDetail**: Full conversation display with export options
+- **AnalyticsDashboard**: Metrics and charts visualization
+
+### Utility Components
+- **ResizablePanel**: Makes content horizontally resizable
+- **ThemeToggle**: Light/dark theme switcher
+- **CircularProgress**: Circular percentage indicator
+- **FilterPanel**: Comprehensive filtering overlay
+- **DataControls**: File upload and data management
+
 ## ResizablePanel
 
 **Location**: `src/components/ResizablePanel/ResizablePanel.tsx`
@@ -223,16 +245,17 @@ interface ConversationListProps {
 
 ### Architecture
 The component is now composed of:
-1. **List component**: Provides the container, scrolling, and search UI
-2. **ListItem component**: Handles individual conversation item styling
-3. **Custom header**: Contains logo, view toggles, and controls
+1. **LogoHeader component**: Provides the two-line header with logo and controls
+2. **List component**: Provides the container, scrolling, and search UI
+3. **ListItem component**: Handles individual conversation item styling
 4. **Render function**: Maps conversation data to ListItem components
 
 ### Integration Points
+- Uses LogoHeader for the application header section
 - Leverages List component's search functionality
 - Delegates item rendering to ListItem component
 - Maintains FilterPanel as a separate overlay
-- Integrates DataControls in the header
+- Integrates DataControls and ThemeToggle within LogoHeader
 
 ### Limitations
 - No virtualization for large lists (inherited from List component)
@@ -379,6 +402,200 @@ interface CircularProgressProps {
 - Fixed color scheme tied to CSS variables
 - No animation on value changes
 - Labels may overlap with very small percentages
+
+---
+
+## LogoHeader
+
+**Location**: `src/components/LogoHeader/LogoHeader.tsx`
+
+### Purpose
+A flexible two-line header component with logo placement, configurable controls, and consistent styling. Provides a standardized layout for application headers with branding and navigation controls.
+
+### Use Cases
+- Application headers with logo and navigation
+- Dashboard headers with controls and status information
+- Section headers with branding and actions
+- Any two-line header layout with left logo and right controls
+
+### Props
+```typescript
+interface LogoHeaderProps {
+  // Logo configuration
+  logoSrc?: string;              // Logo image source
+  logoAlt?: string;              // Logo alt text (default: 'Logo')
+  logoHeight?: number;           // Logo height in pixels (default: 60)
+  onLogoClick?: () => void;      // Optional logo click handler
+  
+  // Title configuration (appears below logo)
+  title?: ReactNode;             // Title content (typically h1-h6)
+  
+  // Subtitle configuration (middle of second line)
+  subtitle?: ReactNode;          // Subtitle content
+  
+  // Controls configuration
+  topRightControls?: ReactNode;  // First line right-side controls
+  bottomRightControls?: ReactNode; // Second line right-side controls
+  
+  // Style customization
+  backgroundColor?: string;      // Header background (default: '#345085')
+  className?: string;            // Additional CSS classes
+  minHeight?: number;            // Minimum height in pixels (default: 105)
+}
+```
+
+### Example Usage
+```tsx
+<LogoHeader
+  logoSrc="/company-logo.svg"
+  logoAlt="Company Name"
+  logoHeight={50}
+  onLogoClick={() => navigate('/')}
+  title={<h2>Dashboard</h2>}
+  subtitle={<span>5 active users, 12 sessions today</span>}
+  topRightControls={
+    <>
+      <ViewToggle mode={viewMode} onChange={setViewMode} />
+      <Button icon={<Settings />} onClick={openSettings} />
+    </>
+  }
+  bottomRightControls={<ThemeToggle />}
+  backgroundColor="#2a4080"
+/>
+```
+
+### Features
+- **Two-Line Layout**: Structured header with distinct top and bottom sections
+- **Logo Positioning**: Absolute positioning for consistent logo placement
+- **Flexible Controls**: Separate slots for top and bottom right controls
+- **Button Styling**: Consistent hover states and group styling for controls
+- **Responsive Design**: Adapts to smaller screens gracefully
+- **Accessibility**: Keyboard navigation support for interactive logo
+- **Theme Support**: Respects light/dark theme settings
+
+### Styling Behaviors
+- **Logo**: Positioned absolutely with optional click behavior and hover state
+- **Controls**: Consistent button styling with hover effects
+- **Button Groups**: Automatic grouping with rounded corners and backgrounds
+- **Typography**: Standardized title and subtitle styling
+- **Responsive**: Hides subtitle on very small screens
+
+### Combination with Other Components
+- Used by ConversationList for the main application header
+- Can contain ThemeToggle, DataControls, or any control components
+- Works well with view mode toggles and action buttons
+- Integrates seamlessly with List component for complete layouts
+
+### Limitations
+- Fixed two-line structure (not suitable for single-line headers)
+- Logo always positioned on the left
+- No built-in navigation menu support
+- Background color doesn't support gradients or patterns
+- Title and subtitle positioning is fixed
+
+---
+
+## NoLogoHeader
+
+**Location**: `src/components/NoLogoHeader/NoLogoHeader.tsx`
+
+### Purpose
+A two-line header component following the layout structure of LogoHeader but without logo support. Both title and subtitle are left-aligned, with controls remaining on the right side of each line.
+
+### Use Cases
+- Section headers without branding requirements
+- Sub-page headers where logo is not needed
+- Dashboard panels with title and controls
+- Content sections with hierarchical headings
+
+### Props
+```typescript
+interface NoLogoHeaderProps {
+  // Title configuration (left side of first line)
+  title?: ReactNode;             // Title content (typically h1-h6)
+  
+  // Subtitle configuration (left side of second line)
+  subtitle?: ReactNode;          // Subtitle content
+  
+  // Controls configuration
+  topRightControls?: ReactNode;  // First line right-side controls
+  bottomRightControls?: ReactNode; // Second line right-side controls
+  
+  // Style customization
+  backgroundColor?: string;      // Header background (default: '#345085')
+  className?: string;            // Additional CSS classes
+  minHeight?: number;            // Minimum height in pixels (default: 105)
+  heightAdjustment?: number;     // Pixel adjustment for LogoHeader alignment (default: 0)
+}
+```
+
+### Example Usage
+```tsx
+<NoLogoHeader
+  title={<h3>Analytics Dashboard</h3>}
+  subtitle={<span>Last updated: 5 minutes ago</span>}
+  topRightControls={
+    <>
+      <DateRangePicker onChange={setDateRange} />
+      <ExportButton onClick={handleExport} />
+    </>
+  }
+  bottomRightControls={<RefreshButton onClick={refresh} />}
+  backgroundColor="#2a4080"
+/>
+
+// Example with height adjustment to align with adjacent LogoHeader
+<NoLogoHeader
+  title={<h2>Section Title</h2>}
+  subtitle={<span>Section details</span>}
+  heightAdjustment={2}  // Add 2px to match LogoHeader height
+/>
+```
+
+### Features
+- **Two-Line Layout**: Similar structure to LogoHeader minus the logo
+- **Left-Aligned Text**: Both title and subtitle are left-aligned
+- **Flexible Controls**: Separate slots for top and bottom right controls
+- **Button Styling**: Consistent hover states and group styling
+- **Responsive Design**: Adapts to smaller screens gracefully
+- **Theme Support**: Respects light/dark theme settings
+- **Consistent Spacing**: Maintains same padding and heights as LogoHeader
+- **Height Adjustment**: Optional parameter to fine-tune alignment with LogoHeader
+
+### Styling Behaviors
+- **Title**: Left-aligned on first line with standard typography
+- **Subtitle**: Left-aligned on second line with ellipsis for overflow
+- **Controls**: Same button styling and grouping as LogoHeader
+- **Responsive**: Hides subtitle and reduces font sizes on small screens
+
+### Layout Structure
+```
+┌─────────────────────────────────────────┐
+│ Title                    [Controls]     │ ← First line
+│ Subtitle                 [Controls]     │ ← Second line
+└─────────────────────────────────────────┘
+```
+
+### Differences from LogoHeader
+- No logo support or logo-related props
+- Title on left of first line (LogoHeader: below logo on second line)
+- Subtitle on left of second line (LogoHeader: centered on second line)
+- Simpler DOM structure without absolute positioning
+- Both text elements left-aligned for hierarchical clarity
+- May need heightAdjustment prop to align with LogoHeader (typically +2px)
+
+### Combination with Other Components
+- Can be used interchangeably with LogoHeader based on needs
+- Works with same control components (ThemeToggle, DataControls, etc.)
+- Integrates seamlessly with List component for complete layouts
+- Suitable for nested sections within LogoHeader layouts
+
+### Limitations
+- No logo support (use LogoHeader if logo is needed)
+- Fixed two-line structure
+- Title always on the left of first line
+- Subtitle always on the left of second line
+- Background color doesn't support gradients or patterns
 
 ---
 
@@ -560,17 +777,40 @@ All components integrate with two main context providers:
 
 ### Component Hierarchy
 The project now follows a clear component hierarchy:
-1. **Generic Components**: List, ListItem - fully reusable across any context
+1. **Generic Components**: List, ListItem, LogoHeader, NoLogoHeader - fully reusable across any context
 2. **Feature Components**: ConversationList, ConversationDetail - domain-specific
 3. **UI Components**: ThemeToggle, CircularProgress, ResizablePanel - utility components
 4. **Control Components**: FilterPanel, DataControls - user interaction components
 
 ### Reusability Guidelines
 - Components are designed to work together but can be used independently
-- Generic components (List, ListItem) use render props for maximum flexibility
+- Generic components use flexible patterns:
+  - List uses render props for item rendering
+  - ListItem uses children and header slots
+  - LogoHeader and NoLogoHeader use ReactNode props for all content areas
 - Props interfaces are well-defined for easy integration
 - Context dependencies should be wrapped in providers
 - CSS files should be imported when using components
+- Header components (LogoHeader/NoLogoHeader) can be used interchangeably
+
+### Recent Architecture Improvements
+
+The project has undergone significant refactoring to improve reusability:
+
+1. **Extracted Generic Components**: 
+   - ListItem was extracted from ConversationList for reusable item styling
+   - List was extracted to provide consistent container behavior
+   - LogoHeader was extracted for standardized two-line headers
+
+2. **Component Composition**: 
+   - ConversationList now composes LogoHeader + List + ListItem
+   - Clear separation between container (List) and items (ListItem)
+   - Flexible content areas using ReactNode props
+
+3. **Consistent Patterns**:
+   - Render props for flexible item rendering in List
+   - Slot-based content in ListItem and LogoHeader
+   - Theme-aware styling across all components
 
 ### Enhancement Opportunities
 1. Add prop validation with PropTypes or stricter TypeScript
@@ -581,3 +821,5 @@ The project now follows a clear component hierarchy:
 6. Implement error boundaries for robustness
 7. Add virtualization to List component for better performance with large datasets
 8. Consider extracting more generic components from domain-specific ones
+9. Add animation utilities for consistent transitions
+10. Create a form component library for consistent input styling

@@ -1,0 +1,204 @@
+/* LogoHeader base styles */
+.logo-header {
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
+  overflow: visible;
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Top line - controls right-aligned */
+.logo-header-top {
+  padding: 12px 24px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  height: auto;
+  box-sizing: border-box;
+  min-height: 48px;
+}
+
+/* Logo positioning */
+.logo-header-logo {
+  width: auto;
+  flex-shrink: 0;
+  margin: 0;
+  padding: 0;
+  display: block;
+  position: absolute;
+  top: 3px;
+  left: 24px;
+  z-index: 10;
+  transition: opacity 0.2s;
+}
+
+.logo-header-logo[role="button"] {
+  cursor: pointer;
+}
+
+.logo-header-logo[role="button"]:hover {
+  opacity: 0.9;
+}
+
+.logo-header-logo[role="button"]:focus {
+  outline: 2px solid rgba(255, 255, 255, 0.5);
+  outline-offset: 2px;
+}
+
+/* Top right controls container */
+.logo-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Control buttons styling */
+.logo-header-controls button,
+.logo-header-bottom-controls button {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.logo-header-controls button:hover,
+.logo-header-bottom-controls button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+}
+
+/* Button groups */
+.logo-header-controls > div,
+.logo-header-bottom-controls > div {
+  display: flex;
+  gap: 0;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 4px;
+  padding: 2px;
+}
+
+.logo-header-controls > div > button,
+.logo-header-bottom-controls > div > button {
+  padding: 6px 10px;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+
+.logo-header-controls > div > button.active,
+.logo-header-bottom-controls > div > button.active {
+  background: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+}
+
+/* Bottom line - title left, subtitle middle, controls right */
+.logo-header-bottom {
+  padding: 5px 24px 12px 24px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Title styling */
+.logo-header-title {
+  flex-shrink: 0;
+}
+
+.logo-header-title h1,
+.logo-header-title h2,
+.logo-header-title h3,
+.logo-header-title h4,
+.logo-header-title h5,
+.logo-header-title h6 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+/* Subtitle styling */
+.logo-header-subtitle {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  margin-left: auto;
+  margin-right: 12px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* Bottom controls */
+.logo-header-bottom-controls {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Responsive behavior */
+@media (max-width: 600px) {
+  .logo-header-top,
+  .logo-header-bottom {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  .logo-header-logo {
+    left: 16px;
+  }
+  
+  .logo-header-subtitle {
+    font-size: 12px;
+  }
+  
+  .logo-header-bottom {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 400px) {
+  .logo-header-subtitle {
+    display: none;
+  }
+  
+  .logo-header-bottom {
+    padding: 5px 16px 12px 16px;
+  }
+}
+
+/* Theme variations */
+[data-theme="light"] .logo-header {
+  background-color: #345085;
+  color: #FFFFFF;
+}
+
+[data-theme="light"] .logo-header-controls button,
+[data-theme="light"] .logo-header-bottom-controls button {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="light"] .logo-header-controls button:hover,
+[data-theme="light"] .logo-header-bottom-controls button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+}
+
+/* High contrast support */
+@media (prefers-contrast: high) {
+  .logo-header {
+    border-bottom-width: 2px;
+  }
+  
+  .logo-header-logo[role="button"]:focus {
+    outline-width: 3px;
+  }
+}

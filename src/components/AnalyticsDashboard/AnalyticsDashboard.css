@@ -6,22 +6,10 @@
   overflow: hidden;
 }
 
+/* NoLogoHeader handles the header styling now */
 .analytics-header {
-  border-bottom: 1px solid var(--border-color);
-  background: #345085;
-  backdrop-filter: blur(10px);
   position: relative;
-  min-height: 105px; /* Standardized header height */
-  box-sizing: border-box;
-}
-
-.analytics-header-top {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 12px 24px;
-  min-height: 48px;
-  box-sizing: border-box;
+  z-index: 100;
 }
 
 .analytics-header h2 {
@@ -31,26 +19,14 @@
   color: #FFFFFF;
 }
 
-.analytics-stats {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.8) !important;
-  padding: 5px 24px 12px 24px;
-}
-
-.analytics-dashboard .stats-info {
+.stats-info {
   display: flex;
   gap: 24px;
-}
-
-.analytics-dashboard .stats-info span {
+  font-size: 14px;
   color: rgba(255, 255, 255, 0.8) !important;
 }
 
-/* Extra specificity to override any global styles */
-.analytics-header .stats-info span {
+.stats-info span {
   color: rgba(255, 255, 255, 0.8) !important;
 }
 
@@ -66,7 +42,7 @@
   z-index: 1100;
 }
 
-.export-button {
+.analytics-header .export-button {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -81,7 +57,7 @@
   pointer-events: auto;
 }
 
-.export-button:hover {
+.analytics-header .export-button:hover {
   background-color: rgba(255, 255, 255, 0.1);
   color: #FFFFFF;
 }
@@ -124,8 +100,9 @@
 }
 
 /* Light theme adjustments */
-[data-theme="light"] .export-button:hover {
-  background-color: var(--bg-tertiary);
+[data-theme="light"] .analytics-header .export-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
 }
 
 [data-theme="light"] .export-menu {

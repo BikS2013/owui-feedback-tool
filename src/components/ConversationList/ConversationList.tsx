@@ -7,6 +7,7 @@ import { DataControls } from '../DataControls/DataControls';
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
 import { ListItem } from '../ListItem/ListItem';
 import { List } from '../List/List';
+import { LogoHeader } from '../LogoHeader/LogoHeader';
 import { useFeedbackStore } from '../../store/feedbackStore';
 import './ConversationList.css';
 
@@ -44,39 +45,40 @@ export function ConversationList({
     return 'var(--accent-red)';
   };
 
-  const conversationHeader = (
+  const topRightControls = (
     <>
-      <div className="conversation-list-header-top">
-        <img src="/nbg-tech-hub-logo.svg" alt="NBG Technology Hub" className="nbg-logo" />
-        <div className="header-controls">
-          <div className="view-toggle">
-            <button 
-              className={`view-toggle-btn ${viewMode === 'details' ? 'active' : ''}`}
-              onClick={() => setViewMode('details')}
-              title="Conversation Details"
-            >
-              <MessageSquare size={16} />
-            </button>
-            <button 
-              className={`view-toggle-btn ${viewMode === 'analytics' ? 'active' : ''}`}
-              onClick={() => setViewMode('analytics')}
-              title="Analytics Dashboard"
-            >
-              <BarChart2 size={16} />
-            </button>
-          </div>
-          <DataControls />
-          <button className="filter-btn" onClick={() => setIsFilterPanelOpen(true)}>
-            <Filter size={16} />
-          </button>
-        </div>
+      <div className="view-toggle">
+        <button 
+          className={`view-toggle-btn ${viewMode === 'details' ? 'active' : ''}`}
+          onClick={() => setViewMode('details')}
+          title="Conversation Details"
+        >
+          <MessageSquare size={16} />
+        </button>
+        <button 
+          className={`view-toggle-btn ${viewMode === 'analytics' ? 'active' : ''}`}
+          onClick={() => setViewMode('analytics')}
+          title="Analytics Dashboard"
+        >
+          <BarChart2 size={16} />
+        </button>
       </div>
-      <div className="conversation-counts">
-        <h2>Conversations</h2>
-        <span className="counts-text">{conversations.length} conversations, {totalQAPairs} Q&As</span>
-        <ThemeToggle />
-      </div>
+      <DataControls />
+      <button className="filter-btn" onClick={() => setIsFilterPanelOpen(true)}>
+        <Filter size={16} />
+      </button>
     </>
+  );
+
+  const conversationHeader = (
+    <LogoHeader
+      logoSrc="/nbg-tech-hub-logo.svg"
+      logoAlt="NBG Technology Hub"
+      title={<h2>Conversations</h2>}
+      subtitle={<span className="counts-text">{conversations.length} conversations, {totalQAPairs} Q&As</span>}
+      topRightControls={topRightControls}
+      bottomRightControls={<ThemeToggle />}
+    />
   );
 
   const emptyState = (

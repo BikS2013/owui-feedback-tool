@@ -1,0 +1,260 @@
+/* NoLogoHeader base styles - follows LogoHeader layout without logo */
+.no-logo-header {
+  border-bottom: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
+  overflow: visible;
+  position: relative;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  /* Force white text in header regardless of theme */
+  --text-primary: #FFFFFF;
+  --text-secondary: rgba(255, 255, 255, 0.8);
+  --text-tertiary: rgba(255, 255, 255, 0.6);
+}
+
+/* Top line - title left, controls right */
+.no-logo-header-top {
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  height: auto;
+  box-sizing: border-box;
+  min-height: 48px;
+}
+
+/* Title styling - now on the left of first line */
+.no-logo-header-title {
+  flex-shrink: 0;
+}
+
+.no-logo-header-title h1,
+.no-logo-header-title h2,
+.no-logo-header-title h3,
+.no-logo-header-title h4,
+.no-logo-header-title h5,
+.no-logo-header-title h6 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #FFFFFF;
+  margin: 0;
+}
+
+/* Top right controls container */
+.no-logo-header-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-left: auto;
+}
+
+/* Control buttons styling */
+.no-logo-header-controls button,
+.no-logo-header-bottom-controls button {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.no-logo-header-controls button:hover,
+.no-logo-header-bottom-controls button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+}
+
+/* Button groups */
+.no-logo-header-controls > div,
+.no-logo-header-bottom-controls > div {
+  display: flex;
+  gap: 8px;
+  border-radius: 4px;
+}
+
+.no-logo-header-controls > div > button,
+.no-logo-header-bottom-controls > div > button {
+  padding: 6px 10px;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+
+.no-logo-header-controls > div > button.active,
+.no-logo-header-bottom-controls > div > button.active {
+  color: #FFFFFF;
+}
+
+/* Bottom line - subtitle left, controls right */
+.no-logo-header-bottom {
+  padding: 5px 24px 12px 24px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+/* Subtitle styling - now left-aligned */
+.no-logo-header-subtitle {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  flex: 1;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.8);
+  text-align: left;
+}
+
+/* Ensure all child elements inherit the correct color */
+.no-logo-header-subtitle * {
+  color: inherit !important;
+}
+
+/* Force all text elements to be white */
+.no-logo-header-subtitle,
+.no-logo-header-subtitle span,
+.no-logo-header-subtitle div,
+.no-logo-header-subtitle p,
+.no-logo-header-subtitle h1,
+.no-logo-header-subtitle h2,
+.no-logo-header-subtitle h3,
+.no-logo-header-subtitle h4,
+.no-logo-header-subtitle h5,
+.no-logo-header-subtitle h6 {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Override any var(--text-*) usage */
+.no-logo-header *,
+.no-logo-header *::before,
+.no-logo-header *::after {
+  --text-primary: #FFFFFF !important;
+  --text-secondary: rgba(255, 255, 255, 0.8) !important;
+  --text-tertiary: rgba(255, 255, 255, 0.6) !important;
+}
+
+/* Remove backgrounds from form elements */
+.no-logo-header select,
+.no-logo-header input,
+.no-logo-header label {
+  background: transparent !important;
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.no-logo-header select {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.no-logo-header select:hover {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.no-logo-header select:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.2);
+}
+
+/* Style select options */
+.no-logo-header select option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+/* Bottom controls */
+.no-logo-header-bottom-controls {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Responsive behavior */
+@media (max-width: 600px) {
+  .no-logo-header-top,
+  .no-logo-header-bottom {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  
+  .no-logo-header-subtitle {
+    font-size: 12px;
+  }
+  
+  .no-logo-header-bottom {
+    gap: 8px;
+  }
+}
+
+@media (max-width: 400px) {
+  .no-logo-header-subtitle {
+    display: none;
+  }
+  
+  .no-logo-header-bottom {
+    padding: 5px 16px 12px 16px;
+  }
+  
+  .no-logo-header-title h1,
+  .no-logo-header-title h2,
+  .no-logo-header-title h3,
+  .no-logo-header-title h4,
+  .no-logo-header-title h5,
+  .no-logo-header-title h6 {
+    font-size: 16px;
+  }
+}
+
+/* Theme variations */
+[data-theme="light"] .no-logo-header {
+  background-color: #345085;
+  color: #FFFFFF !important;
+}
+
+[data-theme="light"] .no-logo-header-title h1,
+[data-theme="light"] .no-logo-header-title h2,
+[data-theme="light"] .no-logo-header-title h3,
+[data-theme="light"] .no-logo-header-title h4,
+[data-theme="light"] .no-logo-header-title h5,
+[data-theme="light"] .no-logo-header-title h6 {
+  color: #FFFFFF;
+}
+
+[data-theme="light"] .no-logo-header-subtitle,
+[data-theme="light"] .no-logo-header-subtitle *,
+[data-theme="light"] .no-logo-header-subtitle span,
+[data-theme="light"] .no-logo-header-subtitle div {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+/* Absolutely force white text in light theme */
+[data-theme="light"] .no-logo-header * {
+  --text-primary: #FFFFFF !important;
+  --text-secondary: rgba(255, 255, 255, 0.8) !important;
+  --text-tertiary: rgba(255, 255, 255, 0.6) !important;
+}
+
+[data-theme="light"] .no-logo-header-controls button,
+[data-theme="light"] .no-logo-header-bottom-controls button {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+[data-theme="light"] .no-logo-header-controls button:hover,
+[data-theme="light"] .no-logo-header-bottom-controls button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+}
+
+/* High contrast support */
+@media (prefers-contrast: high) {
+  .no-logo-header {
+    border-bottom-width: 2px;
+  }
+}

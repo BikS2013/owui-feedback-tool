@@ -1,63 +1,10 @@
 /* ConversationList specific styles that enhance the generic List component */
 
-/* Override List header styles for conversation list */
-.conversation-list .list-header {
-  border-bottom: 1px solid var(--border-color);
-  background: #345085;
-  backdrop-filter: blur(10px);
-  overflow: visible;
-  position: relative;
-  min-height: 105px;
-  box-sizing: border-box;
-}
+/* ConversationList now uses LogoHeader component */
 
-.conversation-list-header-top {
-  padding: 12px 24px;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  height: auto;
-  box-sizing: border-box;
-  min-height: 48px;
-}
+/* Conversation-specific button styles that work with LogoHeader */
 
-.nbg-logo {
-  height: 60px;
-  width: auto;
-  flex-shrink: 0;
-  margin: 0;
-  padding: 0;
-  display: block;
-  position: absolute;
-  top: 3px;
-  left: 24px;
-  z-index: 10;
-}
-
-.conversation-list-header h2 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #FFFFFF;
-  margin: 0;
-}
-
-.conversation-counts {
-  font-size: 14px;
-  color: rgba(255, 255, 255, 0.8);
-  padding: 5px 24px 12px 24px;
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.conversation-counts h2 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #FFFFFF;
-  margin: 0;
-  flex-shrink: 0;
-}
+/* Counts text styling */
 
 .counts-text {
   white-space: nowrap;
@@ -104,11 +51,7 @@
   color: #FFFFFF;
 }
 
-.header-controls {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
+/* View toggle and filter button styles are now part of LogoHeader */
 
 .filter-btn {
   background: none;
@@ -276,10 +219,5 @@
 @media (max-width: 400px) {
   .counts-text {
     font-size: 12px;
-  }
-  
-  .conversation-counts {
-    gap: 8px;
-    padding: 5px 16px 12px 16px;
   }
 }

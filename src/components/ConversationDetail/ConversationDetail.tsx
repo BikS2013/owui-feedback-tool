@@ -4,6 +4,7 @@ import { format } from 'date-fns';
 import { User, Bot, ThumbsUp, ThumbsDown, Download, FileJson, FileText, Code, Eye } from 'lucide-react';
 import { Conversation, QAPair } from '../../types/conversation';
 import { Message } from '../../types/feedback';
+import { NoLogoHeader } from '../NoLogoHeader/NoLogoHeader';
 import { 
   downloadAsJSON, 
   downloadAsMarkdown, 
@@ -119,72 +120,78 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     );
   };
 
-  return (
-    <div className="conversation-detail" ref={downloadRef}>
-      <div className="conversation-header">
-        <div className="conversation-header-top">
-          <h2>{conversation.title}</h2>
-        </div>
-        <div className="conversation-stats">
-          <div className="stats-info">
-            <span>Q&A pairs: {conversation.qaPairCount}</span>
-            <span>Rated responses: {conversation.totalRatings}</span>
-            {conversation.averageRating && (
-              <span>Average rating: {conversation.averageRating.toFixed(1)}/10</span>
-            )}
-          </div>
-          <div className="header-actions">
-            <button
-              type="button"
-              className="view-toggle-button"
-              onClick={() => setShowRawJson(!showRawJson)}
-              title={showRawJson ? "Show formatted view" : "Show raw JSON"}
-            >
-              {showRawJson ? <Eye size={16} /> : <Code size={16} />}
-            </button>
-            <div className="download-button-container">
+  const statsInfo = (
+    <div className="stats-info">
+      <span>Q&A pairs: {conversation.qaPairCount}</span>
+      <span>Rated responses: {conversation.totalRatings}</span>
+      {conversation.averageRating && (
+        <span>Average rating: {conversation.averageRating.toFixed(1)}/10</span>
+      )}
+    </div>
+  );
+
+  const headerActions = (
+    <div className="header-actions">
+      <button
+        type="button"
+        className="view-toggle-button"
+        onClick={() => setShowRawJson(!showRawJson)}
+        title={showRawJson ? "Show formatted view" : "Show raw JSON"}
+      >
+        {showRawJson ? <Eye size={16} /> : <Code size={16} />}
+      </button>
+      <div className="download-button-container">
+        <button 
+          type="button"
+          className="download-button"
+          onClick={() => {
+            console.log('Button clicked directly!');
+            handleDownloadButtonClick();
+          }}
+        >
+          <Download size={16} />
+        </button>
+        {showDownloadMenu && (
+          <div className="download-menu">
             <button 
               type="button"
-              className="download-button"
-              onClick={() => {
-                console.log('Button clicked directly!');
-                handleDownloadButtonClick();
+              className="download-menu-item"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('JSON button clicked');
+                handleDownloadConversation('json');
               }}
             >
-              <Download size={16} />
+              <FileJson size={16} />
+              <span>Download as JSON</span>
             </button>
-            {showDownloadMenu && (
-              <div className="download-menu">
-                <button 
-                  type="button"
-                  className="download-menu-item"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    console.log('JSON button clicked');
-                    handleDownloadConversation('json');
-                  }}
-                >
-                  <FileJson size={16} />
-                  <span>Download as JSON</span>
-                </button>
-                <button 
-                  type="button"
-                  className="download-menu-item"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    console.log('Markdown button clicked');
-                    handleDownloadConversation('markdown');
-                  }}
-                >
-                  <FileText size={16} />
-                  <span>Download as Markdown</span>
-                </button>
-              </div>
-            )}
+            <button 
+              type="button"
+              className="download-menu-item"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('Markdown button clicked');
+                handleDownloadConversation('markdown');
+              }}
+            >
+              <FileText size={16} />
+              <span>Download as Markdown</span>
+            </button>
           </div>
-          </div>
-        </div>
+        )}
       </div>
+    </div>
+  );
+
+  return (
+    <div className="conversation-detail" ref={downloadRef}>
+      <NoLogoHeader
+        title={<h2>{conversation.title}</h2>}
+        subtitle={statsInfo}
+        bottomRightControls={headerActions}
+        className="conversation-header"
+        heightAdjustment={2}
+      />
 
       {showRawJson ? (
         <div className="raw-json-container">
