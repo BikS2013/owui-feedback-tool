@@ -1,5 +1,6 @@
 /* LogoHeader base styles */
 .logo-header {
+  background: var(--header-bg);
   border-bottom: 1px solid var(--border-color);
   backdrop-filter: blur(10px);
   overflow: visible;
@@ -79,10 +80,8 @@
 .logo-header-controls > div,
 .logo-header-bottom-controls > div {
   display: flex;
-  gap: 0;
-  background: rgba(255, 255, 255, 0.1);
+  gap: 8px;
   border-radius: 4px;
-  padding: 2px;
 }
 
 .logo-header-controls > div > button,
@@ -94,7 +93,6 @@
 
 .logo-header-controls > div > button.active,
 .logo-header-bottom-controls > div > button.active {
-  background: rgba(255, 255, 255, 0.2);
   color: #FFFFFF;
 }
 
@@ -177,7 +175,6 @@
 
 /* Theme variations */
 [data-theme="light"] .logo-header {
-  background-color: #345085;
   color: #FFFFFF;
 }
 

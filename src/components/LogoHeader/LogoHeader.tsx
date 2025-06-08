@@ -33,7 +33,7 @@ export function LogoHeader({
   subtitle,
   topRightControls,
   bottomRightControls,
-  backgroundColor = '#345085',
+  backgroundColor,
   className = '',
   minHeight = 105
 }: LogoHeaderProps) {

@@ -24,7 +24,7 @@ export function NoLogoHeader({
   subtitle,
   topRightControls,
   bottomRightControls,
-  backgroundColor = '#345085',
+  backgroundColor,
   className = '',
   minHeight = 105,
   heightAdjustment = 0

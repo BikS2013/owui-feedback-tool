@@ -1,5 +1,6 @@
 /* NoLogoHeader base styles - follows LogoHeader layout without logo */
 .no-logo-header {
+  background: var(--header-bg);
   border-bottom: 1px solid var(--border-color);
   backdrop-filter: blur(10px);
   overflow: visible;
@@ -214,7 +215,6 @@
 
 /* Theme variations */
 [data-theme="light"] .no-logo-header {
-  background-color: #345085;
   color: #FFFFFF !important;
 }
 

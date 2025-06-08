@@ -10,6 +10,7 @@
 .analytics-header {
   position: relative;
   z-index: 100;
+  background: var(--header-bg);
 }
 
 .analytics-header h2 {

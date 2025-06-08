@@ -1,4 +1,5 @@
-:root, [data-theme="dark"] {
+/* Blue theme - Dark mode */
+:root, [data-theme="dark"][data-color-scheme="blue"] {
   /* Dark blue theme inspired by the header */
   --bg-primary: #1a2332;
   --bg-secondary: #222d42;
@@ -18,9 +19,35 @@
   --shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
   --gradient-primary: linear-gradient(135deg, #1a2332 0%, #2a3752 100%);
   --gradient-card: linear-gradient(135deg, #222d42 0%, #2a3752 100%);
+  --header-bg: #345085;
 }
 
-[data-theme="light"] {
+/* Green theme - Dark mode (based on the provided image) */
+[data-theme="dark"][data-color-scheme="green"] {
+  /* Petrol and light blue theme from the image */
+  --bg-primary: #1C3A42;
+  --bg-secondary: #254952;
+  --bg-tertiary: #2E5862;
+  --bg-card: #254952;
+  --text-primary: #FFFFFF;
+  --text-secondary: #B8E0E6;
+  --text-tertiary: #8BB9C2;
+  --accent-primary: #5EC1D3;
+  --accent-secondary: #FF8C5A;
+  --accent-purple: #8B7BEE;
+  --accent-blue: #7DD3E0;
+  --accent-green: #52C77E;
+  --accent-yellow: #FFD666;
+  --accent-red: #FF7B7B;
+  --border-color: rgba(94, 193, 211, 0.2);
+  --shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+  --gradient-primary: linear-gradient(135deg, #1C3A42 0%, #2E5862 100%);
+  --gradient-card: linear-gradient(135deg, #254952 0%, #2E5862 100%);
+  --header-bg: #2C5F6F;
+}
+
+/* Blue theme - Light mode */
+[data-theme="light"][data-color-scheme="blue"] {
   /* Light theme with blue accents */
   --bg-primary: #F5F8FB;
   --bg-secondary: #FFFFFF;
@@ -40,6 +67,31 @@
   --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   --gradient-primary: linear-gradient(135deg, #E8EFF6 0%, #F5F8FB 100%);
   --gradient-card: linear-gradient(135deg, #FFFFFF 0%, #F5F8FB 100%);
+  --header-bg: #345085;
+}
+
+/* Green theme - Light mode */
+[data-theme="light"][data-color-scheme="green"] {
+  /* Light theme with petrol and light blue accents */
+  --bg-primary: #F5FBFC;
+  --bg-secondary: #FFFFFF;
+  --bg-tertiary: #E8F4F6;
+  --bg-card: #FFFFFF;
+  --text-primary: #1C3A42;
+  --text-secondary: #2C5F6F;
+  --text-tertiary: #4A7C8C;
+  --accent-primary: #2C5F6F;
+  --accent-secondary: #FF8C5A;
+  --accent-purple: #8B7BEE;
+  --accent-blue: #5EC1D3;
+  --accent-green: #52C77E;
+  --accent-yellow: #F59E0B;
+  --accent-red: #EF4444;
+  --border-color: rgba(44, 95, 111, 0.15);
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  --gradient-primary: linear-gradient(135deg, #E8F4F6 0%, #F5FBFC 100%);
+  --gradient-card: linear-gradient(135deg, #FFFFFF 0%, #F5FBFC 100%);
+  --header-bg: #2C5F6F;
 }
 
 * {

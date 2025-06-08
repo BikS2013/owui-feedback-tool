@@ -5,10 +5,12 @@ import { format } from 'date-fns';
 import { FilterPanel } from '../FilterPanel/FilterPanel';
 import { DataControls } from '../DataControls/DataControls';
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
+import { ColorSchemeToggle } from '../ColorSchemeToggle/ColorSchemeToggle';
 import { ListItem } from '../ListItem/ListItem';
 import { List } from '../List/List';
 import { LogoHeader } from '../LogoHeader/LogoHeader';
 import { useFeedbackStore } from '../../store/feedbackStore';
+import { useTheme } from '../../store/themeStore';
 import './ConversationList.css';
 
 interface ConversationListProps {
@@ -34,6 +36,7 @@ export function ConversationList({
 }: ConversationListProps) {
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const { viewMode, setViewMode } = useFeedbackStore();
+  const { colorScheme } = useTheme();
   
   // Calculate total Q&A pairs
   const totalQAPairs = conversations.reduce((sum, conv) => sum + conv.qaPairCount, 0);
@@ -72,12 +75,17 @@ export function ConversationList({
 
   const conversationHeader = (
     <LogoHeader
-      logoSrc="/nbg-tech-hub-logo.svg"
+      logoSrc={colorScheme === 'green' ? "/nbg-logo-only.svg" : "/nbg-tech-hub-logo.svg"}
       logoAlt="NBG Technology Hub"
       title={<h2>Conversations</h2>}
       subtitle={<span className="counts-text">{conversations.length} conversations, {totalQAPairs} Q&As</span>}
       topRightControls={topRightControls}
-      bottomRightControls={<ThemeToggle />}
+      bottomRightControls={
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <ColorSchemeToggle />
+          <ThemeToggle />
+        </div>
+      }
     />
   );
 
