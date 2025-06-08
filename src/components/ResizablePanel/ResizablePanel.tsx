@@ -7,6 +7,7 @@ interface ResizablePanelProps {
   minWidth?: number;
   maxWidth?: number;
   onResize?: (width: number) => void;
+  storageKey?: string;
 }
 
 export function ResizablePanel({
@@ -14,13 +15,34 @@ export function ResizablePanel({
   defaultWidth = 400,
   minWidth = 300,
   maxWidth = 600,
-  onResize
+  onResize,
+  storageKey = 'resizable-panel-width'
 }: ResizablePanelProps) {
-  const [width, setWidth] = useState(defaultWidth);
+  const [width, setWidth] = useState(() => {
+    // Try to load saved width from localStorage
+    if (storageKey) {
+      const savedWidth = localStorage.getItem(storageKey);
+      if (savedWidth) {
+        const parsedWidth = parseInt(savedWidth, 10);
+        // Ensure saved width is within bounds
+        if (!isNaN(parsedWidth) && parsedWidth >= minWidth && parsedWidth <= maxWidth) {
+          return parsedWidth;
+        }
+      }
+    }
+    return defaultWidth;
+  });
   const [isResizing, setIsResizing] = useState(false);
   const panelRef = useRef<HTMLDivElement>(null);
   const startXRef = useRef(0);
   const startWidthRef = useRef(0);
+
+  // Save width to localStorage when it changes
+  useEffect(() => {
+    if (storageKey) {
+      localStorage.setItem(storageKey, width.toString());
+    }
+  }, [width, storageKey]);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {

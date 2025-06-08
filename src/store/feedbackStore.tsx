@@ -43,6 +43,7 @@ interface StoredFeedbackData {
 }
 
 const STORAGE_KEY = 'owui-feedback-data';
+const VIEW_MODE_KEY = 'owui-view-mode';
 const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000; // 14 days in milliseconds
 
 export function FeedbackProvider({ children }: FeedbackProviderProps) {
@@ -52,7 +53,11 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dataExpiresAt, setDataExpiresAt] = useState<number | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('details');
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    // Load saved view mode from localStorage
+    const savedViewMode = localStorage.getItem(VIEW_MODE_KEY);
+    return (savedViewMode as ViewMode) || 'details';
+  });
   const [selectedAnalyticsModel, setSelectedAnalyticsModel] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterOptions>({
     dateRange: {
@@ -180,6 +185,11 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
   useEffect(() => {
     loadData();
   }, []);
+
+  // Save viewMode to localStorage when it changes
+  useEffect(() => {
+    localStorage.setItem(VIEW_MODE_KEY, viewMode);
+  }, [viewMode]);
 
   const value: FeedbackStore = {
     rawData,

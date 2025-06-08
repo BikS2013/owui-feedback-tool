@@ -117,7 +117,7 @@ function AppContent() {
 
   return (
     <div className="app">
-      <ResizablePanel>
+      <ResizablePanel storageKey="conversation-list-width">
         <ConversationList
           conversations={filteredConversations}
           selectedId={selectedConversationId}
