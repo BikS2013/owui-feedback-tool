@@ -20,6 +20,8 @@
   --gradient-primary: linear-gradient(135deg, #1a2332 0%, #2a3752 100%);
   --gradient-card: linear-gradient(135deg, #222d42 0%, #2a3752 100%);
   --header-bg: #345085;
+  --hover-bg: rgba(255, 255, 255, 0.1);
+  --accent-primary-hover: #4A6CA8;
 }
 
 /* Green theme - Dark mode (based on the provided image) */
@@ -44,6 +46,8 @@
   --gradient-primary: linear-gradient(135deg, #1C3A42 0%, #2E5862 100%);
   --gradient-card: linear-gradient(135deg, #254952 0%, #2E5862 100%);
   --header-bg: #2C5F6F;
+  --hover-bg: rgba(255, 255, 255, 0.1);
+  --accent-primary-hover: #7CCFDC;
 }
 
 /* Blue theme - Light mode */
@@ -68,6 +72,8 @@
   --gradient-primary: linear-gradient(135deg, #E8EFF6 0%, #F5F8FB 100%);
   --gradient-card: linear-gradient(135deg, #FFFFFF 0%, #F5F8FB 100%);
   --header-bg: #345085;
+  --hover-bg: rgba(0, 0, 0, 0.05);
+  --accent-primary-hover: #E8EFF6;
 }
 
 /* Green theme - Light mode */
@@ -92,6 +98,8 @@
   --gradient-primary: linear-gradient(135deg, #E8F4F6 0%, #F5FBFC 100%);
   --gradient-card: linear-gradient(135deg, #FFFFFF 0%, #F5FBFC 100%);
   --header-bg: #2C5F6F;
+  --hover-bg: rgba(0, 0, 0, 0.05);
+  --accent-primary-hover: #E8F4F6;
 }
 
 * {
@@ -207,4 +215,28 @@ input, textarea {
 /* Smooth transitions */
 * {
   transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Light theme modal button hover styles */
+[data-theme="light"] .modal-overlay button:hover:not(:disabled):not(.close-button) {
+  background-color: var(--bg-tertiary);
+  color: var(--text-primary);
+}
+
+/* Ensure close buttons in light theme also get proper hover */
+[data-theme="light"] .modal-overlay .close-button:hover {
+  background-color: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+/* Test and execute buttons in modals for light theme */
+[data-theme="light"] .llm-test-button:hover:not(:disabled),
+[data-theme="light"] .execute-prompt-button:hover:not(:disabled) {
+  color: var(--text-primary) !important;
+}
+
+/* Primary buttons in light theme modals */
+[data-theme="light"] button[class*="primary"]:hover:not(:disabled) {
+  background-color: var(--bg-tertiary) !important;
+  color: var(--text-primary) !important;
 }

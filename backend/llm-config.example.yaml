@@ -1,0 +1,68 @@
+# LLM Configuration File Example
+# Copy this file to llm-config.yaml and configure with your settings
+
+configurations:
+  # OpenAI Configuration
+  # Requires: OPENAI_API_KEY environment variable
+  - name: gpt-4
+    provider: openai
+    model: gpt-4
+    description: "OpenAI GPT-4 - Most capable model for complex tasks"
+    temperature: 0.7
+    maxTokens: 2000
+    enabled: true
+
+  - name: gpt-3.5-turbo
+    provider: openai
+    model: gpt-3.5-turbo
+    description: "OpenAI GPT-3.5 Turbo - Fast and efficient for most tasks"
+    temperature: 0.7
+    maxTokens: 1000
+    enabled: true
+
+  # Anthropic Configuration
+  # Requires: ANTHROPIC_API_KEY environment variable
+  - name: claude-3-opus
+    provider: anthropic
+    model: claude-3-opus-20240229
+    description: "Claude 3 Opus - Most capable Claude model"
+    temperature: 0.7
+    maxTokens: 2000
+    enabled: false # Set to true when API key is configured
+
+  # Google Configuration
+  # Requires: GOOGLE_API_KEY environment variable
+  - name: gemini-pro
+    provider: google
+    model: gemini-pro
+    description: "Google Gemini Pro - Advanced reasoning capabilities"
+    temperature: 0.7
+    maxOutputTokens: 2048
+    enabled: false # Set to true when API key is configured
+
+  # Azure OpenAI Configuration
+  # Requires: AZURE_OPENAI_API_KEY environment variable
+  - name: azure-gpt-4
+    provider: azure-openai
+    model: gpt-4
+    description: "Azure-hosted GPT-4"
+    apiVersion: "2024-02-01"
+    azureOpenAIEndpoint: "https://your-resource.openai.azure.com"
+    azureOpenAIApiDeploymentName: "your-deployment-name"
+    temperature: 0.7
+    maxTokens: 2000
+    enabled: false # Set to true when properly configured
+
+  # Ollama Configuration (for local models)
+  # Requires: Ollama running locally
+  - name: ollama-llama2
+    provider: ollama
+    model: llama2
+    description: "Local Llama 2 model via Ollama"
+    baseUrl: "http://localhost:11434"
+    temperature: 0.7
+    numPredict: 1000
+    enabled: false # Set to true when Ollama is running
+
+# Default configuration to use when none is specified
+defaultConfiguration: gpt-3.5-turbo

@@ -1,6 +1,41 @@
 # Issues - Pending Items
 
 ## Pending Items
+
+### Backend TypeScript Build Errors
+**Issue**: Backend has TypeScript compilation errors preventing successful build.
+**Errors**:
+- Express route handler type mismatches
+- Missing HeadersInit type definition
+- Missing conversation.types.js file
+- Google Generative AI chat input property error
+**Current Status**: Need to fix TypeScript configuration and type definitions.
+
+### PromptSelectorModal Not Showing All Files
+**Issue**: The dropdown in PromptSelectorModal isn't showing all files from the prompts folder.
+**Investigation Steps**:
+1. Added comprehensive logging to loadPromptFiles function
+2. Enhanced GitHub service to log API response details and check for truncation
+3. Implemented fallback to tree API for large directories (>100 files)
+4. Added case-insensitive file extension matching (.txt, .md, .markdown)
+5. Added alphabetical sorting of files in dropdown
+6. Added logging for hidden files and other file types
+
+**Potential Causes**:
+- GitHub Contents API has a limit of 1000 files per directory
+- Case sensitivity in file extensions (now fixed)
+- Hidden files (starting with .) are now explicitly filtered
+- API rate limiting or authentication issues
+
+**Debug Output Added**:
+- Prompts folder path being used
+- Raw API response and file count
+- Individual file filtering decisions
+- Other file types found but not shown
+- API response headers including rate limit info
+
+**Current Status**: Enhanced with debugging and fallback mechanisms. User should check console logs when opening the modal.
+
 **Issue**: Download buttons don't trigger any console output - click handlers not firing.
 **Debug Steps Taken**:
 1. Added console logging throughout the download flow
@@ -20,6 +55,157 @@
 - Need to verify if there's a CSS or DOM issue preventing clicks
 
 ## Completed Items
+
+### Button Hover Colors in Light Theme (Completed: 2025-01-09)
+**Issue**: Button hover states in headers used white overlay (`rgba(255, 255, 255, 0.1)`) which doesn't work well in light theme.
+**Solution**:
+1. Added `--hover-bg` CSS variable to all theme configurations:
+   - Dark themes: `rgba(255, 255, 255, 0.1)` (white overlay)
+   - Light themes: `rgba(0, 0, 0, 0.05)` (black overlay)
+2. Updated all button hover styles to use `var(--hover-bg)` instead of hard-coded values
+3. Updated components:
+   - ConversationDetail.css - header button hover states
+   - DataControls.css - data control button hover
+   - NoLogoHeader.css - header control button hover
+   - ThemeToggle.css - theme toggle button hover
+   - AnalyticsDashboard.css - export button hover
+   - PromptSelectorModal.css - already referenced --hover-bg
+
+**Implementation**:
+- All button hover states now adapt properly to light/dark themes
+- Consistent hover behavior across all components
+- Header buttons remain white text on hover but with appropriate background
+
+### LLM Prompt Server-Side Execution (Completed: 2025-01-09)
+**Requirements**:
+- Add Execute button in the LLMs/Prompts Modal
+- Send model configuration, prompt text, and parameter values to server
+- Support parameter types: Conversations, Q&As, current date/time, custom text
+- Implement server-side endpoint for direct prompt execution
+
+**Solution**:
+1. Frontend Changes:
+   - Added Execute button to PromptSelectorModal with loading state
+   - Added parameter value building logic for different sources
+   - Created executePromptWithParameters method in LLM service
+   - Added execution result display with success/error states
+   - Pass conversation prop from ConversationDetail to modal
+
+2. Backend Changes:
+   - Created new POST endpoint `/api/llm/execute-prompt-direct`
+   - Implemented parameter substitution in prompt text
+   - Used LangChain to execute prompts with selected LLM configuration
+   - Added proper error handling and validation
+
+3. UI/UX Improvements:
+   - Execute button disabled when no model or prompt selected
+   - Loading spinner during execution
+   - Results displayed in styled container with close button
+   - Success/error states with appropriate styling
+
+**Implementation Details**:
+- Parameter values for conversations/Q&As sent as JSON strings
+- Date formats: YYYY-MM-DD for date, YYYY-MM-DD HH:mm:ss for datetime
+- Custom text parameters use user-provided values
+- Server replaces {parameterName} placeholders with actual values
+- Response content properly extracted from LangChain response format
+
+### LLM Tab Removal from Settings Modal (Completed: 2025-01-09)
+**Requirements**:
+- Remove the LLM tab from the Settings modal
+- Clean up all LLM-related code and imports
+
+**Solution**:
+1. Removed the LLM tab button from the settings tabs section
+2. Removed the LLM tab content panel
+3. Updated TabType type definition to exclude 'llm'
+4. Removed all LLM-related state variables (llmConfigurations, selectedLLM, defaultLLM, etc.)
+5. Removed LLM-related imports (llmService, LLMConfiguration type)
+6. Removed loadLLMConfigurations function and related handlers
+7. Removed Brain icon import from lucide-react
+
+**Implementation**:
+- The Settings modal now only has two tabs: 'api' and 'github'
+- Default tab remains 'api' as before
+- All LLM-related functionality has been cleanly removed
+- No orphaned imports or unused variables remain
+
+### Backend NPM Vulnerabilities Fixed (Completed: 2025-01-08)
+**Requirements**:
+- Fix 5 high severity vulnerabilities in backend dependencies
+- Update deprecated packages
+
+**Solution**:
+1. Updated package.json with latest secure versions:
+   - puppeteer: 21.6.1 → 24.10.0 (fixes tar-fs and ws vulnerabilities)
+   - express: 4.18.2 → 4.21.2
+   - dotenv: 16.3.1 → 16.4.7
+   - eslint: 8.56.0 → 9.18.0
+   - TypeScript and other dev dependencies updated to latest versions
+2. Moved @types packages from dependencies to devDependencies
+3. Removed and reinstalled all packages
+
+**Implementation**:
+- All 5 high severity vulnerabilities resolved
+- npm audit now reports 0 vulnerabilities
+- All deprecated packages updated to supported versions
+- Backend functionality remains intact with updated dependencies
+
+### Backend ESLint Configuration for v9.x (Completed: 2025-01-08)
+**Requirements**:
+- Update backend to use ESLint 9.x flat config format
+- Create proper configuration file for TypeScript linting
+
+**Solution**:
+1. Created `eslint.config.js` using the new flat config format
+2. Configured TypeScript parser and plugin
+3. Added recommended rules with additional TypeScript-specific rules
+4. Updated package.json scripts to modern ESLint syntax
+
+**Implementation**:
+- Created flat config with proper TypeScript support
+- Added ignore patterns for dist and node_modules
+- Configured rules for type safety and code quality
+- Added lint:fix script for automatic fixes
+- Successfully validates code and reports legitimate issues
+
+### Backend Module for Server-Side Operations (Completed: 2025-01-08)
+**Requirements**:
+- Create a separate backend module for server-side operations
+- Support PDF generation with proper Greek character support
+- Keep backend code totally separated from frontend
+
+**Solution**:
+1. Created a separate `backend` folder with Express/TypeScript server
+2. Implemented PDF generation using Puppeteer for full Unicode support
+3. Added REST API endpoints for conversation and Q&A pair exports
+4. Integrated frontend with backend through API service
+5. Added Docker support for both frontend and backend
+
+**Implementation**:
+- **Backend Structure**:
+  - Express server with TypeScript configuration
+  - Routes for `/api/export/conversation` and `/api/export/qa-pair`
+  - Service layer using Puppeteer for PDF generation
+  - HTML generation with proper UTF-8 encoding
+  - Support for both PDF and HTML export formats
+  
+- **Frontend Integration**:
+  - Created `ApiService` for backend communication
+  - Updated download utilities to use backend for PDF generation
+  - Added PDF options back to UI with "(Server)" label
+  - Graceful fallback if backend is unavailable
+  
+- **Docker Setup**:
+  - Separate Dockerfile for backend with Chromium/Puppeteer
+  - Updated docker-compose.yml to run both services
+  - Proper networking between frontend and backend containers
+  
+- **Features**:
+  - Full Greek character support in PDFs
+  - Markdown processing (bold, links, headings)
+  - Styled HTML templates for professional output
+  - Print-optimized CSS for PDFs
 
 ### PDF Export Removal (Completed: 2025-01-08)
 **Requirements**:

@@ -29,6 +29,23 @@ cd owui-feedback
 npm install
 ```
 
+3. Configure the application:
+```bash
+cp .env.example .env
+```
+Then edit `.env` to configure:
+```
+# Port for the client application (default: 5173)
+VITE_CLIENT_PORT=5173
+
+# Backend API URL
+VITE_API_URL=http://localhost:3001/api
+
+# GitHub Integration (optional)
+VITE_GITHUB_REPO=owner/repository
+VITE_GITHUB_TOKEN=your_github_token_here
+```
+
 ### Running the Application
 
 1. Start the development server:
@@ -36,7 +53,7 @@ npm install
 npm run dev
 ```
 
-2. Open your browser and navigate to the provided URL (usually http://localhost:5173)
+2. Open your browser and navigate to the provided URL (default: http://localhost:5173, or the port configured in VITE_CLIENT_PORT)
 
 ### Building for Production
 
@@ -73,6 +90,41 @@ The application loads data from `public/feedback-history-export.json`. The data 
 - Ratings (1-10 scale)
 - User feedback comments
 - Timestamps
+
+## GitHub Integration
+
+The application includes a GitHub API service for retrieving repository files:
+
+### Configuration
+1. Set `VITE_GITHUB_REPO` to your repository (format: `owner/repo`)
+2. Set `VITE_GITHUB_TOKEN` for private repos or to increase API rate limits
+   - Create a token at: https://github.com/settings/tokens
+   - Required scopes: `repo` (private) or `public_repo` (public)
+
+### Available Methods
+```typescript
+import { GitHubService } from './services/github.service';
+
+// Get files in a directory
+const files = await GitHubService.getFiles('src/components');
+
+// Get all files recursively
+const tree = await GitHubService.getTree();
+
+// Get file content
+const content = await GitHubService.getFileContentAsText('README.md');
+
+// Search for files
+const results = await GitHubService.searchFiles('test', { extension: 'ts' });
+
+// Get files by extension
+const tsFiles = await GitHubService.getFilesByExtension('ts');
+```
+
+### Rate Limits
+- Without token: 60 requests/hour
+- With token: 5,000 requests/hour
+- Check current limits: `GitHubService.getRateLimit()`
 
 ## Technical Stack
 

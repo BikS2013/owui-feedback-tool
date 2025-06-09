@@ -3,6 +3,7 @@ import { Message } from '../types/feedback';
 import { format } from 'date-fns';
 import { Document, Packer, Paragraph, TextRun, HeadingLevel, AlignmentType } from 'docx';
 import { parseMarkdownToTextRuns, detectMarkdownHeading } from './markdownParser';
+import { ApiService } from '../services/api.service';
 
 export function downloadAsJSON(data: unknown, filename: string) {
   console.log('downloadAsJSON called:', filename);
@@ -20,6 +21,11 @@ export function downloadAsMarkdown(content: string, filename: string) {
 export async function downloadAsDocx(docxBlob: Blob, filename: string) {
   console.log('downloadAsDocx called:', filename);
   downloadBlob(docxBlob, filename);
+}
+
+export async function downloadAsPDF(pdfBlob: Blob, filename: string) {
+  console.log('downloadAsPDF called:', filename);
+  downloadBlob(pdfBlob, filename);
 }
 
 
@@ -298,6 +304,17 @@ ${conversation.messages.map(msg => {
   // Generate DOCX blob
   const docxBlob = await Packer.toBlob(doc);
 
+  // Generate PDF through backend API
+  let pdfBlob: Blob | null = null;
+  let pdfFilename = '';
+  
+  try {
+    pdfBlob = await ApiService.exportConversationPDF(conversation, qaPairs);
+    pdfFilename = `conversation_${conversation.id}_${timestamp}.pdf`;
+  } catch (error) {
+    console.error('PDF generation failed:', error);
+    // PDF generation is optional, continue without it
+  }
 
   return {
     jsonFilename: `conversation_${conversation.id}_${timestamp}.json`,
@@ -306,6 +323,8 @@ ${conversation.messages.map(msg => {
     markdownContent,
     docxFilename: `conversation_${conversation.id}_${timestamp}.docx`,
     docxBlob,
+    pdfFilename,
+    pdfBlob
   };
 }
 
@@ -529,6 +548,18 @@ ${qaPair.comment ? `\n\n> **Feedback:** ${qaPair.comment}` : ''}
   // Generate DOCX blob
   const docxBlob = await Packer.toBlob(doc);
 
+  // Generate PDF through backend API
+  let pdfBlob: Blob | null = null;
+  let pdfFilename = '';
+  
+  try {
+    pdfBlob = await ApiService.exportQAPairPDF(qaPair, conversationId);
+    pdfFilename = `qa_pair_${qaPair.answer.id}_${timestamp}.pdf`;
+  } catch (error) {
+    console.error('PDF generation failed:', error);
+    // PDF generation is optional, continue without it
+  }
+
   return {
     jsonFilename: `qa_pair_${qaPair.answer.id}_${timestamp}.json`,
     jsonData,
@@ -536,5 +567,7 @@ ${qaPair.comment ? `\n\n> **Feedback:** ${qaPair.comment}` : ''}
     markdownContent,
     docxFilename: `qa_pair_${qaPair.answer.id}_${timestamp}.docx`,
     docxBlob,
+    pdfFilename,
+    pdfBlob
   };
 }

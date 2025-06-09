@@ -12,9 +12,28 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+      - VITE_API_URL=http://owui-feedback-backend:3001/api
     volumes:
       # Optional: Mount a local directory for custom feedback data
       # - ./data:/usr/share/nginx/html/data
+    networks:
+      - owui-network
+    depends_on:
+      - owui-feedback-backend
+
+  owui-feedback-backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: owui-feedback-backend:latest
+    container_name: owui-feedback-backend
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - CORS_ORIGIN=http://localhost:8080
     networks:
       - owui-network
 

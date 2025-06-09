@@ -6,7 +6,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### Development
 ```bash
-npm run dev        # Start development server with hot reload (http://localhost:5173)
+# First time setup
+cp .env.example .env  # Configure API endpoint
+
+npm run dev        # Start development server with hot reload (port from VITE_CLIENT_PORT or 5173)
 npm run build      # Run TypeScript checks and build for production
 npm run preview    # Preview production build locally
 npm run lint       # Run ESLint to check code quality
@@ -24,6 +27,29 @@ npm run docker:compose:up     # Start services
 npm run docker:compose:down   # Stop services
 npm run docker:compose:build  # Rebuild images
 ```
+
+## Configuration
+
+### Environment Variables
+Configuration is managed through environment variables in the `.env` file:
+
+#### Client Port
+- `VITE_CLIENT_PORT`: The port for the Vite development server (default: 5173)
+- This is used when running `npm run dev`
+- If the port is already in use, the server will exit with an error
+
+#### API Endpoint
+- `VITE_API_URL`: The backend API endpoint
+- Must include the complete path (e.g., `http://localhost:3001/api`)
+- This value is read at build time and cannot be changed at runtime
+- The Settings modal shows the current configuration and allows testing the connection
+
+#### GitHub Integration
+- `VITE_GITHUB_REPO`: GitHub repository in format `owner/repo`
+- `VITE_GITHUB_TOKEN`: Optional GitHub personal access token
+  - Required for private repositories
+  - Increases API rate limit from 60 to 5,000 requests/hour
+  - Create at: https://github.com/settings/tokens
 
 ## Architecture Overview
 
@@ -73,6 +99,16 @@ Production builds go to `dist/` directory. Docker image serves via nginx on port
 ## Documentation Guidelines
 
 ### Analytics Specification
-- The file "Analytics Requirements & Specs.md" must serve as the "source of truth" regarding the design and the specs of the overall analytics offered by the app. 
-- Every new design decision regarding this topic must be registered there.
-- All questions related to the functionality or the technical design in this area must be retrieved from this file.
+- The file "Analytics Requirements & Specs.md" must serve as the "source of truth" regarding the design and the specs of the overall analytics offered by the app. Every new design decision regarding this topic must be registered there. All questions related to the functionality or the technical design in this area must be retrieved from this file.
+
+### LLM Integration Specification
+- The file "LLM-INTEGRATION.md" located in the backend folder, must be used as the "source of truth" regarding the llm integration to the app. Every new design decision regarding this topic must be registered there. All questions related to the functionality or the technical design in this area must be retrieved from this file.
+
+### Backend API Specification
+- The file "BACKEND-API.md" located in the backend folder, must be used as the "source of truth" regarding the APIs developed to support or enhance the app. Every new design decision regarding the server side APIs must be registered there. All questions related to the functionality or the technical design of the server side APIs must be retrieved from this file.
+
+## Backend Module Guidelines
+- There is a backend module which is hosted in the backend folder. 
+- Always maintain a clear separation between the frontend and the backend
+- Keep all code related to the backend in the backend folder
+- Always look in the backend folder for any task or request considering the backend module

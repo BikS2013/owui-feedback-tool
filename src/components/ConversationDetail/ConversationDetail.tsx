@@ -1,17 +1,23 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { format } from 'date-fns';
-import { User, Bot, ThumbsUp, ThumbsDown, Download, FileJson, FileText, File, Code, Eye } from 'lucide-react';
+import { User, Bot, ThumbsUp, ThumbsDown, Download, FileJson, FileText, File, Code, Eye, Send, Settings, Sparkles, FileSearch } from 'lucide-react';
 import { Conversation, QAPair } from '../../types/conversation';
 import { Message } from '../../types/feedback';
 import { NoLogoHeader } from '../NoLogoHeader/NoLogoHeader';
+import { SettingsModal } from '../SettingsModal/SettingsModal';
+import { PromptSelectorModal } from '../PromptSelectorModal/PromptSelectorModal';
 import { 
   downloadAsJSON, 
   downloadAsMarkdown,
   downloadAsDocx,
+  downloadAsPDF,
   formatConversationForDownload, 
   formatQAPairForDownload 
 } from '../../utils/downloadUtils';
+import { ApiService } from '../../services/api.service';
+import { llmService } from '../../services/llm.service';
+import { storageUtils } from '../../utils/storageUtils';
 import './ConversationDetail.css';
 
 interface ConversationDetailProps {
@@ -23,6 +29,9 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [qaDownloadMenus, setQaDownloadMenus] = useState<{ [key: string]: boolean }>({});
   const [showRawJson, setShowRawJson] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
+  const [showPromptSelector, setShowPromptSelector] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
   const downloadRef = useRef<HTMLDivElement>(null);
 
   // Close menus when clicking outside
@@ -64,10 +73,10 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     };
   };
 
-  const handleDownloadConversation = async (format: 'json' | 'markdown' | 'docx') => {
+  const handleDownloadConversation = async (format: 'json' | 'markdown' | 'docx' | 'pdf') => {
     try {
       console.log('Download conversation triggered:', format);
-      const { jsonFilename, jsonData, markdownFilename, markdownContent, docxFilename, docxBlob } = 
+      const { jsonFilename, jsonData, markdownFilename, markdownContent, docxFilename, docxBlob, pdfFilename, pdfBlob } = 
         await formatConversationForDownload(conversation, qaPairs);
       
       if (format === 'json') {
@@ -79,6 +88,9 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
       } else if (format === 'docx') {
         console.log('Downloading DOCX:', docxFilename);
         await downloadAsDocx(docxBlob, docxFilename);
+      } else if (format === 'pdf' && pdfBlob) {
+        console.log('Downloading PDF:', pdfFilename);
+        await downloadAsPDF(pdfBlob, pdfFilename);
       }
       setShowDownloadMenu(false);
     } catch (error) {
@@ -86,7 +98,32 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     }
   };
 
-  const handleDownloadQAPair = async (questionMsg: Message, answerMsg: Message, format: 'json' | 'markdown' | 'docx') => {
+  const handleExportToBackend = async () => {
+    setIsExporting(true);
+    try {
+      console.log('Exporting conversation to backend...');
+      const blob = await ApiService.exportConversationPDF(conversation, qaPairs);
+      
+      // Create a download link for the returned PDF
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `conversation_${conversation.id}_${format(new Date(), 'yyyy-MM-dd_HHmmss')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      console.log('Export successful');
+    } catch (error) {
+      console.error('Export to backend failed:', error);
+      alert('Failed to export conversation. Please ensure the backend service is running.');
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  const handleDownloadQAPair = async (questionMsg: Message, answerMsg: Message, format: 'json' | 'markdown' | 'docx' | 'pdf') => {
     const ratingInfo = getRatingInfo(answerMsg);
     const qaPair = {
       question: questionMsg,
@@ -95,7 +132,7 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
       comment: ratingInfo?.comment
     };
     
-    const { jsonFilename, jsonData, markdownFilename, markdownContent, docxFilename, docxBlob } = 
+    const { jsonFilename, jsonData, markdownFilename, markdownContent, docxFilename, docxBlob, pdfFilename, pdfBlob } = 
       await formatQAPairForDownload(qaPair, conversation.id);
     
     if (format === 'json') {
@@ -104,6 +141,8 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
       downloadAsMarkdown(markdownContent, markdownFilename);
     } else if (format === 'docx') {
       await downloadAsDocx(docxBlob, docxFilename);
+    } else if (format === 'pdf' && pdfBlob) {
+      await downloadAsPDF(pdfBlob, pdfFilename);
     }
     setQaDownloadMenus({ ...qaDownloadMenus, [answerMsg.id]: false });
   };
@@ -126,6 +165,44 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     );
   };
 
+  const handleExecutePrompt = async () => {
+    if (!conversation) return;
+    
+    try {
+      // Get the selected LLM configuration from localStorage
+      const llmConfiguration = llmService.getSelectedConfiguration();
+      if (!llmConfiguration) {
+        alert('Please select an LLM configuration in Settings first.');
+        setShowSettings(true);
+        return;
+      }
+      
+      const promptsFolder = storageUtils.getPromptsFolder();
+      const promptFilePath = `${promptsFolder}/analysis/default.md`; // This can be selected from GitHub files later
+      
+      console.log('Executing prompt with:', {
+        llmConfiguration,
+        promptFilePath,
+        conversationId: conversation.id
+      });
+      
+      const response = await llmService.executePrompt(
+        llmConfiguration,
+        promptFilePath,
+        conversation
+      );
+      
+      if (response.success) {
+        alert(`Prompt execution started!\nRequest ID: ${response.requestId}`);
+      } else {
+        alert(`Error: ${response.error || response.message}`);
+      }
+    } catch (error) {
+      console.error('Error executing prompt:', error);
+      alert('Failed to execute prompt. Please check the console for details.');
+    }
+  };
+
   const statsInfo = (
     <div className="stats-info">
       <span>Q&A pairs: {conversation.qaPairCount}</span>
@@ -138,6 +215,43 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
 
   const headerActions = (
     <div className="header-actions">
+      <button
+        type="button"
+        className="settings-button"
+        onClick={() => setShowSettings(true)}
+        title="Settings"
+      >
+        <Settings size={16} />
+      </button>
+      <button
+        type="button"
+        className="prompt-selector-button"
+        onClick={() => setShowPromptSelector(true)}
+        title="Select and execute prompt"
+      >
+        <FileSearch size={16} />
+      </button>
+      <button
+        type="button"
+        className="llm-execute-button"
+        onClick={handleExecutePrompt}
+        title="Execute LLM prompt"
+      >
+        <Sparkles size={16} />
+      </button>
+      <button
+        type="button"
+        className="export-backend-button"
+        onClick={handleExportToBackend}
+        disabled={isExporting}
+        title={isExporting ? "Exporting..." : "Export to backend (PDF)"}
+      >
+        {isExporting ? (
+          <div className="button-spinner" />
+        ) : (
+          <Send size={16} />
+        )}
+      </button>
       <button
         type="button"
         className="view-toggle-button"
@@ -194,6 +308,18 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
             >
               <File size={16} />
               <span>Chat as Word</span>
+            </button>
+            <button 
+              type="button"
+              className="download-menu-item"
+              onClick={(e) => {
+                e.stopPropagation();
+                console.log('PDF button clicked');
+                handleDownloadConversation('pdf');
+              }}
+            >
+              <File size={16} />
+              <span>Chat as PDF (Server)</span>
             </button>
           </div>
         )}
@@ -272,6 +398,13 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
                           <File size={14} />
                           <span>Q&A as Word</span>
                         </button>
+                        <button 
+                          className="download-menu-item"
+                          onClick={() => handleDownloadQAPair(conversation.messages[index - 1], message, 'pdf')}
+                        >
+                          <File size={14} />
+                          <span>Q&A as PDF (Server)</span>
+                        </button>
                       </div>
                     )}
                   </div>
@@ -297,6 +430,12 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
         })}
       </div>
       )}
+      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
+      <PromptSelectorModal 
+        isOpen={showPromptSelector} 
+        onClose={() => setShowPromptSelector(false)} 
+        conversation={conversation}
+      />
     </div>
   );
 }
