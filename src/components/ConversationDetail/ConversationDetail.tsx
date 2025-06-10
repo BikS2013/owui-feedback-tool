@@ -7,6 +7,7 @@ import { Message } from '../../types/feedback';
 import { NoLogoHeader } from '../NoLogoHeader/NoLogoHeader';
 import { SettingsModal } from '../SettingsModal/SettingsModal';
 import { PromptSelectorModal } from '../PromptSelectorModal/PromptSelectorModal';
+import { PromptResultsModal } from '../PromptResultsModal/PromptResultsModal';
 import { 
   downloadAsJSON, 
   downloadAsMarkdown,
@@ -18,6 +19,8 @@ import {
 import { ApiService } from '../../services/api.service';
 import { llmService } from '../../services/llm.service';
 import { storageUtils } from '../../utils/storageUtils';
+import { githubService } from '../../services/github.service';
+import { parsePromptParameters } from '../../utils/promptParser';
 import './ConversationDetail.css';
 
 interface ConversationDetailProps {
@@ -32,6 +35,18 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
   const [showSettings, setShowSettings] = useState(false);
   const [showPromptSelector, setShowPromptSelector] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
+  const [isExecutingPrompt, setIsExecutingPrompt] = useState(false);
+  const [showPromptResults, setShowPromptResults] = useState(false);
+  const [promptExecutionResult, setPromptExecutionResult] = useState<{
+    success: boolean;
+    message: string;
+    response?: string;
+    error?: string;
+    timestamp?: Date;
+    duration?: number;
+    promptName?: string;
+    llmConfiguration?: string;
+  } | null>(null);
   const downloadRef = useRef<HTMLDivElement>(null);
 
   // Close menus when clicking outside
@@ -168,38 +183,125 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
   const handleExecutePrompt = async () => {
     if (!conversation) return;
     
+    setIsExecutingPrompt(true);
+    
     try {
       // Get the selected LLM configuration from localStorage
       const llmConfiguration = llmService.getSelectedConfiguration();
       if (!llmConfiguration) {
         alert('Please select an LLM configuration in Settings first.');
         setShowSettings(true);
+        setIsExecutingPrompt(false);
         return;
       }
       
-      const promptsFolder = storageUtils.getPromptsFolder();
-      const promptFilePath = `${promptsFolder}/analysis/default.md`; // This can be selected from GitHub files later
+      // Get the saved prompt configuration from localStorage
+      const savedConfig = localStorage.getItem('promptSelectorConfiguration');
+      if (!savedConfig) {
+        alert('Please select a prompt template in the Prompt Selector first.');
+        setShowPromptSelector(true);
+        setIsExecutingPrompt(false);
+        return;
+      }
       
-      console.log('Executing prompt with:', {
+      const promptConfig = JSON.parse(savedConfig);
+      if (!promptConfig.selectedFile || !promptConfig.promptContent) {
+        alert('Please select a prompt template in the Prompt Selector first.');
+        setShowPromptSelector(true);
+        setIsExecutingPrompt(false);
+        return;
+      }
+      
+      console.log('Executing prompt with saved configuration:', {
         llmConfiguration,
-        promptFilePath,
-        conversationId: conversation.id
+        promptFile: promptConfig.selectedFile,
+        parameters: promptConfig.parameters
       });
       
-      const response = await llmService.executePrompt(
+      // Build parameter values based on the saved configuration
+      const parameterValues: Record<string, string> = {};
+      
+      if (promptConfig.parameters && Array.isArray(promptConfig.parameters)) {
+        promptConfig.parameters.forEach((config: any) => {
+          switch (config.source) {
+            case 'conversation':
+              if (conversation) {
+                parameterValues[config.name] = JSON.stringify(conversation, null, 2);
+              }
+              break;
+            case 'qa':
+              // For now, we'll use empty since we don't have Q&A context here
+              parameterValues[config.name] = '{}';
+              break;
+            case 'current-date':
+              parameterValues[config.name] = new Date().toLocaleDateString('en-CA');
+              break;
+            case 'current-datetime':
+              parameterValues[config.name] = new Date().toLocaleString('en-CA', { 
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+                hour12: false
+              }).replace(',', '');
+              break;
+            case 'custom-text':
+              parameterValues[config.name] = config.customValue || '';
+              break;
+          }
+        });
+      }
+      
+      const startTime = Date.now();
+      
+      // Execute the prompt with parameters
+      const response = await llmService.executePromptWithParameters(
         llmConfiguration,
-        promptFilePath,
-        conversation
+        promptConfig.promptContent,
+        parameterValues
       );
       
+      const duration = Date.now() - startTime;
+      
+      // Extract prompt name from file path
+      const promptName = promptConfig.selectedFile.split('/').pop() || 'Unknown Prompt';
+      
       if (response.success) {
-        alert(`Prompt execution started!\nRequest ID: ${response.requestId}`);
+        setPromptExecutionResult({
+          success: true,
+          message: 'Prompt executed successfully!',
+          response: response.result,
+          timestamp: new Date(),
+          duration,
+          promptName,
+          llmConfiguration
+        });
+        setShowPromptResults(true);
       } else {
-        alert(`Error: ${response.error || response.message}`);
+        setPromptExecutionResult({
+          success: false,
+          message: response.error || 'Execution failed',
+          error: response.error,
+          timestamp: new Date(),
+          duration,
+          promptName,
+          llmConfiguration
+        });
+        setShowPromptResults(true);
       }
     } catch (error) {
       console.error('Error executing prompt:', error);
-      alert('Failed to execute prompt. Please check the console for details.');
+      setPromptExecutionResult({
+        success: false,
+        message: 'Failed to execute prompt',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        timestamp: new Date()
+      });
+      setShowPromptResults(true);
+    } finally {
+      setIsExecutingPrompt(false);
     }
   };
 
@@ -235,9 +337,14 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
         type="button"
         className="llm-execute-button"
         onClick={handleExecutePrompt}
-        title="Execute LLM prompt"
+        disabled={isExecutingPrompt}
+        title={isExecutingPrompt ? "Executing prompt..." : "Execute LLM prompt"}
       >
-        <Sparkles size={16} />
+        {isExecutingPrompt ? (
+          <div className="button-spinner" />
+        ) : (
+          <Sparkles size={16} />
+        )}
       </button>
       <button
         type="button"
@@ -435,6 +542,11 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
         isOpen={showPromptSelector} 
         onClose={() => setShowPromptSelector(false)} 
         conversation={conversation}
+      />
+      <PromptResultsModal
+        isOpen={showPromptResults}
+        onClose={() => setShowPromptResults(false)}
+        result={promptExecutionResult}
       />
     </div>
   );
