@@ -18,9 +18,6 @@ import {
 } from '../../utils/downloadUtils';
 import { ApiService } from '../../services/api.service';
 import { llmService } from '../../services/llm.service';
-import { storageUtils } from '../../utils/storageUtils';
-import { githubService } from '../../services/github.service';
-import { parsePromptParameters } from '../../utils/promptParser';
 import './ConversationDetail.css';
 
 interface ConversationDetailProps {

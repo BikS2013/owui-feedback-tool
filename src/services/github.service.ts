@@ -1,7 +1,7 @@
 import { GitHubFile, GitHubTree, GitHubError, GitHubRateLimit } from '../types/github';
 
 export class GitHubService {
-  private static readonly BASE_URL = 'https://api.github.com';
+  private static readonly BASE_URL = import.meta.env.VITE_GITHUB_API_URL || 'https://api.github.com';
   
   // Get configuration from environment variables
   private static getConfig() {

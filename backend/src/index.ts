@@ -12,6 +12,7 @@ import { swaggerSpec } from './swagger.config.js';
 
 const app: Application = express();
 const PORT = process.env.PORT || 3001;
+const HOST = process.env.HOST || 'localhost';
 
 // Parse allowed origins from environment variable
 const getAllowedOrigins = (): string[] | string => {
@@ -115,20 +116,20 @@ app.listen(PORT, () => {
   
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('📚 API Documentation:');
-  console.log(`   👉 http://localhost:${PORT}/api-docs`);
+  console.log(`   👉 http://${HOST}:${PORT}/api-docs`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log('🔗 Available endpoints:');
-  console.log(`   • GET  http://localhost:${PORT}/health`);
-  console.log(`   • POST http://localhost:${PORT}/api/export/conversation`);
-  console.log(`   • POST http://localhost:${PORT}/api/export/qa-pair`);
-  console.log(`   • GET  http://localhost:${PORT}/api/github/status`);
-  console.log(`   • GET  http://localhost:${PORT}/api/github/tree`);
-  console.log(`   • GET  http://localhost:${PORT}/api/github/files`);
-  console.log(`   • POST http://localhost:${PORT}/api/llm/execute-prompt`);
-  console.log(`   • GET  http://localhost:${PORT}/api/llm/status/:requestId`);
-  console.log(`   • GET  http://localhost:${PORT}/api/llm/configurations`);
-  console.log(`   • POST http://localhost:${PORT}/api/llm/test`);
-  console.log(`   • POST http://localhost:${PORT}/api/llm/reload`);
+  console.log(`   • GET  http://${HOST}:${PORT}/health`);
+  console.log(`   • POST http://${HOST}:${PORT}/api/export/conversation`);
+  console.log(`   • POST http://${HOST}:${PORT}/api/export/qa-pair`);
+  console.log(`   • GET  http://${HOST}:${PORT}/api/github/status`);
+  console.log(`   • GET  http://${HOST}:${PORT}/api/github/tree`);
+  console.log(`   • GET  http://${HOST}:${PORT}/api/github/files`);
+  console.log(`   • POST http://${HOST}:${PORT}/api/llm/execute-prompt`);
+  console.log(`   • GET  http://${HOST}:${PORT}/api/llm/status/:requestId`);
+  console.log(`   • GET  http://${HOST}:${PORT}/api/llm/configurations`);
+  console.log(`   • POST http://${HOST}:${PORT}/api/llm/test`);
+  console.log(`   • POST http://${HOST}:${PORT}/api/llm/reload`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 });
 

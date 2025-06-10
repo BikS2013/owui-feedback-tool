@@ -1,0 +1,22 @@
+version: '3.8'
+
+services:
+  owui-unified:
+    build:
+      context: .
+      dockerfile: Dockerfile.unified
+    image: owui-unified:latest
+    container_name: owui-unified
+    ports:
+      - "8080:80"
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - VITE_API_URL=http://localhost:8080/api
+      - PORT=3001
+      - CORS_ORIGIN=http://localhost:8080
+    volumes:
+      # Optional: Mount LLM config
+      - ./backend/llm-config.yaml:/app/backend/llm-config.yaml:ro
+      # Optional: Mount feedback data
+      # - ./data:/usr/share/nginx/html/data

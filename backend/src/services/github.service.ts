@@ -8,7 +8,7 @@ import {
 } from '../types/github.types.js';
 
 export class GitHubService {
-  private static readonly BASE_URL = 'https://api.github.com';
+  private static readonly BASE_URL = process.env.GITHUB_API_URL || 'https://api.github.com';
   private readonly repo: string;
   private readonly token?: string;
   
