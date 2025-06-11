@@ -3,6 +3,7 @@ import { ConversationList } from './components/ConversationList/ConversationList
 import { ConversationDetail } from './components/ConversationDetail/ConversationDetail';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard/AnalyticsDashboard';
 import { ResizablePanel } from './components/ResizablePanel/ResizablePanel';
+import { DataNotification } from './components/DataNotification/DataNotification';
 import { FeedbackProvider, useFeedbackStore } from './store/feedbackStore';
 import { ThemeProvider } from './store/themeStore';
 import { 
@@ -117,6 +118,7 @@ function AppContent() {
 
   return (
     <div className="app">
+      <DataNotification />
       <ResizablePanel storageKey="conversation-list-width">
         <ConversationList
           conversations={filteredConversations}

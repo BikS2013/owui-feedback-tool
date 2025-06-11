@@ -1,5 +1,38 @@
 import { FeedbackEntry, Message } from '../types/feedback';
 import { Conversation, QAPair } from '../types/conversation';
+import { detectDataFormat, validateDataIntegrity } from './formatDetector';
+import { convertChatFormatToFeedbackFormat, ChatExportEntry } from './chatFormatConverter';
+
+export function processRawData(rawData: any[]): {
+  conversations: Map<string, Conversation>;
+  qaPairs: QAPair[];
+  format: string;
+  warnings: string[];
+} {
+  const detectionResult = detectDataFormat(rawData);
+  const validationResult = validateDataIntegrity(rawData, detectionResult.format);
+  
+  let feedbackEntries: FeedbackEntry[];
+  const warnings: string[] = [...validationResult.warnings];
+  
+  if (detectionResult.format === 'chat') {
+    // Convert chat format to feedback format
+    feedbackEntries = convertChatFormatToFeedbackFormat(rawData as ChatExportEntry[]);
+    warnings.push('Data imported from chat export format. No ratings or feedback data available.');
+  } else if (detectionResult.format === 'feedback') {
+    feedbackEntries = rawData as FeedbackEntry[];
+  } else {
+    throw new Error(`Unknown data format: ${detectionResult.details}`);
+  }
+  
+  const result = processRawFeedbackData(feedbackEntries);
+  
+  return {
+    ...result,
+    format: detectionResult.format,
+    warnings
+  };
+}
 
 export function processRawFeedbackData(feedbackEntries: FeedbackEntry[]): {
   conversations: Map<string, Conversation>;

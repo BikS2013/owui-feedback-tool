@@ -1,0 +1,147 @@
+.data-notification {
+  position: fixed;
+  top: 70px;
+  right: 20px;
+  z-index: 1000;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.notification-item {
+  background: var(--surface-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  gap: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease-out;
+  backdrop-filter: blur(10px);
+  position: relative;
+  padding-right: 40px;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.notification-item.info {
+  border-color: #3b82f6;
+  background: rgba(59, 130, 246, 0.95);
+  color: white;
+}
+
+.notification-item.info svg {
+  color: white;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notification-item.info .notification-title {
+  color: white;
+}
+
+.notification-item.info .notification-description {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.notification-item.warning {
+  border-color: #f59e0b;
+  background: rgba(245, 158, 11, 0.95);
+  color: white;
+}
+
+.notification-item.warning svg {
+  color: white;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.notification-item.warning .notification-title {
+  color: white;
+}
+
+.notification-item.warning .notification-description,
+.notification-item.warning .warning-list {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.notification-content {
+  flex: 1;
+}
+
+.notification-title {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+.notification-description {
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+.warning-list {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin: 4px 0 0 0;
+  padding-left: 20px;
+  line-height: 1.4;
+}
+
+.warning-list li {
+  margin-bottom: 2px;
+}
+
+.notification-close {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.notification-close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+.notification-close:active {
+  transform: scale(0.95);
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .notification-item {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  }
+  
+  .notification-item.info {
+    background: rgba(59, 130, 246, 0.9);
+    border-color: rgba(59, 130, 246, 0.5);
+  }
+  
+  .notification-item.warning {
+    background: rgba(245, 158, 11, 0.9);
+    border-color: rgba(245, 158, 11, 0.5);
+  }
+}

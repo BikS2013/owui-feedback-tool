@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { FeedbackEntry } from '../types/feedback';
 import { Conversation, QAPair, FilterOptions } from '../types/conversation';
-import { processRawFeedbackData } from '../utils/dataProcessor';
+import { processRawData } from '../utils/dataProcessor';
 
 type ViewMode = 'details' | 'analytics';
 
@@ -21,6 +21,8 @@ interface FeedbackStore {
   setViewMode: (mode: ViewMode) => void;
   selectedAnalyticsModel: string | null;
   setSelectedAnalyticsModel: (model: string | null) => void;
+  dataFormat: string | null;
+  dataWarnings: string[];
 }
 
 const FeedbackContext = createContext<FeedbackStore | undefined>(undefined);
@@ -53,6 +55,8 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [dataExpiresAt, setDataExpiresAt] = useState<number | null>(null);
+  const [dataFormat, setDataFormat] = useState<string | null>(null);
+  const [dataWarnings, setDataWarnings] = useState<string[]>([]);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     // Load saved view mode from localStorage
     const savedViewMode = localStorage.getItem(VIEW_MODE_KEY);
@@ -93,9 +97,11 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
             setDataExpiresAt(storedData.expiresAt);
             
             // Process the data
-            const { conversations: convMap, qaPairs: qaList } = processRawFeedbackData(storedData.data);
+            const { conversations: convMap, qaPairs: qaList, format, warnings } = processRawData(storedData.data);
             setConversations(Array.from(convMap.values()));
             setQAPairs(qaList);
+            setDataFormat(format);
+            setDataWarnings(warnings);
             return;
           } else {
             // Data has expired, remove it
@@ -125,6 +131,8 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
     setQAPairs([]);
     setError(null);
     setDataExpiresAt(null);
+    setDataFormat(null);
+    setDataWarnings([]);
     // Clear local storage
     localStorage.removeItem(STORAGE_KEY);
     // Reset filters to default
@@ -151,25 +159,40 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
       
       // Read the file
       const text = await file.text();
-      const data: FeedbackEntry[] = JSON.parse(text);
+      const rawData = JSON.parse(text);
       
       // Validate that it's an array
-      if (!Array.isArray(data)) {
-        throw new Error('Invalid file format: expected an array of feedback entries');
+      if (!Array.isArray(rawData)) {
+        throw new Error('Invalid file format: expected an array of entries');
+      }
+      
+      // Process the data - this will handle format detection and conversion
+      const { conversations: convMap, qaPairs: qaList, format, warnings } = processRawData(rawData);
+      
+      // For chat format, we need to extract the processed feedback entries
+      // For feedback format, they're already in the correct format
+      let feedbackEntries: FeedbackEntry[] = [];
+      if (format === 'feedback') {
+        feedbackEntries = rawData as FeedbackEntry[];
+      } else {
+        // For chat format, we store the converted data
+        // The conversion already happened in processRawData
+        // We'll store the synthetic feedback entries
+        feedbackEntries = Array.from(convMap.values()).flatMap(conv => conv.feedbackEntries);
       }
       
       // Save to local storage with expiration
       const storedData: StoredFeedbackData = {
-        data: data,
+        data: feedbackEntries,
         expiresAt: Date.now() + TWO_WEEKS_MS
       };
       localStorage.setItem(STORAGE_KEY, JSON.stringify(storedData));
       
-      setRawData(data);
+      setRawData(feedbackEntries);
       setDataExpiresAt(storedData.expiresAt);
+      setDataFormat(format);
+      setDataWarnings(warnings);
       
-      // Process the data
-      const { conversations: convMap, qaPairs: qaList } = processRawFeedbackData(data);
       setConversations(Array.from(convMap.values()));
       setQAPairs(qaList);
       
@@ -198,6 +221,8 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
     isLoading,
     error,
     dataExpiresAt,
+    dataFormat,
+    dataWarnings,
     loadData,
     loadFromFile,
     clearData,

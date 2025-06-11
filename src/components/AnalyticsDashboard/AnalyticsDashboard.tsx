@@ -28,9 +28,12 @@ export function AnalyticsDashboard({
   qaPairs,
   selectedConversationId 
 }: AnalyticsDashboardProps) {
-  const { selectedAnalyticsModel, setSelectedAnalyticsModel, filters } = useFeedbackStore();
+  const { selectedAnalyticsModel, setSelectedAnalyticsModel, filters, dataFormat } = useFeedbackStore();
   const [showExportMenu, setShowExportMenu] = useState(false);
   const exportRef = useRef<HTMLDivElement>(null);
+  
+  // Check if we have rating data
+  const hasRatingData = dataFormat !== 'chat';
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -277,7 +280,7 @@ export function AnalyticsDashboard({
         heightAdjustment={2}
       />
 
-      <div className="analytics-content">
+      <div className={`analytics-content ${!hasRatingData ? 'no-rating-data' : ''}`}>
         <div className="metrics-section">
           <h3>Conversation Metrics</h3>
           
@@ -413,6 +416,15 @@ export function AnalyticsDashboard({
           </div>
         </div>
       </div>
+      
+      {!hasRatingData && (
+        <div className="no-rating-overlay">
+          <div className="no-rating-message">
+            <h3>Rating Data Not Available</h3>
+            <p>Analytics require feedback data with ratings. The current data format contains only chat conversations without ratings.</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
