@@ -5,6 +5,168 @@
   background-color: var(--surface-color);
 }
 
+/* Header button styles to match ConversationDetail */
+.conversation-header .prompt-selector-button,
+.conversation-header .llm-execute-button,
+.conversation-header .export-backend-button,
+.conversation-header .view-toggle-button,
+.conversation-header .download-button {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.8);
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.conversation-header .prompt-selector-button:hover,
+.conversation-header .llm-execute-button:hover,
+.conversation-header .export-backend-button:hover,
+.conversation-header .view-toggle-button:hover,
+.conversation-header .download-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #FFFFFF;
+}
+
+.conversation-header .prompt-selector-button:disabled,
+.conversation-header .llm-execute-button:disabled,
+.conversation-header .export-backend-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tab-buttons-header {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.tab-button-header {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.7);
+  padding: 6px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tab-button-header:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.tab-button-header.active {
+  background: rgba(255, 255, 255, 0.15);
+  color: #FFFFFF;
+}
+
+.stats-info {
+  display: flex;
+  gap: 16px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.stats-info span {
+  white-space: nowrap;
+}
+
+.button-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: #FFFFFF;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.download-container {
+  position: relative;
+}
+
+.download-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-primary);
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 100;
+  min-width: 140px;
+  padding: 4px;
+}
+
+.download-menu button {
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.download-menu button:hover {
+  background: var(--bg-secondary);
+}
+
+.raw-json-container {
+  flex: 1;
+  overflow: auto;
+  background: var(--bg-secondary);
+  padding: 16px;
+}
+
+.raw-json-content {
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  margin: 0;
+}
+
+.conversation-content {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--bg-primary);
+}
+
+.analytics-container {
+  flex: 1;
+  overflow-y: auto;
+  background: var(--bg-primary);
+}
+
 /* Thread header styling */
 .thread-detail h2 {
   font-size: 18px;

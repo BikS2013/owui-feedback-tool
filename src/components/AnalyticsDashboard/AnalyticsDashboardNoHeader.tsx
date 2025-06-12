@@ -75,6 +75,7 @@ export function AnalyticsDashboardNoHeader({
 
   // Filter QA pairs by model if selected
   const filteredQAPairs = useMemo(() => {
+    if (!qaPairs) return [];
     if (!selectedAnalyticsModel) return qaPairs;
     
     return qaPairs.filter(qa => qa.answer.model === selectedAnalyticsModel);
