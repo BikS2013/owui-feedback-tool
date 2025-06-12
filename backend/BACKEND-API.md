@@ -450,6 +450,131 @@ Reload LLM configurations from file.
 
 ---
 
+## Agent Routes
+
+Base path: `/api/agent`
+
+**Note:** Agent configurations are loaded from `agent-config.yaml` file which contains agent names, URLs, and database connection strings.
+
+### GET /api/agent
+
+Get all configured agents in the system.
+
+**Response:**
+```json
+{
+  "success": true,
+  "agents": [
+    {
+      "name": "Customer Facing",
+      "url": "http://localhost:3001/api/agent1",
+      "database_connection_string": "postgresql://user:password@localhost:5432/agent1_db"
+    },
+    {
+      "name": "Ask Athena",
+      "url": "http://localhost:3002/api/agent2",
+      "database_connection_string": "postgresql://user:password@localhost:5432/agent2_db"
+    }
+  ],
+  "count": 2
+}
+```
+
+**Error Response:**
+- `500 Internal Server Error`: Failed to retrieve agents
+
+### GET /api/agent/{name}
+
+Get a specific agent by name.
+
+**Path Parameters:**
+- `name`: The name of the agent to retrieve (e.g., "Customer Facing")
+
+**Response:**
+```json
+{
+  "success": true,
+  "agent": {
+    "name": "Customer Facing",
+    "url": "http://localhost:3001/api/agent1",
+    "database_connection_string": "postgresql://user:password@localhost:5432/agent1_db"
+  }
+}
+```
+
+**Error Responses:**
+- `404 Not Found`: Agent not found
+- `500 Internal Server Error`: Failed to retrieve agent
+
+### POST /api/agent/reload
+
+Reload agent configuration from the `agent-config.yaml` file.
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Agent configuration reloaded successfully",
+  "agentsLoaded": 3
+}
+```
+
+**Error Response:**
+- `500 Internal Server Error`: Failed to reload agent configuration
+
+### GET /api/agent/threads
+
+Get paginated thread data from a specific agent's database.
+
+**Query Parameters:**
+- `agentName` (required): Name of the agent whose threads to retrieve
+- `page` (optional, default: 1): Page number (minimum: 1)
+- `limit` (optional, default: 50): Number of items per page (range: 1-100)
+
+**Example Request:**
+```
+GET /api/agent/threads?agentName=Customer Facing&page=1&limit=20
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "threads": [
+      {
+        "thread_id": "abc-123",
+        "thread_ts": "2025-01-06T10:30:00Z",
+        "channel_id": "channel-1",
+        "configurable": {},
+        "created_at": "2025-01-06T10:30:00Z",
+        "updated_at": "2025-01-06T11:00:00Z",
+        "metadata": {},
+        "checkpoint": {},
+        "parent_checkpoint": {}
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 150,
+      "totalPages": 8
+    }
+  }
+}
+```
+
+**Error Responses:**
+- `400 Bad Request`: Missing agent name or invalid pagination parameters
+- `404 Not Found`: Agent not found
+- `500 Internal Server Error`: Database connection error or query failed
+
+**Database Requirements:**
+- Requires direct database access using the PostgreSQL connection string from agent configuration
+- The agent's database must have a `thread` table with the expected schema
+
+---
+
 ## Error Handling
 
 All endpoints follow a consistent error response format:

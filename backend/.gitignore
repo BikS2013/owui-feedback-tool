@@ -6,3 +6,4 @@ dist/
 *.log
 .tsbuildinfo
 llm-config.yaml
+agent-config.yaml

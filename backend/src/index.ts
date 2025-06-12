@@ -8,6 +8,7 @@ import swaggerUi from 'swagger-ui-express';
 import { exportRoutes } from './routes/export.routes.js';
 import { githubRoutes } from './routes/github.routes.js';
 import { llmRoutes } from './routes/llm.routes.js';
+import { agentRoutes } from './routes/agent.routes.js';
 import { swaggerSpec } from './swagger.config.js';
 
 const app: Application = express();
@@ -86,6 +87,7 @@ app.get('/health', (req, res) => {
 app.use('/api/export', exportRoutes);
 app.use('/api/github', githubRoutes);
 app.use('/api/llm', llmRoutes);
+app.use('/api/agent', agentRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -130,6 +132,10 @@ app.listen(PORT, () => {
   console.log(`   • GET  http://${HOST}:${PORT}/api/llm/configurations`);
   console.log(`   • POST http://${HOST}:${PORT}/api/llm/test`);
   console.log(`   • POST http://${HOST}:${PORT}/api/llm/reload`);
+  console.log(`   • GET  http://${HOST}:${PORT}/api/agent`);
+  console.log(`   • GET  http://${HOST}:${PORT}/api/agent/:name`);
+  console.log(`   • GET  http://${HOST}:${PORT}/api/agent/threads?agentName=xxx`);
+  console.log(`   • POST http://${HOST}:${PORT}/api/agent/reload`);
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 });
 
