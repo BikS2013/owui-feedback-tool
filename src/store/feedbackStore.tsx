@@ -83,34 +83,26 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
       setIsLoading(true);
       setError(null);
       
-      // Check if there's data in local storage
-      const storedDataStr = localStorage.getItem(STORAGE_KEY);
-      if (storedDataStr) {
+      // Check if there's metadata in local storage
+      const metadataStr = localStorage.getItem(STORAGE_KEY + '-metadata');
+      if (metadataStr) {
         try {
-          const storedData: StoredFeedbackData = JSON.parse(storedDataStr);
+          const metadata = JSON.parse(metadataStr);
           
-          // Check if data has expired
+          // Check if metadata has expired
           const now = Date.now();
-          if (now < storedData.expiresAt) {
-            // Data is still valid
-            setRawData(storedData.data);
-            setDataExpiresAt(storedData.expiresAt);
-            
-            // Process the data
-            const { conversations: convMap, qaPairs: qaList, format, warnings } = processRawData(storedData.data);
-            setConversations(Array.from(convMap.values()));
-            setQAPairs(qaList);
-            setDataFormat(format);
-            setDataWarnings(warnings);
-            return;
+          if (now < metadata.expiresAt) {
+            // Show info about previously loaded file
+            console.log(`Previously loaded: ${metadata.fileName} (${(metadata.fileSize / 1024 / 1024).toFixed(2)}MB)`);
+            console.log(`Format: ${metadata.format}, Conversations: ${metadata.conversationCount}`);
           } else {
-            // Data has expired, remove it
-            console.log('Stored data has expired, removing from local storage');
-            localStorage.removeItem(STORAGE_KEY);
+            // Metadata has expired, remove it
+            console.log('Stored metadata has expired, removing from local storage');
+            localStorage.removeItem(STORAGE_KEY + '-metadata');
           }
         } catch (parseError) {
-          console.error('Error parsing stored data:', parseError);
-          localStorage.removeItem(STORAGE_KEY);
+          console.error('Error parsing metadata:', parseError);
+          localStorage.removeItem(STORAGE_KEY + '-metadata');
         }
       }
       
@@ -133,8 +125,9 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
     setDataExpiresAt(null);
     setDataFormat(null);
     setDataWarnings([]);
-    // Clear local storage
+    // Clear local storage metadata
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(STORAGE_KEY + '-metadata');
     // Reset filters to default
     setFilters({
       dateRange: {
@@ -181,15 +174,25 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
         feedbackEntries = Array.from(convMap.values()).flatMap(conv => conv.feedbackEntries);
       }
       
-      // Save to local storage with expiration
-      const storedData: StoredFeedbackData = {
-        data: feedbackEntries,
+      // Don't save large files to localStorage - just keep in memory
+      // Store only metadata about the loaded file
+      const metadata = {
+        fileName: file.name,
+        fileSize: file.size,
+        loadedAt: Date.now(),
+        format: format,
+        conversationCount: convMap.size,
         expiresAt: Date.now() + TWO_WEEKS_MS
       };
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(storedData));
+      
+      try {
+        localStorage.setItem(STORAGE_KEY + '-metadata', JSON.stringify(metadata));
+      } catch (e) {
+        console.warn('Could not save file metadata to localStorage:', e);
+      }
       
       setRawData(feedbackEntries);
-      setDataExpiresAt(storedData.expiresAt);
+      setDataExpiresAt(metadata.expiresAt);
       setDataFormat(format);
       setDataWarnings(warnings);
       

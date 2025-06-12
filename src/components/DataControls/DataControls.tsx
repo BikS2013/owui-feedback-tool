@@ -26,6 +26,7 @@ export function DataControls() {
         return;
       }
 
+
       try {
         await loadFromFile(file);
       } catch (error) {
