@@ -1,0 +1,53 @@
+/* Button group style */
+.view-mode-switch {
+  display: inline-flex;
+  background-color: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.view-mode-btn {
+  background: none;
+  border: none;
+  padding: 8px 12px;
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.view-mode-btn:not(:last-child) {
+  border-right: 1px solid var(--color-border);
+}
+
+.view-mode-btn:hover {
+  background-color: var(--color-surface-secondary);
+  color: var(--color-text);
+}
+
+.view-mode-btn.active {
+  background-color: var(--color-primary);
+  color: white;
+}
+
+.view-mode-btn.active:hover {
+  background-color: var(--color-primary-hover);
+}
+
+/* Toggle style with Switch component */
+.view-mode-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.view-mode-toggle .icon-active {
+  color: var(--color-primary);
+}
+
+.view-mode-toggle .icon-inactive {
+  color: var(--color-text-secondary);
+}

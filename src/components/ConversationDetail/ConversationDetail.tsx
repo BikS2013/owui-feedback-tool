@@ -1,11 +1,26 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { format } from 'date-fns';
-import { User, Bot, ThumbsUp, ThumbsDown, Download, FileJson, FileText, File, Code, Eye, Send, Settings, Sparkles, FileSearch } from 'lucide-react';
+import { 
+  User, 
+  Bot, 
+  ThumbsUp, 
+  ThumbsDown, 
+  Download, 
+  FileJson, 
+  FileText, 
+  File, 
+  Code, 
+  Eye, 
+  Send, 
+  Sparkles, 
+  FileSearch, 
+  MessageSquare, 
+  BarChart3 
+} from 'lucide-react';
 import { Conversation, QAPair } from '../../types/conversation';
 import { Message } from '../../types/feedback';
 import { NoLogoHeader } from '../NoLogoHeader/NoLogoHeader';
-import { SettingsModal } from '../SettingsModal/SettingsModal';
 import { PromptSelectorModal } from '../PromptSelectorModal/PromptSelectorModal';
 import { PromptResultsModal } from '../PromptResultsModal/PromptResultsModal';
 import { 
@@ -18,6 +33,8 @@ import {
 } from '../../utils/downloadUtils';
 import { ApiService } from '../../services/api.service';
 import { llmService } from '../../services/llm.service';
+import { AnalyticsDashboardNoHeader } from '../AnalyticsDashboard/AnalyticsDashboardNoHeader';
+import { useFeedbackStore } from '../../store/feedbackStore';
 import './ConversationDetail.css';
 
 interface ConversationDetailProps {
@@ -26,10 +43,10 @@ interface ConversationDetailProps {
 }
 
 export function ConversationDetail({ conversation, qaPairs }: ConversationDetailProps) {
+  const { conversations, qaPairs: allQaPairs } = useFeedbackStore();
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [qaDownloadMenus, setQaDownloadMenus] = useState<{ [key: string]: boolean }>({});
   const [showRawJson, setShowRawJson] = useState(false);
-  const [showSettings, setShowSettings] = useState(false);
   const [showPromptSelector, setShowPromptSelector] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isExecutingPrompt, setIsExecutingPrompt] = useState(false);
@@ -44,6 +61,7 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     promptName?: string;
     llmConfiguration?: string;
   } | null>(null);
+  const [activeTab, setActiveTab] = useState<'text' | 'analytics'>('text');
   const downloadRef = useRef<HTMLDivElement>(null);
 
   // Close menus when clicking outside
@@ -187,7 +205,6 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
       const llmConfiguration = llmService.getSelectedConfiguration();
       if (!llmConfiguration) {
         alert('Please select an LLM configuration in Settings first.');
-        setShowSettings(true);
         setIsExecutingPrompt(false);
         return;
       }
@@ -302,26 +319,41 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     }
   };
 
+  const tabButtons = (
+    <div className="tab-buttons-header">
+      <button
+        type="button"
+        className={`tab-button-header ${activeTab === 'text' ? 'active' : ''}`}
+        onClick={() => setActiveTab('text')}
+      >
+        {MessageSquare && <MessageSquare size={16} />}
+        <span>Text</span>
+      </button>
+      <button
+        type="button"
+        className={`tab-button-header ${activeTab === 'analytics' ? 'active' : ''}`}
+        onClick={() => setActiveTab('analytics')}
+      >
+        {BarChart3 && <BarChart3 size={16} />}
+        <span>Analytics</span>
+      </button>
+    </div>
+  );
+
   const statsInfo = (
-    <div className="stats-info">
-      <span>Q&A pairs: {conversation.qaPairCount}</span>
-      <span>Rated responses: {conversation.totalRatings}</span>
-      {conversation.averageRating && (
-        <span>Average rating: {conversation.averageRating.toFixed(1)}/10</span>
-      )}
+    <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+      <div className="stats-info">
+        <span>Q&A pairs: {conversation.qaPairCount}</span>
+        <span>Rated responses: {conversation.totalRatings}</span>
+        {conversation.averageRating && (
+          <span>Average rating: {conversation.averageRating.toFixed(1)}/10</span>
+        )}
+      </div>
     </div>
   );
 
   const headerActions = (
     <div className="header-actions">
-      <button
-        type="button"
-        className="settings-button"
-        onClick={() => setShowSettings(true)}
-        title="Settings"
-      >
-        <Settings size={16} />
-      </button>
       <button
         type="button"
         className="prompt-selector-button"
@@ -435,21 +467,23 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     <div className="conversation-detail" ref={downloadRef}>
       <NoLogoHeader
         title={<h2>{conversation.title}</h2>}
-        subtitle={statsInfo}
-        bottomRightControls={headerActions}
+        topRightControls={headerActions}
+        subtitle={tabButtons}
+        bottomRightControls={statsInfo}
         className="conversation-header"
         heightAdjustment={2}
       />
 
-      {showRawJson ? (
-        <div className="raw-json-container">
-          <pre className="raw-json-content">
-            {JSON.stringify(conversation, null, 2)}
-          </pre>
-        </div>
-      ) : (
-        <div className="messages-container">
-          {conversation.messages.map((message, index) => {
+      {activeTab === 'text' ? (
+        showRawJson ? (
+          <div className="raw-json-container">
+            <pre className="raw-json-content">
+              {JSON.stringify(conversation, null, 2)}
+            </pre>
+          </div>
+        ) : (
+          <div className="messages-container">
+            {conversation.messages.map((message, index) => {
           const ratingInfo = message.role === 'assistant' ? getRatingInfo(message) : null;
           
           return (
@@ -533,8 +567,16 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
           );
         })}
       </div>
+        )
+      ) : (
+        <div className="analytics-container">
+          <AnalyticsDashboardNoHeader
+            conversations={conversations}
+            qaPairs={allQaPairs}
+            selectedConversationId={conversation.id}
+          />
+        </div>
       )}
-      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
       <PromptSelectorModal 
         isOpen={showPromptSelector} 
         onClose={() => setShowPromptSelector(false)} 

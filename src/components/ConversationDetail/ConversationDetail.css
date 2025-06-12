@@ -99,6 +99,83 @@
   flex-direction: column;
 }
 
+/* Tab buttons in header styling */
+.tab-buttons-header {
+  display: flex;
+  gap: 0;
+  margin-left: -24px; /* Align with header padding */
+  position: absolute;
+  bottom: -12px; /* Push tabs way down, well past the border */
+  left: 24px; /* Align with header padding */
+}
+
+.tab-button-header {
+  padding: 12px 20px 14px 20px;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 10; /* High z-index to ensure visibility */
+  background-color: var(--header-bg); /* Give tabs the header background */
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.tab-button-header svg {
+  stroke-width: 2;
+}
+
+.tab-button-header:hover {
+  color: rgba(255, 255, 255, 0.9);
+  background-color: var(--header-bg);
+  filter: brightness(1.2);
+}
+
+.tab-button-header.active {
+  color: #FFFFFF;
+  border-bottom-color: var(--primary-color, #007BFF);
+  background-color: var(--header-bg);
+}
+
+/* Ensure the active tab border overlaps the header border */
+.conversation-header {
+  overflow: visible !important;
+}
+
+/* Ensure the header bottom section is positioned relatively for absolute tab positioning */
+.conversation-header .no-logo-header-bottom {
+  position: relative !important;
+}
+
+/* Analytics container styling */
+.analytics-container {
+  flex: 1;
+  overflow: hidden;
+  min-height: 0;
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Ensure the analytics dashboard fills the container */
+.analytics-container .analytics-dashboard {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 /* Custom scrollbar styling to ensure visibility */
 .messages-container::-webkit-scrollbar {
   width: 12px;

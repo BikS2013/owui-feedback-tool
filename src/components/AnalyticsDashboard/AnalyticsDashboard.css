@@ -366,6 +366,10 @@
 
 .average-rating-content {
   text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 80px;
 }
 
 .average-rating-content h4 {
@@ -379,7 +383,7 @@
   display: flex;
   align-items: baseline;
   justify-content: center;
-  gap: 0.5rem;
+  gap: 0.25rem;
 }
 
 .average-rating-card .rating-value {
@@ -389,12 +393,14 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+  letter-spacing: -0.02em;
 }
 
 .average-rating-card .rating-scale {
   font-size: 1.75rem;
-  color: var(--text-secondary);
-  font-weight: 400;
+  color: #7A8A9F;
+  font-weight: 600;
 }
 
 /* Dark theme adjustments */

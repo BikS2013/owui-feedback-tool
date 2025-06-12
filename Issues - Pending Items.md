@@ -56,6 +56,30 @@
 
 ## Completed Items
 
+### Reusable Switch Component Created (Completed: 2025-01-06)
+**Feature**: Created a reusable Switch component for toggle functionality throughout the application.
+**Implementation**:
+- Created `/src/components/Switch/` with Switch.tsx, Switch.css, and index.ts
+- Supports multiple sizes (small, medium, large)
+- Fully accessible with keyboard navigation and ARIA attributes
+- Disabled state support
+- Optional label text
+- Dark mode compatible styling
+- Uses CSS variables for theming
+
+**Usage Examples**:
+1. Basic switch: `<Switch checked={isOn} onChange={setIsOn} />`
+2. With label: `<Switch checked={isOn} onChange={setIsOn} label="Enable feature" />`
+3. Different sizes: `<Switch checked={isOn} onChange={setIsOn} size="large" />`
+4. Disabled: `<Switch checked={isOn} onChange={setIsOn} disabled />`
+
+**Additionally Created**:
+- ViewModeSwitch component demonstrating two UI patterns:
+  - Button group style for list/grid view switching
+  - Toggle style using the Switch component
+- Located in `/src/components/ViewModeSwitch/`
+- Provides examples of how to implement view mode switching
+
 ### Button Hover Colors in Light Theme (Completed: 2025-01-09)
 **Issue**: Button hover states in headers used white overlay (`rgba(255, 255, 255, 0.1)`) which doesn't work well in light theme.
 **Solution**:

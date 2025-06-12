@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Filter, BarChart2, MessageSquare } from 'lucide-react';
+import { Filter, Settings } from 'lucide-react';
 import { Conversation, FilterOptions } from '../../types/conversation';
 import { format } from 'date-fns';
 import { FilterPanel } from '../FilterPanel/FilterPanel';
@@ -9,6 +9,7 @@ import { ColorSchemeToggle } from '../ColorSchemeToggle/ColorSchemeToggle';
 import { ListItem } from '../ListItem/ListItem';
 import { List } from '../List/List';
 import { LogoHeader } from '../LogoHeader/LogoHeader';
+import { SettingsModal } from '../SettingsModal/SettingsModal';
 import { useFeedbackStore } from '../../store/feedbackStore';
 import { useTheme } from '../../store/themeStore';
 import './ConversationList.css';
@@ -35,7 +36,7 @@ export function ConversationList({
   availableModels
 }: ConversationListProps) {
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
-  const { viewMode, setViewMode } = useFeedbackStore();
+  const [showSettings, setShowSettings] = useState(false);
   const { colorScheme } = useTheme();
   
   // Calculate total Q&A pairs
@@ -50,22 +51,6 @@ export function ConversationList({
 
   const topRightControls = (
     <>
-      <div className="view-toggle">
-        <button 
-          className={`view-toggle-btn ${viewMode === 'details' ? 'active' : ''}`}
-          onClick={() => setViewMode('details')}
-          title="Conversation Details"
-        >
-          <MessageSquare size={16} />
-        </button>
-        <button 
-          className={`view-toggle-btn ${viewMode === 'analytics' ? 'active' : ''}`}
-          onClick={() => setViewMode('analytics')}
-          title="Analytics Dashboard"
-        >
-          <BarChart2 size={16} />
-        </button>
-      </div>
       <DataControls />
       <button className="filter-btn" onClick={() => setIsFilterPanelOpen(true)}>
         <Filter size={16} />
@@ -82,6 +67,14 @@ export function ConversationList({
       topRightControls={topRightControls}
       bottomRightControls={
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <button
+            type="button"
+            className="settings-button"
+            onClick={() => setShowSettings(true)}
+            title="Settings"
+          >
+            <Settings size={16} />
+          </button>
           <ColorSchemeToggle />
           <ThemeToggle />
         </div>
@@ -164,6 +157,7 @@ export function ConversationList({
         onClose={() => setIsFilterPanelOpen(false)}
         availableModels={availableModels}
       />
+      <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </>
   );
 }

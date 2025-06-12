@@ -1,0 +1,132 @@
+.switch-container {
+  display: inline-flex;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.switch-container:has(.switch-disabled) {
+  cursor: not-allowed;
+}
+
+.switch-wrapper {
+  position: relative;
+  display: inline-block;
+}
+
+.switch-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.switch-slider {
+  position: relative;
+  display: inline-block;
+  background-color: var(--color-border);
+  border-radius: 34px;
+  transition: background-color 0.2s ease;
+  outline: none;
+}
+
+/* Size variations */
+.switch-small {
+  width: 32px;
+  height: 18px;
+}
+
+.switch-medium {
+  width: 40px;
+  height: 22px;
+}
+
+.switch-large {
+  width: 48px;
+  height: 26px;
+}
+
+.switch-thumb {
+  position: absolute;
+  background-color: white;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Thumb sizes */
+.switch-small .switch-thumb {
+  width: 14px;
+  height: 14px;
+  top: 2px;
+  left: 2px;
+}
+
+.switch-medium .switch-thumb {
+  width: 18px;
+  height: 18px;
+  top: 2px;
+  left: 2px;
+}
+
+.switch-large .switch-thumb {
+  width: 22px;
+  height: 22px;
+  top: 2px;
+  left: 2px;
+}
+
+/* Checked state */
+.switch-checked {
+  background-color: var(--color-primary);
+}
+
+.switch-checked .switch-thumb {
+  transform: translateX(100%);
+}
+
+.switch-small.switch-checked .switch-thumb {
+  transform: translateX(14px);
+}
+
+.switch-medium.switch-checked .switch-thumb {
+  transform: translateX(18px);
+}
+
+.switch-large.switch-checked .switch-thumb {
+  transform: translateX(22px);
+}
+
+/* Hover states */
+.switch-slider:not(.switch-disabled):hover {
+  opacity: 0.8;
+}
+
+/* Focus states */
+.switch-slider:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* Disabled state */
+.switch-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.switch-label {
+  margin-left: 8px;
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .switch-slider {
+    background-color: var(--color-surface-secondary);
+  }
+  
+  .switch-thumb {
+    background-color: var(--color-background);
+  }
+}

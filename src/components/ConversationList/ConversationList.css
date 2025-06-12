@@ -19,39 +19,7 @@
   flex-shrink: 0;
 }
 
-/* View Toggle Styles */
-.view-toggle {
-  display: flex;
-  gap: 0;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 4px;
-  padding: 2px;
-}
-
-.view-toggle-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 6px 10px;
-  border: none;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.7);
-  cursor: pointer;
-  border-radius: 3px;
-  transition: all 0.2s;
-}
-
-.view-toggle-btn:hover {
-  color: #FFFFFF;
-  background: rgba(255, 255, 255, 0.1);
-}
-
-.view-toggle-btn.active {
-  background: rgba(255, 255, 255, 0.2);
-  color: #FFFFFF;
-}
-
-/* View toggle and filter button styles are now part of LogoHeader */
+/* Filter button styles are now part of LogoHeader */
 
 .filter-btn {
   background: none;
@@ -220,4 +188,36 @@
   .counts-text {
     font-size: 12px;
   }
+}
+
+/* Settings button styling to match theme toggles */
+.settings-button {
+  background: none;
+  border: 1px solid var(--border-primary);
+  color: var(--text-primary);
+  padding: 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s, color 0.2s, border-color 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.settings-button:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  border-color: var(--border-secondary);
+}
+
+/* Light theme styles for settings button */
+[data-theme="light"] .settings-button {
+  color: var(--text-primary);
+  border-color: var(--border-primary);
+}
+
+[data-theme="light"] .settings-button:hover {
+  background: var(--bg-secondary);
+  border-color: var(--border-secondary);
 }

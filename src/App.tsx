@@ -2,7 +2,6 @@ import { useState, useMemo } from 'react';
 import { ConversationList } from './components/ConversationList/ConversationList';
 import { ConversationDetail } from './components/ConversationDetail/ConversationDetail';
 import { ThreadDetail } from './components/ThreadDetail/ThreadDetail';
-import { AnalyticsDashboard } from './components/AnalyticsDashboard/AnalyticsDashboard';
 import { ResizablePanel } from './components/ResizablePanel/ResizablePanel';
 import { DataNotification } from './components/DataNotification/DataNotification';
 import { FeedbackProvider, useFeedbackStore } from './store/feedbackStore';
@@ -19,6 +18,15 @@ import {
 import './App.css';
 
 function AppContent() {
+  let feedbackStore;
+  try {
+    feedbackStore = useFeedbackStore();
+  } catch (error) {
+    // Handle hot module replacement issues
+    console.warn('FeedbackStore not available yet, this may be due to hot reload');
+    return <div>Loading...</div>;
+  }
+  
   const { 
     conversations, 
     qaPairs, 
@@ -27,9 +35,8 @@ function AppContent() {
     error,
     filters,
     setFilters,
-    viewMode,
     dataSource
-  } = useFeedbackStore();
+  } = feedbackStore;
   
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
 
@@ -127,23 +134,15 @@ function AppContent() {
         />
       </ResizablePanel>
       <main className="main-content">
-        {viewMode === 'details' ? (
-          dataSource === 'agent' ? (
-            <ThreadDetail
-              conversation={selectedConversation}
-              qaPairs={filteredQAPairs}
-            />
-          ) : (
-            <ConversationDetail
-              conversation={selectedConversation}
-              qaPairs={filteredQAPairs}
-            />
-          )
+        {dataSource === 'agent' ? (
+          <ThreadDetail
+            conversation={selectedConversation}
+            qaPairs={filteredQAPairs}
+          />
         ) : (
-          <AnalyticsDashboard
-            conversations={filteredConversations}
-            qaPairs={qaPairs}
-            selectedConversationId={selectedConversationId}
+          <ConversationDetail
+            conversation={selectedConversation}
+            qaPairs={filteredQAPairs}
           />
         )}
       </main>

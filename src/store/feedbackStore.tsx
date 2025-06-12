@@ -314,10 +314,6 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
     loadData();
   }, []);
 
-  // Save viewMode to localStorage when it changes
-  useEffect(() => {
-    localStorage.setItem(VIEW_MODE_KEY, viewMode);
-  }, [viewMode]);
 
   const value: FeedbackStore = {
     rawData,
@@ -336,8 +332,6 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
     clearData,
     filters,
     setFilters,
-    viewMode,
-    setViewMode,
     selectedAnalyticsModel,
     setSelectedAnalyticsModel
   };
