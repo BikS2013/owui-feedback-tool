@@ -258,6 +258,24 @@
   margin-bottom: 15px;
 }
 
+.info-message {
+  background-color: rgba(59, 130, 246, 0.1);
+  color: var(--text-primary);
+  padding: 12px 16px;
+  border-radius: 6px;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.info-message code {
+  background-color: var(--bg-tertiary);
+  padding: 2px 6px;
+  border-radius: 3px;
+  font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Fira Code', monospace;
+  font-size: 13px;
+}
+
 
 
 .prompt-content-section {

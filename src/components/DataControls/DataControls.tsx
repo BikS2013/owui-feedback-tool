@@ -1,11 +1,12 @@
-import React, { useRef } from 'react';
+import { useState } from 'react';
 import { Upload, Trash2 } from 'lucide-react';
 import { useFeedbackStore } from '../../store/feedbackStore';
+import { UploadModal } from '../UploadModal/UploadModal';
 import './DataControls.css';
 
 export function DataControls() {
-  const { clearData, loadFromFile } = useFeedbackStore();
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const { clearData } = useFeedbackStore();
+  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
   const handleClearData = () => {
     if (window.confirm('Are you sure you want to clear all data? This will remove all conversations.')) {
@@ -14,46 +15,15 @@ export function DataControls() {
   };
 
   const handleUploadClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      // Validate file type
-      if (!file.name.endsWith('.json')) {
-        alert('Please upload a JSON file');
-        return;
-      }
-
-
-      try {
-        await loadFromFile(file);
-      } catch (error) {
-        console.error('Error loading file:', error);
-      }
-
-      // Reset the input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    }
+    setIsUploadModalOpen(true);
   };
 
   return (
     <>
-      <input
-        ref={fileInputRef}
-        type="file"
-        accept=".json"
-        onChange={handleFileChange}
-        style={{ display: 'none' }}
-      />
-      
       <button
         className="data-control-button upload"
         onClick={handleUploadClick}
-        title="Upload new JSON file"
+        title="Upload data"
       >
         <Upload size={16} />
       </button>
@@ -65,6 +35,11 @@ export function DataControls() {
       >
         <Trash2 size={16} />
       </button>
+
+      <UploadModal 
+        isOpen={isUploadModalOpen}
+        onClose={() => setIsUploadModalOpen(false)}
+      />
     </>
   );
 }

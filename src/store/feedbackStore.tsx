@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { FeedbackEntry } from '../types/feedback';
+import { FeedbackEntry, Message } from '../types/feedback';
 import { Conversation, QAPair, FilterOptions } from '../types/conversation';
 import { processRawData } from '../utils/dataProcessor';
 
@@ -10,10 +10,12 @@ interface FeedbackStore {
   conversations: Conversation[];
   qaPairs: QAPair[];
   isLoading: boolean;
+  loadingSource: 'file' | 'agent' | null;
   error: string | null;
   dataExpiresAt: number | null; // Unix timestamp when data expires
   loadData: () => Promise<void>;
   loadFromFile: (file: File) => Promise<void>;
+  loadFromAgentThreads: (agentName: string) => Promise<void>;
   clearData: () => void;
   filters: FilterOptions;
   setFilters: (filters: FilterOptions) => void;
@@ -23,6 +25,7 @@ interface FeedbackStore {
   setSelectedAnalyticsModel: (model: string | null) => void;
   dataFormat: string | null;
   dataWarnings: string[];
+  dataSource: 'file' | 'agent' | null;
 }
 
 const FeedbackContext = createContext<FeedbackStore | undefined>(undefined);
@@ -39,10 +42,6 @@ interface FeedbackProviderProps {
   children: ReactNode;
 }
 
-interface StoredFeedbackData {
-  data: FeedbackEntry[];
-  expiresAt: number; // Unix timestamp
-}
 
 const STORAGE_KEY = 'owui-feedback-data';
 const VIEW_MODE_KEY = 'owui-view-mode';
@@ -53,10 +52,12 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [qaPairs, setQAPairs] = useState<QAPair[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingSource, setLoadingSource] = useState<'file' | 'agent' | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [dataExpiresAt, setDataExpiresAt] = useState<number | null>(null);
   const [dataFormat, setDataFormat] = useState<string | null>(null);
   const [dataWarnings, setDataWarnings] = useState<string[]>([]);
+  const [dataSource, setDataSource] = useState<'file' | 'agent' | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     // Load saved view mode from localStorage
     const savedViewMode = localStorage.getItem(VIEW_MODE_KEY);
@@ -125,6 +126,7 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
     setDataExpiresAt(null);
     setDataFormat(null);
     setDataWarnings([]);
+    setDataSource(null);
     // Clear local storage metadata
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(STORAGE_KEY + '-metadata');
@@ -148,6 +150,7 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
   const loadFromFile = async (file: File) => {
     try {
       setIsLoading(true);
+      setLoadingSource('file');
       setError(null);
       
       // Read the file
@@ -195,6 +198,7 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
       setDataExpiresAt(metadata.expiresAt);
       setDataFormat(format);
       setDataWarnings(warnings);
+      setDataSource('file'); // Set data source to file
       
       setConversations(Array.from(convMap.values()));
       setQAPairs(qaList);
@@ -204,6 +208,104 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
       setError(err instanceof Error ? err.message : 'Failed to load file');
     } finally {
       setIsLoading(false);
+      setLoadingSource(null);
+    }
+  };
+
+  const loadFromAgentThreads = async (agentName: string) => {
+    try {
+      setIsLoading(true);
+      setLoadingSource('agent');
+      setError(null);
+      
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const response = await fetch(`${apiUrl}/agent/threads?agentName=${encodeURIComponent(agentName)}&limit=100`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch agent threads');
+      }
+      
+      const data = await response.json();
+      
+      if (!data.success || !data.data || !data.data.threads) {
+        throw new Error('Invalid response format');
+      }
+      
+      // Convert agent threads to conversation format
+      const threads = data.data.threads;
+      const conversations: Conversation[] = [];
+      const qaPairs: QAPair[] = [];
+      
+      threads.forEach((thread: any) => {
+        // Extract messages from thread values
+        const messages: Message[] = [];
+        if (thread.values && thread.values.messages) {
+          thread.values.messages.forEach((msg: any) => {
+            messages.push({
+              id: msg.id || `${thread.thread_id}-${messages.length}`,
+              parentId: null,
+              childrenIds: [],
+              role: msg.type === 'human' ? 'user' : 'assistant',
+              content: typeof msg.content === 'string' ? msg.content : 
+                       typeof msg.text === 'string' ? msg.text :
+                       typeof msg.content === 'object' && msg.content?.text ? msg.content.text :
+                       JSON.stringify(msg.content || msg.text || ''),
+              timestamp: new Date(msg.timestamp || thread.created_at).getTime(),
+              model: msg.model || 'unknown'
+            });
+          });
+        }
+        
+        // Create conversation from thread
+        const conversation: Conversation = {
+          id: thread.thread_id,
+          title: `Thread ${thread.thread_id.slice(0, 8)}...`,
+          userId: thread.metadata?.user_id || 'agent-user',
+          createdAt: new Date(thread.created_at).getTime(),
+          updatedAt: new Date(thread.updated_at || thread.created_at).getTime(),
+          messages: messages,
+          averageRating: null,
+          totalRatings: 0,
+          feedbackEntries: [],
+          modelsUsed: Array.from(new Set(messages.filter(m => m.model).map(m => m.model!))),
+          qaPairCount: Math.floor(messages.length / 2)
+        };
+        
+        // Create Q/A pairs from messages
+        for (let i = 0; i < messages.length - 1; i += 2) {
+          if (messages[i].role === 'user' && messages[i + 1].role === 'assistant') {
+            qaPairs.push({
+              id: `${thread.thread_id}-qa-${i}`,
+              conversationId: conversation.id,
+              question: messages[i],
+              answer: messages[i + 1],
+              rating: null,
+              sentiment: null,
+              comment: '',
+              feedbackId: null,
+              timestamp: messages[i + 1].timestamp
+            });
+          }
+        }
+        
+        conversations.push(conversation);
+      });
+      
+      setRawData([]);
+      setDataExpiresAt(null);
+      setDataFormat('agent');
+      setDataWarnings([]);
+      setDataSource('agent');
+      
+      setConversations(conversations);
+      setQAPairs(qaPairs);
+      
+    } catch (err) {
+      console.error('Error loading agent threads:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load agent threads');
+    } finally {
+      setIsLoading(false);
+      setLoadingSource(null);
     }
   };
 
@@ -222,12 +324,15 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
     conversations,
     qaPairs,
     isLoading,
+    loadingSource,
     error,
     dataExpiresAt,
     dataFormat,
     dataWarnings,
+    dataSource,
     loadData,
     loadFromFile,
+    loadFromAgentThreads,
     clearData,
     filters,
     setFilters,

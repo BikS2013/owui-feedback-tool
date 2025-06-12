@@ -33,7 +33,7 @@ export function AnalyticsDashboard({
   const exportRef = useRef<HTMLDivElement>(null);
   
   // Check if we have rating data
-  const hasRatingData = dataFormat !== 'chat';
+  const hasRatingData = dataFormat !== 'chat' && dataFormat !== 'agent';
 
   // Close menu when clicking outside
   useEffect(() => {
@@ -421,7 +421,7 @@ export function AnalyticsDashboard({
         <div className="no-rating-overlay">
           <div className="no-rating-message">
             <h3>Rating Data Not Available</h3>
-            <p>Analytics require feedback data with ratings. The current data format contains only chat conversations without ratings.</p>
+            <p>Analytics require feedback data with ratings. The current data {dataFormat === 'agent' ? 'from the API' : 'format'} contains only conversations without ratings.</p>
           </div>
         </div>
       )}

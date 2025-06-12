@@ -17,9 +17,12 @@ export function CircularProgress({
   size = 180,
   strokeWidth = 12 
 }: CircularProgressProps) {
+  // Ensure percentage is a valid number
+  const validPercentage = isNaN(percentage) ? 0 : percentage;
+  
   const radius = (size - strokeWidth) / 2;
   const circumference = radius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+  const strokeDashoffset = circumference - (validPercentage / 100) * circumference;
 
   // Calculate position for rated count
   // The circle starts at top (12 o'clock) and goes clockwise
@@ -37,7 +40,7 @@ export function CircularProgress({
   // Convert percentage to radians (subtract 90 degrees because SVG starts at 3 o'clock)
   // Add a larger offset into the unrated section (e.g., 20 degrees)
   const unratedAngleOffset = 20;
-  const unratedAngleInDegrees = (percentage / 100) * 360 - 90 + unratedAngleOffset;
+  const unratedAngleInDegrees = (validPercentage / 100) * 360 - 90 + unratedAngleOffset;
   const unratedAngleInRadians = (unratedAngleInDegrees * Math.PI) / 180;
   
   const unratedX = size / 2 + labelOffset * Math.cos(unratedAngleInRadians);
@@ -71,7 +74,7 @@ export function CircularProgress({
           />
         </svg>
         <div className="progress-text">
-          <span className="progress-percentage">{percentage.toFixed(0)}%</span>
+          <span className="progress-percentage">{validPercentage.toFixed(0)}%</span>
           <span className="progress-label">{label}</span>
         </div>
         {/* Rated count positioned on the rated section */}

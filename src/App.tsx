@@ -1,6 +1,7 @@
 import { useState, useMemo } from 'react';
 import { ConversationList } from './components/ConversationList/ConversationList';
 import { ConversationDetail } from './components/ConversationDetail/ConversationDetail';
+import { ThreadDetail } from './components/ThreadDetail/ThreadDetail';
 import { AnalyticsDashboard } from './components/AnalyticsDashboard/AnalyticsDashboard';
 import { ResizablePanel } from './components/ResizablePanel/ResizablePanel';
 import { DataNotification } from './components/DataNotification/DataNotification';
@@ -21,11 +22,13 @@ function AppContent() {
   const { 
     conversations, 
     qaPairs, 
-    isLoading, 
+    isLoading,
+    loadingSource, 
     error,
     filters,
     setFilters,
-    viewMode
+    viewMode,
+    dataSource
   } = useFeedbackStore();
   
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -100,14 +103,6 @@ function AppContent() {
     });
   };
 
-  if (isLoading) {
-    return (
-      <div className="app-loading">
-        <p>Loading feedback data...</p>
-      </div>
-    );
-  }
-
   if (error) {
     return (
       <div className="app-error">
@@ -117,7 +112,7 @@ function AppContent() {
   }
 
   return (
-    <div className="app">
+    <div className={`app ${isLoading ? 'app-loading-blur' : ''}`}>
       <DataNotification />
       <ResizablePanel storageKey="conversation-list-width">
         <ConversationList
@@ -133,10 +128,17 @@ function AppContent() {
       </ResizablePanel>
       <main className="main-content">
         {viewMode === 'details' ? (
-          <ConversationDetail
-            conversation={selectedConversation}
-            qaPairs={filteredQAPairs}
-          />
+          dataSource === 'agent' ? (
+            <ThreadDetail
+              conversation={selectedConversation}
+              qaPairs={filteredQAPairs}
+            />
+          ) : (
+            <ConversationDetail
+              conversation={selectedConversation}
+              qaPairs={filteredQAPairs}
+            />
+          )
         ) : (
           <AnalyticsDashboard
             conversations={filteredConversations}
@@ -145,6 +147,20 @@ function AppContent() {
           />
         )}
       </main>
+      {isLoading && (
+        <div className="app-loading-overlay">
+          <div className="app-loading-message">
+            <h3>Loading Data</h3>
+            <p>
+              {loadingSource === 'agent' 
+                ? 'Fetching conversations from the API...' 
+                : loadingSource === 'file'
+                ? 'Processing file data...'
+                : 'Loading data...'}
+            </p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

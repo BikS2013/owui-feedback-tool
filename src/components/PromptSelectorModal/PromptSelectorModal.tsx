@@ -165,6 +165,12 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
     } catch (error) {
       console.error('Failed to load LLM configurations:', error);
       setLlmConfigurations([]);
+      // Show error to user
+      if (error instanceof Error && error.message.includes('fetch')) {
+        setError('Unable to connect to backend server. Please ensure the backend is running on port 3001.');
+      } else {
+        setError('Failed to load LLM configurations. Please check the backend server.');
+      }
     } finally {
       setIsLoadingLLM(false);
     }
@@ -415,9 +421,12 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
               value={selectedLLM || ''}
               onChange={(e) => handleLLMSelection(e.target.value)}
               disabled={llmConfigurations.length === 0 || isLoadingLLM}
+              title={llmConfigurations.length === 0 && !isLoadingLLM ? 'Backend server not running. Start the backend on port 3001.' : ''}
             >
-              {llmConfigurations.length === 0 ? (
-                <option value="">No LLM configurations</option>
+              {isLoadingLLM ? (
+                <option value="">Loading configurations...</option>
+              ) : llmConfigurations.length === 0 ? (
+                <option value="">No LLM configurations (check backend)</option>
               ) : (
                 <>
                   <option value="">-- Select a model --</option>
@@ -457,6 +466,12 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
         
         <div className="modal-content">
           {error && <div className="error-message">{error}</div>}
+          {llmConfigurations.length === 0 && !isLoadingLLM && (
+            <div className="info-message" style={{ marginBottom: '16px' }}>
+              <strong>Backend not connected:</strong> Please ensure the backend server is running on port 3001. 
+              Run <code>npm run backend:dev</code> in the backend folder to start it.
+            </div>
+          )}
           
           {llmTestResult && (
             <div className="llm-test-result-container">

@@ -5,7 +5,7 @@ export class ApiService {
     return storageUtils.getApiUrl();
   }
   static async exportConversationPDF(conversation: any, qaPairs: any[]): Promise<Blob> {
-    const response = await fetch(`${this.getApiBaseUrl()}/api/export/conversation`, {
+    const response = await fetch(`${this.getApiBaseUrl()}/export/conversation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -28,7 +28,7 @@ export class ApiService {
     qaPair: { question: any; answer: any; rating?: number | null; comment?: string | null },
     conversationId: string
   ): Promise<Blob> {
-    const response = await fetch(`${this.getApiBaseUrl()}/api/export/qa-pair`, {
+    const response = await fetch(`${this.getApiBaseUrl()}/export/qa-pair`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

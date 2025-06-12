@@ -23,19 +23,58 @@
   flex-direction: column;
 }
 
-.app-loading,
 .app-error {
   display: flex;
   align-items: center;
   justify-content: center;
   height: 100vh;
   background: var(--gradient-primary);
-  color: var(--text-secondary);
+  color: var(--accent-red);
   font-size: 16px;
 }
 
-.app-error {
-  color: var(--accent-red);
+/* Loading blur effect */
+.app-loading-blur > *:not(.app-loading-overlay) {
+  filter: blur(8px);
+  pointer-events: none;
+  user-select: none;
+  transition: filter 0.3s ease;
+}
+
+.app-loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(2px);
+  z-index: 1000;
+}
+
+.app-loading-message {
+  background: var(--bg-secondary);
+  padding: 32px 48px;
+  border-radius: 12px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  max-width: 400px;
+}
+
+.app-loading-message h3 {
+  margin: 0 0 12px 0;
+  color: var(--text-primary);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.app-loading-message p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 14px;
 }
 
 @media (max-width: 768px) {
