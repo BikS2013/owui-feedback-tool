@@ -356,6 +356,150 @@ router.get('/threads', async (req: Request, res: Response): Promise<void> => {
 
 /**
  * @swagger
+ * /api/agent/thread/{threadId}/documents:
+ *   get:
+ *     summary: Get documents for a specific thread
+ *     tags: [Agents]
+ *     description: Returns the retrieved documents associated with a specific thread
+ *     parameters:
+ *       - in: path
+ *         name: threadId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The thread ID to retrieve documents for
+ *         example: "thread_abc123"
+ *       - in: query
+ *         name: agentName
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Name of the agent that owns the thread
+ *         example: "Customer Facing"
+ *     responses:
+ *       200:
+ *         description: Documents retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 threadId:
+ *                   type: string
+ *                   example: "thread_abc123"
+ *                 documents:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                   description: Array of retrieved documents
+ *       400:
+ *         description: Bad request - missing parameters
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Agent name is required"
+ *       404:
+ *         description: Thread or agent not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Thread not found"
+ *       500:
+ *         description: Internal server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: false
+ *                 error:
+ *                   type: string
+ *                   example: "Failed to retrieve documents"
+ *                 message:
+ *                   type: string
+ *                   example: "Error details"
+ */
+router.get('/thread/:threadId/documents', async (req: Request, res: Response): Promise<void> => {
+  console.log('🔍 Thread documents endpoint hit with params:', req.params, req.query);
+  try {
+    const { threadId } = req.params;
+    const { agentName } = req.query;
+
+    // Validate thread ID
+    if (!threadId) {
+      res.status(400).json({
+        success: false,
+        error: 'Thread ID is required'
+      });
+      return;
+    }
+
+    // Validate agent name
+    if (!agentName || typeof agentName !== 'string') {
+      res.status(400).json({
+        success: false,
+        error: 'Agent name is required'
+      });
+      return;
+    }
+
+    // Get agent by name
+    const agent = agentService.getAgentByName(agentName);
+    if (!agent) {
+      res.status(404).json({
+        success: false,
+        error: 'Agent not found'
+      });
+      return;
+    }
+
+    // Fetch documents from database
+    const documents = await databaseService.getThreadDocuments(agent, threadId);
+    
+    if (documents === null) {
+      res.status(404).json({
+        success: false,
+        error: 'Thread not found'
+      });
+      return;
+    }
+
+    res.json({
+      success: true,
+      threadId,
+      documents
+    });
+  } catch (error) {
+    console.error('Error fetching thread documents:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve documents',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * @swagger
  * /api/agent/reload:
  *   post:
  *     summary: Reload agent configuration

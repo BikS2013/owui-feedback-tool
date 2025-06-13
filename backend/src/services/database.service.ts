@@ -157,6 +157,34 @@ export class DatabaseService {
     }
   }
 
+  async getThreadDocuments(agent: Agent, threadId: string): Promise<any> {
+    const pool = this.getPool(agent);
+    let client: PoolClient | null = null;
+
+    try {
+      client = await pool.connect();
+      
+      const query = `SELECT values->'retrieved_docs' as documents 
+                     FROM thread 
+                     WHERE thread_id = $1`;
+      
+      const result = await client.query(query, [threadId]);
+      
+      if (result.rows.length === 0) {
+        return null;
+      }
+      
+      return result.rows[0].documents || [];
+    } catch (error) {
+      console.error(`Error fetching documents for thread ${threadId}:`, error);
+      throw new Error(`Failed to fetch documents: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      if (client) {
+        client.release();
+      }
+    }
+  }
+
   private async closeAllPools(): Promise<void> {
     console.log('Closing all database pools...');
     const closePromises = Array.from(this.pools.entries()).map(async ([name, pool]) => {

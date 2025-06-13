@@ -576,6 +576,65 @@ GET /api/agent/threads?agentName=Customer Facing&fromDate=2025-01-01T00:00:00Z&t
 - Requires direct database access using the PostgreSQL connection string from agent configuration
 - The agent's database must have a `thread` table with the expected schema
 
+### GET /api/agent/thread/{threadId}/documents
+
+Get the retrieved documents for a specific thread.
+
+**Path Parameters:**
+- `threadId`: The thread ID to retrieve documents for (e.g., "thread_abc123")
+
+**Query Parameters:**
+- `agentName` (required): Name of the agent that owns the thread
+
+**Example Request:**
+```
+GET /api/agent/thread/thread_abc123/documents?agentName=Customer Facing
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "threadId": "thread_abc123",
+  "documents": [
+    {
+      // Document object structure varies based on agent implementation
+    }
+  ]
+}
+```
+
+**Error Responses:**
+- `400 Bad Request`: Missing thread ID or agent name
+- `404 Not Found`: Thread or agent not found
+- `500 Internal Server Error`: Database connection error or query failed
+
+**Notes:**
+- Documents are retrieved from the `values->'retrieved_docs'` field in the thread table
+- The structure of documents depends on how the agent stores retrieved documents
+- Returns an empty array if no documents are associated with the thread
+
+### GET /api/agent/test-connection
+
+Test database connection for a specific agent.
+
+**Query Parameters:**
+- `agentName` (required): Name of the agent to test
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Database connection successful",
+  "agent": "Customer Facing"
+}
+```
+
+**Error Responses:**
+- `400 Bad Request`: Missing agent name
+- `404 Not Found`: Agent not found
+- `500 Internal Server Error`: Connection test failed
+
 ---
 
 ## Error Handling
