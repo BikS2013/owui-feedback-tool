@@ -172,8 +172,13 @@
 
 .tab-button-header.active {
   color: #FFFFFF;
-  border-bottom-color: var(--primary-color, #007BFF);
+  border-bottom-color: var(--accent-primary);
   background-color: var(--header-bg);
+}
+
+/* NBG theme specific tab underline */
+[data-color-scheme="green"] .tab-button-header.active {
+  border-bottom-color: #52C77E; /* Light green */
 }
 
 /* Ensure the active tab border overlaps the header border */
@@ -828,6 +833,12 @@
   font-size: 13px;
   line-height: 1.5;
   color: var(--text-primary);
+}
+
+/* Dark theme specific font for document content */
+[data-theme="dark"] .document-content pre {
+  font-family: 'CF Asty Std', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  font-size: 14px;
 }
 
 /* Markdown document styling */
