@@ -16,7 +16,8 @@ import {
   Sparkles, 
   FileSearch, 
   MessageSquare, 
-  BarChart3 
+  BarChart3,
+  Files 
 } from 'lucide-react';
 import { Conversation, QAPair } from '../../types/conversation';
 import { Message } from '../../types/feedback';
@@ -43,7 +44,13 @@ interface ConversationDetailProps {
 }
 
 export function ConversationDetail({ conversation, qaPairs }: ConversationDetailProps) {
-  const { conversations, qaPairs: allQaPairs } = useFeedbackStore();
+  const { conversations, qaPairs: allQaPairs, dataSource, currentAgent } = useFeedbackStore();
+  
+  // Debug logging
+  useEffect(() => {
+    console.log('ConversationDetail - dataSource:', dataSource);
+    console.log('ConversationDetail - currentAgent:', currentAgent);
+  }, [dataSource, currentAgent]);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [qaDownloadMenus, setQaDownloadMenus] = useState<{ [key: string]: boolean }>({});
   const [showRawJson, setShowRawJson] = useState(false);
@@ -61,7 +68,10 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     promptName?: string;
     llmConfiguration?: string;
   } | null>(null);
-  const [activeTab, setActiveTab] = useState<'text' | 'analytics'>('text');
+  const [activeTab, setActiveTab] = useState<'text' | 'analytics' | 'documents'>('text');
+  const [documents, setDocuments] = useState<any[] | null>(null);
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
+  const [documentsError, setDocumentsError] = useState<string | null>(null);
   const downloadRef = useRef<HTMLDivElement>(null);
 
   // Close menus when clicking outside
@@ -78,6 +88,40 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
+
+  // Fetch documents when Documents tab is active and conversation changes
+  useEffect(() => {
+    if (activeTab === 'documents' && conversation && dataSource === 'agent' && currentAgent) {
+      fetchDocuments();
+    }
+  }, [activeTab, conversation?.id]);
+
+  const fetchDocuments = async () => {
+    if (!conversation || dataSource !== 'agent' || !currentAgent) return;
+    
+    setIsLoadingDocuments(true);
+    setDocumentsError(null);
+    
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const response = await fetch(
+        `${apiUrl}/agent/thread/${conversation.id}/documents?agentName=${encodeURIComponent(currentAgent)}`
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to fetch documents: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      setDocuments(data.documents || []);
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      setDocumentsError(error instanceof Error ? error.message : 'Failed to fetch documents');
+    } finally {
+      setIsLoadingDocuments(false);
+    }
+  };
 
   const handleDownloadButtonClick = () => {
     console.log('Download button clicked, current state:', showDownloadMenu);
@@ -426,11 +470,27 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
         {BarChart3 && <BarChart3 size={16} />}
         <span>Analytics</span>
       </button>
+      {dataSource === 'agent' && (
+        <button
+          type="button"
+          className={`tab-button-header ${activeTab === 'documents' ? 'active' : ''}`}
+          onClick={() => setActiveTab('documents')}
+          style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
+        >
+          {Files && <Files size={16} />}
+          <span>Documents</span>
+        </button>
+      )}
+      {/* Debug info */}
+      {console.log('Rendering Documents tab:', dataSource === 'agent', 'dataSource:', dataSource)}
     </div>
   );
 
   const statsInfo = (
-    <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+    <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
+      <div style={{ fontSize: '12px', color: 'red' }}>
+        DEBUG: dataSource={dataSource || 'null'}, agent={currentAgent || 'null'}
+      </div>
       <div className="stats-info">
         <span>Q&A pairs: {conversation.qaPairCount}</span>
         <span>Rated responses: {conversation.totalRatings}</span>
@@ -657,7 +717,7 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
         })}
       </div>
         )
-      ) : (
+      ) : activeTab === 'analytics' ? (
         <div className="analytics-container">
           <AnalyticsDashboardNoHeader
             conversations={conversations}
@@ -665,7 +725,62 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
             selectedConversationId={conversation.id}
           />
         </div>
-      )}
+      ) : activeTab === 'documents' ? (
+        <div className="documents-container">
+          {isLoadingDocuments ? (
+            <div className="documents-loading">
+              <div className="spinner" />
+              <p>Loading documents...</p>
+            </div>
+          ) : documentsError ? (
+            <div className="documents-error">
+              <p>Error loading documents: {documentsError}</p>
+              <button onClick={fetchDocuments}>Retry</button>
+            </div>
+          ) : !documents || documents.length === 0 ? (
+            <div className="documents-empty">
+              <Files size={48} className="empty-icon" />
+              <p>No documents found for this conversation</p>
+            </div>
+          ) : (
+            <div className="documents-list">
+              {documents.map((doc, index) => (
+                <div key={doc.id || index} className="document-item">
+                  <div className="document-header">
+                    <div className="document-icon">
+                      <FileText size={20} />
+                    </div>
+                    <div className="document-meta">
+                      <h4 className="document-title">{doc.metadata?.title || `Document ${index + 1}`}</h4>
+                      {doc.metadata?.url && (
+                        <a 
+                          href={doc.metadata.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="document-url"
+                        >
+                          {doc.metadata.url}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  <div className="document-content">
+                    <pre>{doc.page_content || JSON.stringify(doc, null, 2)}</pre>
+                  </div>
+                  {doc.metadata && Object.keys(doc.metadata).length > 0 && (
+                    <div className="document-metadata">
+                      <details>
+                        <summary>Metadata</summary>
+                        <pre>{JSON.stringify(doc.metadata, null, 2)}</pre>
+                      </details>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
       <PromptSelectorModal 
         isOpen={showPromptSelector} 
         onClose={() => setShowPromptSelector(false)} 

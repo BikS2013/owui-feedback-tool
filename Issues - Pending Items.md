@@ -2,6 +2,61 @@
 
 ## Pending Items
 
+### 1. **Documents Tab Not Showing for Agent-Loaded Conversations**
+**Date Added:** 2025-01-13
+**Status:** Pending - Testing Required
+**Description:** The Documents tab has been implemented in the ThreadDetail component but user reports it's not showing up for agent-loaded conversations.
+
+**Implementation Completed:**
+1. Added Documents tab to ThreadDetail component (which is used for agent data)
+2. Added state management for documents, loading, and error states
+3. Added fetchDocuments function that calls the backend API
+4. Added useEffect to fetch documents when tab is active or conversation changes
+5. Added complete rendering logic for all document states (loading, error, empty, populated)
+6. Added comprehensive CSS styling for the documents display
+
+**Potential Issues:**
+- The Documents tab is unconditionally shown in ThreadDetail (no dataSource check needed)
+- All CSS styles have been added to ThreadDetail.css
+- The tab should now be visible for all conversations in ThreadDetail
+
+**Next Steps:**
+- User needs to refresh the page and test if the Documents tab now appears
+- Verify that document fetching works when selecting the tab
+- Test switching between conversations while Documents tab is active
+
+### 2. **CRITICAL: dataSource State Not Properly Maintained When Loading Agent Data**
+**Date Added:** 2025-01-06
+**Status:** Pending
+**Description:** The dataSource state in feedbackStore is not being properly maintained when navigating between pages or after loading agent data. This causes issues with pagination and component rendering.
+
+**Findings:**
+1. **dataSource is properly set in feedbackStore:**
+   - Line 226: `setDataSource('file')` when loading from file
+   - Line 402: `setDataSource('agent')` when loading from agent threads
+   - Line 151: `setDataSource(null)` in clearData function
+
+2. **dataSource is properly cleared in clearData():**
+   - The clearData function (lines 143-173) properly resets dataSource to null along with other state
+
+3. **Potential Issues Identified:**
+   - **No persistence mechanism**: dataSource is not saved to localStorage, so it's lost on page refresh
+   - **loadData() doesn't restore dataSource**: The loadData function (lines 104-141) doesn't restore the dataSource state from any persistent storage
+   - **Page navigation maintains state correctly**: The pagination logic in loadFromAgentThreads properly maintains the dataSource when navigating pages (line 402)
+
+4. **App.tsx uses dataSource correctly:**
+   - Lines 137-147: Conditionally renders ThreadDetail vs ConversationDetail based on dataSource
+
+5. **ConversationList uses dataSource correctly:**
+   - Line 162: Shows pagination only when dataSource === 'agent'
+
+**Root Cause:** The dataSource state is lost on page refresh because it's not persisted to localStorage. The loadData() function, which runs on component mount, doesn't restore this state.
+
+**Recommended Fix:**
+1. Save dataSource to localStorage when it's set
+2. Restore dataSource from localStorage in loadData() or component initialization
+3. Consider saving other agent-related state (currentAgent, agentDateRange) to localStorage as well
+
 ### Backend TypeScript Build Errors
 **Issue**: Backend has TypeScript compilation errors preventing successful build.
 **Errors**:

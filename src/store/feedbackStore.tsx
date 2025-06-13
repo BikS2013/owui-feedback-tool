@@ -68,14 +68,37 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
   const [dataExpiresAt, setDataExpiresAt] = useState<number | null>(null);
   const [dataFormat, setDataFormat] = useState<string | null>(null);
   const [dataWarnings, setDataWarnings] = useState<string[]>([]);
-  const [dataSource, setDataSource] = useState<'file' | 'agent' | null>(null);
+  // Initialize dataSource from localStorage immediately
+  const [dataSource, setDataSource] = useState<'file' | 'agent' | null>(() => {
+    const agentMetadataStr = localStorage.getItem(STORAGE_KEY + '-agent-metadata');
+    if (agentMetadataStr) {
+      try {
+        const agentMetadata = JSON.parse(agentMetadataStr);
+        return agentMetadata.dataSource;
+      } catch (e) {
+        console.error('Error parsing agent metadata for initial state:', e);
+      }
+    }
+    return null;
+  });
   const [agentPagination, setAgentPagination] = useState<{
     page: number;
     limit: number;
     total: number;
     totalPages: number;
   } | null>(null);
-  const [currentAgent, setCurrentAgent] = useState<string | null>(null);
+  const [currentAgent, setCurrentAgent] = useState<string | null>(() => {
+    const agentMetadataStr = localStorage.getItem(STORAGE_KEY + '-agent-metadata');
+    if (agentMetadataStr) {
+      try {
+        const agentMetadata = JSON.parse(agentMetadataStr);
+        return agentMetadata.currentAgent;
+      } catch (e) {
+        console.error('Error parsing agent metadata for currentAgent:', e);
+      }
+    }
+    return null;
+  });
   const [agentDateRange, setAgentDateRange] = useState<{
     fromDate?: Date;
     toDate?: Date;
@@ -106,26 +129,49 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
       setIsLoading(true);
       setError(null);
       
-      // Check if there's metadata in local storage
-      const metadataStr = localStorage.getItem(STORAGE_KEY + '-metadata');
-      if (metadataStr) {
+      // Check if there's agent metadata in local storage
+      const agentMetadataStr = localStorage.getItem(STORAGE_KEY + '-agent-metadata');
+      if (agentMetadataStr) {
         try {
-          const metadata = JSON.parse(metadataStr);
+          const agentMetadata = JSON.parse(agentMetadataStr);
+          console.log('Restoring agent metadata:', agentMetadata);
           
-          // Check if metadata has expired
-          const now = Date.now();
-          if (now < metadata.expiresAt) {
-            // Show info about previously loaded file
-            console.log(`Previously loaded: ${metadata.fileName} (${(metadata.fileSize / 1024 / 1024).toFixed(2)}MB)`);
-            console.log(`Format: ${metadata.format}, Conversations: ${metadata.conversationCount}`);
-          } else {
-            // Metadata has expired, remove it
-            console.log('Stored metadata has expired, removing from local storage');
+          // Restore agent state
+          setDataSource(agentMetadata.dataSource);
+          setCurrentAgent(agentMetadata.currentAgent);
+          setAgentDateRange(agentMetadata.agentDateRange);
+          setAgentPagination(agentMetadata.agentPagination);
+          setDataFormat('agent');
+          
+          console.log(`Previously loaded from agent: ${agentMetadata.currentAgent}`);
+        } catch (parseError) {
+          console.error('Error parsing agent metadata:', parseError);
+          localStorage.removeItem(STORAGE_KEY + '-agent-metadata');
+        }
+      } else {
+        // Check if there's file metadata in local storage
+        const metadataStr = localStorage.getItem(STORAGE_KEY + '-metadata');
+        if (metadataStr) {
+          try {
+            const metadata = JSON.parse(metadataStr);
+            
+            // Check if metadata has expired
+            const now = Date.now();
+            if (now < metadata.expiresAt) {
+              // Show info about previously loaded file
+              console.log(`Previously loaded: ${metadata.fileName} (${(metadata.fileSize / 1024 / 1024).toFixed(2)}MB)`);
+              console.log(`Format: ${metadata.format}, Conversations: ${metadata.conversationCount}`);
+              setDataSource('file');
+              setDataFormat(metadata.format);
+            } else {
+              // Metadata has expired, remove it
+              console.log('Stored metadata has expired, removing from local storage');
+              localStorage.removeItem(STORAGE_KEY + '-metadata');
+            }
+          } catch (parseError) {
+            console.error('Error parsing metadata:', parseError);
             localStorage.removeItem(STORAGE_KEY + '-metadata');
           }
-        } catch (parseError) {
-          console.error('Error parsing metadata:', parseError);
-          localStorage.removeItem(STORAGE_KEY + '-metadata');
         }
       }
       
@@ -155,6 +201,7 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
     // Clear local storage metadata
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(STORAGE_KEY + '-metadata');
+    localStorage.removeItem(STORAGE_KEY + '-agent-metadata');
     // Reset filters to default
     setFilters({
       dateRange: {
@@ -215,6 +262,8 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
       
       try {
         localStorage.setItem(STORAGE_KEY + '-metadata', JSON.stringify(metadata));
+        // Clear any agent metadata when loading from file
+        localStorage.removeItem(STORAGE_KEY + '-agent-metadata');
       } catch (e) {
         console.warn('Could not save file metadata to localStorage:', e);
       }
@@ -400,6 +449,21 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
       setDataFormat('agent');
       setDataWarnings([]);
       setDataSource('agent');
+      
+      // Save agent metadata to localStorage
+      const agentMetadata = {
+        dataSource: 'agent',
+        currentAgent: agentName,
+        agentDateRange: { fromDate, toDate },
+        agentPagination: data.data.pagination,
+        loadedAt: Date.now()
+      };
+      
+      try {
+        localStorage.setItem(STORAGE_KEY + '-agent-metadata', JSON.stringify(agentMetadata));
+      } catch (e) {
+        console.warn('Could not save agent metadata to localStorage:', e);
+      }
       
       // Update conversations and QA pairs
       if (startWithExisting) {

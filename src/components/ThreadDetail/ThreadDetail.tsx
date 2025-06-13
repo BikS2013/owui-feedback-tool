@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { format } from 'date-fns';
-import { User, Bot, Download, FileJson, FileText, File, Eye, Code, Send, Sparkles, FileSearch, MessageSquare, BarChart3 } from 'lucide-react';
+import { User, Bot, Download, FileJson, FileText, File, Eye, Code, Send, Sparkles, FileSearch, MessageSquare, BarChart3, Files } from 'lucide-react';
 import { Conversation, QAPair } from '../../types/conversation';
 import { NoLogoHeader } from '../NoLogoHeader/NoLogoHeader';
 import { PromptSelectorModal } from '../PromptSelectorModal/PromptSelectorModal';
@@ -25,10 +25,13 @@ interface ThreadDetailProps {
 }
 
 export function ThreadDetail({ conversation, qaPairs }: ThreadDetailProps) {
-  const { conversations, qaPairs: allQaPairs } = useFeedbackStore();
+  const { conversations, qaPairs: allQaPairs, currentAgent } = useFeedbackStore();
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [showRawJson, setShowRawJson] = useState(false);
-  const [activeTab, setActiveTab] = useState<'text' | 'analytics'>('text');
+  const [activeTab, setActiveTab] = useState<'text' | 'analytics' | 'documents'>('text');
+  const [documents, setDocuments] = useState<any[] | null>(null);
+  const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
+  const [documentsError, setDocumentsError] = useState<string | null>(null);
   const [showPromptSelector, setShowPromptSelector] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isExecutingPrompt, setIsExecutingPrompt] = useState(false);
@@ -59,6 +62,40 @@ export function ThreadDetail({ conversation, qaPairs }: ThreadDetailProps) {
     };
   }, []);
 
+  // Fetch documents when Documents tab is active and conversation changes
+  useEffect(() => {
+    if (activeTab === 'documents' && conversation && currentAgent) {
+      fetchDocuments();
+    }
+  }, [activeTab, conversation?.id]);
+
+  const fetchDocuments = async () => {
+    if (!conversation || !currentAgent) return;
+    
+    setIsLoadingDocuments(true);
+    setDocumentsError(null);
+    
+    try {
+      const apiUrl = import.meta.env.VITE_API_URL;
+      const response = await fetch(
+        `${apiUrl}/agent/thread/${conversation.id}/documents?agentName=${encodeURIComponent(currentAgent)}`
+      );
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || `Failed to fetch documents: ${response.statusText}`);
+      }
+      
+      const data = await response.json();
+      setDocuments(data.documents || []);
+    } catch (error) {
+      console.error('Error fetching documents:', error);
+      setDocumentsError(error instanceof Error ? error.message : 'Failed to fetch documents');
+    } finally {
+      setIsLoadingDocuments(false);
+    }
+  };
+
   // Setup header elements - reusable for both empty and populated states
   const tabButtons = conversation ? (
     <div className="tab-buttons-header">
@@ -78,6 +115,14 @@ export function ThreadDetail({ conversation, qaPairs }: ThreadDetailProps) {
         {BarChart3 && <BarChart3 size={16} />}
         <span>Analytics</span>
       </button>
+      <button
+        type="button"
+        className={`tab-button-header ${activeTab === 'documents' ? 'active' : ''}`}
+        onClick={() => setActiveTab('documents')}
+      >
+        {Files && <Files size={16} />}
+        <span>Documents</span>
+      </button>
     </div>
   ) : (
     <div className="tab-buttons-header">
@@ -96,6 +141,14 @@ export function ThreadDetail({ conversation, qaPairs }: ThreadDetailProps) {
       >
         {BarChart3 && <BarChart3 size={16} />}
         <span>Analytics</span>
+      </button>
+      <button
+        type="button"
+        className="tab-button-header"
+        disabled
+      >
+        {Files && <Files size={16} />}
+        <span>Documents</span>
       </button>
     </div>
   );
@@ -501,7 +554,7 @@ export function ThreadDetail({ conversation, qaPairs }: ThreadDetailProps) {
             </div>
           </div>
         )
-      ) : (
+      ) : activeTab === 'analytics' ? (
         <div className="analytics-container">
           <AnalyticsDashboardNoHeader 
             conversations={conversations}
@@ -509,7 +562,62 @@ export function ThreadDetail({ conversation, qaPairs }: ThreadDetailProps) {
             selectedConversationId={conversation.id}
           />
         </div>
-      )}
+      ) : activeTab === 'documents' ? (
+        <div className="documents-container">
+          {isLoadingDocuments ? (
+            <div className="documents-loading">
+              <div className="spinner" />
+              <p>Loading documents...</p>
+            </div>
+          ) : documentsError ? (
+            <div className="documents-error">
+              <p>Error loading documents: {documentsError}</p>
+              <button onClick={fetchDocuments}>Retry</button>
+            </div>
+          ) : !documents || documents.length === 0 ? (
+            <div className="documents-empty">
+              <Files size={48} className="empty-icon" />
+              <p>No documents found for this conversation</p>
+            </div>
+          ) : (
+            <div className="documents-list">
+              {documents.map((doc, index) => (
+                <div key={doc.id || index} className="document-item">
+                  <div className="document-header">
+                    <div className="document-icon">
+                      <FileText size={20} />
+                    </div>
+                    <div className="document-meta">
+                      <h4 className="document-title">{doc.metadata?.title || `Document ${index + 1}`}</h4>
+                      {doc.metadata?.url && (
+                        <a 
+                          href={doc.metadata.url} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="document-url"
+                        >
+                          {doc.metadata.url}
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                  <div className="document-content">
+                    <pre>{doc.page_content || JSON.stringify(doc, null, 2)}</pre>
+                  </div>
+                  {doc.metadata && Object.keys(doc.metadata).length > 0 && (
+                    <div className="document-metadata">
+                      <details>
+                        <summary>Metadata</summary>
+                        <pre>{JSON.stringify(doc.metadata, null, 2)}</pre>
+                      </details>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      ) : null}
       <PromptSelectorModal 
         isOpen={showPromptSelector} 
         onClose={() => setShowPromptSelector(false)} 
