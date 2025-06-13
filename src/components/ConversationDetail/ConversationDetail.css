@@ -18,6 +18,19 @@
   font-size: 16px;
 }
 
+/* Empty state styling (from ThreadDetail) */
+.empty-state {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-state p {
+  color: var(--text-secondary);
+  font-size: 1.125rem;
+}
+
 /* NoLogoHeader handles the header styling now */
 .conversation-header {
   position: relative;
@@ -259,6 +272,27 @@
 
 .message.user .message-avatar {
   background: linear-gradient(135deg, var(--accent-primary), var(--accent-blue));
+  color: white;
+}
+
+/* Message icon for agent threads */
+.message-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.message.user .message-icon {
+  background-color: var(--accent-primary);
+  color: white;
+}
+
+.message.assistant .message-icon {
+  background-color: var(--accent-secondary);
   color: white;
 }
 
@@ -790,9 +824,117 @@
   margin: 0;
   white-space: pre-wrap;
   word-wrap: break-word;
+  font-family: 'Courier New', Courier, monospace;
   font-size: 13px;
   line-height: 1.5;
   color: var(--text-primary);
+}
+
+/* Markdown document styling */
+.document-markdown {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.document-markdown h1,
+.document-markdown h2,
+.document-markdown h3,
+.document-markdown h4,
+.document-markdown h5,
+.document-markdown h6 {
+  margin-top: 1em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+}
+
+.document-markdown h1 { font-size: 1.5em; }
+.document-markdown h2 { font-size: 1.3em; }
+.document-markdown h3 { font-size: 1.1em; }
+.document-markdown h4 { font-size: 1em; }
+.document-markdown h5 { font-size: 0.9em; }
+.document-markdown h6 { font-size: 0.85em; }
+
+.document-markdown p {
+  margin: 0.5em 0;
+}
+
+.document-markdown ul,
+.document-markdown ol {
+  margin: 0.5em 0;
+  padding-left: 2em;
+}
+
+.document-markdown li {
+  margin: 0.25em 0;
+}
+
+.document-markdown code {
+  background-color: var(--bg-secondary);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: 'Courier New', Courier, monospace;
+  font-size: 0.9em;
+}
+
+.document-markdown pre {
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  padding: 12px;
+  overflow-x: auto;
+  margin: 0.5em 0;
+}
+
+.document-markdown pre code {
+  background: none;
+  padding: 0;
+}
+
+.document-markdown blockquote {
+  border-left: 4px solid var(--accent-primary);
+  margin: 0.5em 0;
+  padding-left: 1em;
+  color: var(--text-secondary);
+}
+
+.document-markdown a {
+  color: var(--accent-primary);
+  text-decoration: none;
+}
+
+.document-markdown a:hover {
+  text-decoration: underline;
+}
+
+.document-markdown hr {
+  border: none;
+  border-top: 1px solid var(--border-color);
+  margin: 1em 0;
+}
+
+.document-markdown table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 0.5em 0;
+}
+
+.document-markdown th,
+.document-markdown td {
+  border: 1px solid var(--border-color);
+  padding: 8px;
+  text-align: left;
+}
+
+.document-markdown th {
+  background-color: var(--bg-secondary);
+  font-weight: 600;
+}
+
+.document-markdown img {
+  max-width: 100%;
+  height: auto;
 }
 
 .document-metadata {

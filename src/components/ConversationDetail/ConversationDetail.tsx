@@ -123,15 +123,40 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     }
   };
 
-  const handleDownloadButtonClick = () => {
-    console.log('Download button clicked, current state:', showDownloadMenu);
-    setShowDownloadMenu(!showDownloadMenu);
+  const handleDownload = async (format: 'json' | 'markdown' | 'docx' | 'pdf') => {
+    const data = await formatConversationForDownload(conversation, qaPairs);
+    const filename = `${dataSource === 'agent' ? 'thread' : 'conversation'}-${conversation.id.slice(0, 8)}`;
+    
+    switch (format) {
+      case 'json':
+        downloadAsJSON(data.jsonData, filename);
+        break;
+      case 'markdown':
+        downloadAsMarkdown(data.markdownContent, filename);
+        break;
+      case 'docx':
+        if (data.docxBlob) {
+          downloadAsDocx(data.docxBlob, filename);
+        }
+        break;
+      case 'pdf':
+        if (data.pdfBlob) {
+          downloadAsPDF(data.pdfBlob, filename);
+        }
+        break;
+    }
+    
+    setShowDownloadMenu(false);
   };
 
   // Early setup for header elements when no conversation
   if (!conversation) {
-    const noDataTitle = conversations.length === 0 ? "No Conversations Available" : "No Conversation Selected";
-    const noDataMessage = conversations.length === 0 ? "No conversations loaded" : "No conversation selected";
+    const noDataTitle = dataSource === 'agent' 
+      ? (conversations.length === 0 ? "No Threads Available" : "No Thread Selected")
+      : (conversations.length === 0 ? "No Conversations Available" : "No Conversation Selected");
+    const noDataMessage = dataSource === 'agent'
+      ? (conversations.length === 0 ? "No threads loaded" : "No thread selected")
+      : (conversations.length === 0 ? "No conversations loaded" : "No conversation selected");
     const emptyTabButtons = (
       <div className="tab-buttons-header">
         <button
@@ -150,6 +175,16 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
           {BarChart3 && <BarChart3 size={16} />}
           <span>Analytics</span>
         </button>
+        {dataSource === 'agent' && (
+          <button
+            type="button"
+            className="tab-button-header"
+            disabled
+          >
+            {Files && <Files size={16} />}
+            <span>Documents</span>
+          </button>
+        )}
       </div>
     );
 
@@ -216,8 +251,10 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
           className="conversation-header"
           heightAdjustment={2}
         />
-        <div className="conversation-detail-empty">
-          <p>{conversations.length === 0 ? "Upload a JSON file to get started" : "Select a conversation to view details"}</p>
+        <div className="empty-state">
+          <p>{dataSource === 'agent' 
+            ? (conversations.length === 0 ? "Connect to an agent to load threads" : "Select a thread to view its messages")
+            : (conversations.length === 0 ? "Upload a JSON file to get started" : "Select a conversation to view details")}</p>
         </div>
       </div>
     );
@@ -260,25 +297,44 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
   };
 
   const handleExportToBackend = async () => {
+    if (!conversation) return;
+    
+    if (isExporting) {
+      return;
+    }
+    
     setIsExporting(true);
+    
     try {
-      console.log('Exporting conversation to backend...');
-      const blob = await ApiService.exportConversationPDF(conversation, qaPairs);
-      
-      // Create a download link for the returned PDF
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `conversation_${conversation.id}_${format(new Date(), 'yyyy-MM-dd_HHmmss')}.pdf`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-      
-      console.log('Export successful');
+      if (dataSource === 'agent') {
+        // For agent data, export conversation and Q&A pairs
+        const apiService = new ApiService();
+        await apiService.exportConversation(conversation);
+        
+        const conversationQaPairs = allQaPairs.filter(qa => qa.conversationId === conversation.id);
+        for (const qaPair of conversationQaPairs) {
+          await apiService.exportQAPair(qaPair);
+        }
+        
+        alert(`Successfully exported conversation and ${conversationQaPairs.length} Q&A pairs to backend`);
+      } else {
+        // For file data, export as PDF
+        const blob = await ApiService.exportConversationPDF(conversation, qaPairs);
+        
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `conversation_${conversation.id}_${format(new Date(), 'yyyy-MM-dd_HHmmss')}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+        
+        console.log('Export successful');
+      }
     } catch (error) {
       console.error('Export to backend failed:', error);
-      alert('Failed to export conversation. Please ensure the backend service is running.');
+      alert('Failed to export to backend. Please check the console for details.');
     } finally {
       setIsExporting(false);
     }
@@ -475,22 +531,16 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
           type="button"
           className={`tab-button-header ${activeTab === 'documents' ? 'active' : ''}`}
           onClick={() => setActiveTab('documents')}
-          style={{ display: 'flex', alignItems: 'center', gap: '4px' }}
         >
           {Files && <Files size={16} />}
           <span>Documents</span>
         </button>
       )}
-      {/* Debug info */}
-      {console.log('Rendering Documents tab:', dataSource === 'agent', 'dataSource:', dataSource)}
     </div>
   );
 
   const statsInfo = (
-    <div style={{ width: '100%', display: 'flex', justifyContent: 'space-between' }}>
-      <div style={{ fontSize: '12px', color: 'red' }}>
-        DEBUG: dataSource={dataSource || 'null'}, agent={currentAgent || 'null'}
-      </div>
+    <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
       <div className="stats-info">
         <span>Q&A pairs: {conversation.qaPairCount}</span>
         <span>Rated responses: {conversation.totalRatings}</span>
@@ -545,66 +595,33 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
       >
         {showRawJson ? <Eye size={16} /> : <Code size={16} />}
       </button>
-      <div className="download-button-container">
+      <div className="download-container" ref={downloadRef}>
         <button 
           type="button"
           className="download-button"
-          onClick={() => {
-            console.log('Button clicked directly!');
-            handleDownloadButtonClick();
-          }}
+          onClick={() => setShowDownloadMenu(!showDownloadMenu)}
+          title={`Download ${dataSource === 'agent' ? 'thread' : 'conversation'}`}
         >
           <Download size={16} />
         </button>
+        
         {showDownloadMenu && (
           <div className="download-menu">
-            <button 
-              type="button"
-              className="download-menu-item"
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log('JSON button clicked');
-                handleDownloadConversation('json');
-              }}
-            >
-              <FileJson size={16} />
-              <span>Chat as JSON</span>
+            <button onClick={() => handleDownload('json')}>
+              <FileJson size={14} />
+              <span>JSON</span>
             </button>
-            <button 
-              type="button"
-              className="download-menu-item"
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log('Markdown button clicked');
-                handleDownloadConversation('markdown');
-              }}
-            >
-              <FileText size={16} />
-              <span>Chat as Markdown</span>
+            <button onClick={() => handleDownload('markdown')}>
+              <FileText size={14} />
+              <span>Markdown</span>
             </button>
-            <button 
-              type="button"
-              className="download-menu-item"
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log('DOCX button clicked');
-                handleDownloadConversation('docx');
-              }}
-            >
-              <File size={16} />
-              <span>Chat as Word</span>
+            <button onClick={() => handleDownload('docx')}>
+              <File size={14} />
+              <span>Word</span>
             </button>
-            <button 
-              type="button"
-              className="download-menu-item"
-              onClick={(e) => {
-                e.stopPropagation();
-                console.log('PDF button clicked');
-                handleDownloadConversation('pdf');
-              }}
-            >
-              <File size={16} />
-              <span>Chat as PDF (Server)</span>
+            <button onClick={() => handleDownload('pdf')}>
+              <FileText size={14} />
+              <span>PDF</span>
             </button>
           </div>
         )}
@@ -633,27 +650,29 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
         ) : (
           <div className="messages-container">
             {conversation.messages.map((message, index) => {
-          const ratingInfo = message.role === 'assistant' ? getRatingInfo(message) : null;
+          const ratingInfo = dataSource !== 'agent' && message.role === 'assistant' ? getRatingInfo(message) : null;
           
           return (
             <div key={message.id} className={`message ${message.role}`}>
               <div className="message-header">
-                <div className="message-avatar">
+                <div className={dataSource === 'agent' ? "message-icon" : "message-avatar"}>
                   {message.role === 'user' ? <User size={20} /> : <Bot size={20} />}
                 </div>
                 <div className="message-meta">
                   <span className="message-role">
-                    {message.role === 'user' ? 'User' : message.modelName || 'AI Assistant'}
+                    {message.role === 'user' 
+                      ? (dataSource === 'agent' ? 'Human' : 'User') 
+                      : (dataSource === 'agent' && message.model ? message.model : message.modelName || 'AI Assistant')}
                   </span>
-                  {message.model && (
+                  {dataSource !== 'agent' && message.model && (
                     <span className="message-model">({message.model})</span>
                   )}
                   <span className="message-time">
-                    {format(new Date(message.timestamp * 1000), 'HH:mm:ss')}
+                    {format(new Date(dataSource === 'agent' ? message.timestamp : message.timestamp * 1000), dataSource === 'agent' ? 'h:mm a' : 'HH:mm:ss')}
                   </span>
                 </div>
-                {ratingInfo && renderRating(ratingInfo.rating, ratingInfo.sentiment)}
-                {message.role === 'assistant' && index > 0 && conversation.messages[index - 1].role === 'user' && (
+                {dataSource !== 'agent' && ratingInfo && renderRating(ratingInfo.rating, ratingInfo.sentiment)}
+                {dataSource !== 'agent' && message.role === 'assistant' && index > 0 && conversation.messages[index - 1].role === 'user' && (
                   <div className="qa-download-container">
                     <button 
                       className="qa-download-button"
@@ -744,39 +763,90 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
             </div>
           ) : (
             <div className="documents-list">
-              {documents.map((doc, index) => (
-                <div key={doc.id || index} className="document-item">
-                  <div className="document-header">
-                    <div className="document-icon">
-                      <FileText size={20} />
+              {documents.map((doc, index) => {
+                // Helper function to safely decode URLs
+                const safeDecodeURI = (str: string) => {
+                  try {
+                    return decodeURIComponent(str);
+                  } catch {
+                    return str;
+                  }
+                };
+                
+                // Extract filename from URL
+                const getFilenameFromUrl = (url: string) => {
+                  try {
+                    const decoded = safeDecodeURI(url);
+                    const parts = decoded.split('/');
+                    return parts[parts.length - 1] || decoded;
+                  } catch {
+                    return url;
+                  }
+                };
+                
+                return (
+                  <div key={doc.id || index} className="document-item">
+                    <div className="document-header">
+                      <div className="document-icon">
+                        <FileText size={20} />
+                      </div>
+                      <div className="document-meta">
+                        <h4 className="document-title">
+                          {doc.metadata?.title 
+                            ? safeDecodeURI(doc.metadata.title)
+                            : doc.metadata?.url 
+                            ? getFilenameFromUrl(doc.metadata.url)
+                            : `Document ${index + 1}`}
+                        </h4>
+                        {doc.metadata?.url && (
+                          <a 
+                            href={doc.metadata.url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="document-url"
+                            title={safeDecodeURI(doc.metadata.url)}
+                          >
+                            {safeDecodeURI(doc.metadata.url)}
+                          </a>
+                        )}
+                      </div>
                     </div>
-                    <div className="document-meta">
-                      <h4 className="document-title">{doc.metadata?.title || `Document ${index + 1}`}</h4>
-                      {doc.metadata?.url && (
-                        <a 
-                          href={doc.metadata.url} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="document-url"
-                        >
-                          {doc.metadata.url}
-                        </a>
-                      )}
-                    </div>
-                  </div>
                   <div className="document-content">
-                    <pre>{doc.page_content || JSON.stringify(doc, null, 2)}</pre>
+                    {(() => {
+                      // Determine file type from URL or title
+                      const fileName = doc.metadata?.url 
+                        ? getFilenameFromUrl(doc.metadata.url)
+                        : doc.metadata?.title || '';
+                      
+                      const isMarkdown = fileName.toLowerCase().endsWith('.md') || 
+                                       fileName.toLowerCase().endsWith('.markdown');
+                      const isText = fileName.toLowerCase().endsWith('.txt');
+                      
+                      const content = doc.page_content || JSON.stringify(doc, null, 2);
+                      
+                      if (isMarkdown) {
+                        return (
+                          <div className="document-markdown">
+                            <ReactMarkdown>{content}</ReactMarkdown>
+                          </div>
+                        );
+                      } else {
+                        // For .txt files and others, render as plain text
+                        return <pre>{content}</pre>;
+                      }
+                    })()}
                   </div>
-                  {doc.metadata && Object.keys(doc.metadata).length > 0 && (
-                    <div className="document-metadata">
-                      <details>
-                        <summary>Metadata</summary>
-                        <pre>{JSON.stringify(doc.metadata, null, 2)}</pre>
-                      </details>
-                    </div>
-                  )}
-                </div>
-              ))}
+                    {doc.metadata && Object.keys(doc.metadata).length > 0 && (
+                      <div className="document-metadata">
+                        <details>
+                          <summary>Metadata</summary>
+                          <pre>{JSON.stringify(doc.metadata, null, 2)}</pre>
+                        </details>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>

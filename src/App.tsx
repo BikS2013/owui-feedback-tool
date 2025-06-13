@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react';
 import { ConversationList } from './components/ConversationList/ConversationList';
 import { ConversationDetail } from './components/ConversationDetail/ConversationDetail';
-import { ThreadDetail } from './components/ThreadDetail/ThreadDetail';
 import { ResizablePanel } from './components/ResizablePanel/ResizablePanel';
 import { DataNotification } from './components/DataNotification/DataNotification';
 import { FeedbackProvider, useFeedbackStore } from './store/feedbackStore';
@@ -134,17 +133,10 @@ function AppContent() {
         />
       </ResizablePanel>
       <main className="main-content">
-        {dataSource === 'agent' ? (
-          <ThreadDetail
-            conversation={selectedConversation}
-            qaPairs={filteredQAPairs}
-          />
-        ) : (
-          <ConversationDetail
-            conversation={selectedConversation}
-            qaPairs={filteredQAPairs}
-          />
-        )}
+        <ConversationDetail
+          conversation={selectedConversation}
+          qaPairs={filteredQAPairs}
+        />
       </main>
       {isLoading && (
         <div className="app-loading-overlay">

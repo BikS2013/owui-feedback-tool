@@ -2,28 +2,33 @@
 
 ## Pending Items
 
-### 1. **Documents Tab Not Showing for Agent-Loaded Conversations**
+### 1. **ConversationDetail and ThreadDetail Components Merged**
 **Date Added:** 2025-01-13
-**Status:** Pending - Testing Required
-**Description:** The Documents tab has been implemented in the ThreadDetail component but user reports it's not showing up for agent-loaded conversations.
+**Status:** Completed - Testing Required
+**Description:** Merged ThreadDetail and ConversationDetail components into a single unified ConversationDetail component.
 
 **Implementation Completed:**
-1. Added Documents tab to ThreadDetail component (which is used for agent data)
-2. Added state management for documents, loading, and error states
-3. Added fetchDocuments function that calls the backend API
-4. Added useEffect to fetch documents when tab is active or conversation changes
-5. Added complete rendering logic for all document states (loading, error, empty, populated)
-6. Added comprehensive CSS styling for the documents display
+1. Updated ConversationDetail to handle both file and agent data sources
+2. Merged all ThreadDetail functionality into ConversationDetail:
+   - Documents tab (shown only for agent data)
+   - Different message styling based on data source
+   - Different header text (Thread vs Conversation)
+   - Different download filenames
+   - Agent-specific export functionality
+3. Added all necessary CSS classes from ThreadDetail to ConversationDetail.css
+4. Updated App.tsx to only use ConversationDetail
+5. Removed ThreadDetail component and its CSS file
 
-**Potential Issues:**
-- The Documents tab is unconditionally shown in ThreadDetail (no dataSource check needed)
-- All CSS styles have been added to ThreadDetail.css
-- The tab should now be visible for all conversations in ThreadDetail
+**Benefits:**
+- Single component to maintain
+- Consistent behavior across data sources
+- Easier to add new features
+- Less code duplication
 
-**Next Steps:**
-- User needs to refresh the page and test if the Documents tab now appears
-- Verify that document fetching works when selecting the tab
-- Test switching between conversations while Documents tab is active
+**Testing Required:**
+- Verify file upload conversations still work correctly
+- Verify agent-loaded conversations show Documents tab
+- Test all functionality for both data sources
 
 ### 2. **CRITICAL: dataSource State Not Properly Maintained When Loading Agent Data**
 **Date Added:** 2025-01-06
