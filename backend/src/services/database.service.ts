@@ -38,7 +38,9 @@ export class DatabaseService {
     agent: Agent,
     page: number = 1,
     limit: number = 50,
-    includeRetrievedDocs: boolean = false
+    includeRetrievedDocs: boolean = false,
+    fromDate?: Date,
+    toDate?: Date
   ): Promise<ThreadPaginatedResponse> {
     console.log(`Attempting to connect to database for agent: ${agent.name}`);
     console.log(`Connection string: ${agent.database_connection_string.replace(/:[^:@]+@/, ':****@')}`); // Log with masked password
@@ -54,13 +56,36 @@ export class DatabaseService {
       // Calculate offset
       const offset = (page - 1) * limit;
 
-      // Get total count
-      const countResult = await client.query('SELECT COUNT(*) FROM thread');
+      // Build WHERE clause for date filtering
+      const whereConditions: string[] = [];
+      const queryParams: any[] = [];
+      let paramCounter = 1;
+
+      if (fromDate) {
+        whereConditions.push(`created_at >= $${paramCounter}`);
+        queryParams.push(fromDate.toISOString());
+        paramCounter++;
+      }
+
+      if (toDate) {
+        whereConditions.push(`created_at <= $${paramCounter}`);
+        queryParams.push(toDate.toISOString());
+        paramCounter++;
+      }
+
+      const whereClause = whereConditions.length > 0 ? `WHERE ${whereConditions.join(' AND ')}` : '';
+
+      // Get total count with date filtering
+      const countQuery = `SELECT COUNT(*) FROM thread ${whereClause}`;
+      const countResult = await client.query(countQuery, queryParams);
       const total = parseInt(countResult.rows[0].count, 10);
 
-      // Get paginated threads
-      const threadsResult = await client.query(
-        `SELECT 
+      // Add pagination parameters
+      queryParams.push(limit);
+      queryParams.push(offset);
+
+      // Get paginated threads with date filtering
+      const threadsQuery = `SELECT 
           thread_id,
           created_at,
           updated_at,
@@ -70,10 +95,11 @@ export class DatabaseService {
           values,
           interrupts
         FROM thread 
+        ${whereClause}
         ORDER BY created_at DESC NULLS LAST
-        LIMIT $1 OFFSET $2`,
-        [limit, offset]
-      );
+        LIMIT $${paramCounter} OFFSET $${paramCounter + 1}`;
+      
+      const threadsResult = await client.query(threadsQuery, queryParams);
 
       let threads: Thread[] = threadsResult.rows;
       

@@ -84,10 +84,97 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     setShowDownloadMenu(!showDownloadMenu);
   };
 
+  // Early setup for header elements when no conversation
   if (!conversation) {
+    const noDataTitle = conversations.length === 0 ? "No Conversations Available" : "No Conversation Selected";
+    const noDataMessage = conversations.length === 0 ? "No conversations loaded" : "No conversation selected";
+    const emptyTabButtons = (
+      <div className="tab-buttons-header">
+        <button
+          type="button"
+          className="tab-button-header active"
+          disabled
+        >
+          {MessageSquare && <MessageSquare size={16} />}
+          <span>Text</span>
+        </button>
+        <button
+          type="button"
+          className="tab-button-header"
+          disabled
+        >
+          {BarChart3 && <BarChart3 size={16} />}
+          <span>Analytics</span>
+        </button>
+      </div>
+    );
+
+    const emptyStatsInfo = (
+      <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+        <div className="stats-info">
+          <span>{noDataMessage}</span>
+        </div>
+      </div>
+    );
+
+    const emptyHeaderActions = (
+      <div className="header-actions">
+        <button
+          type="button"
+          className="prompt-selector-button"
+          onClick={() => setShowPromptSelector(true)}
+          title="Select and execute prompt"
+        >
+          <FileSearch size={16} />
+        </button>
+        <button
+          type="button"
+          className="llm-execute-button"
+          disabled
+          title="Select a conversation first"
+        >
+          <Sparkles size={16} />
+        </button>
+        <button
+          type="button"
+          className="export-backend-button"
+          disabled
+          title="Select a conversation first"
+        >
+          <Send size={16} />
+        </button>
+        <button 
+          className="view-toggle-button"
+          disabled
+          title="Select a conversation first"
+        >
+          <Code size={16} />
+        </button>
+        <div className="download-container">
+          <button 
+            className="download-button"
+            disabled
+            title="Select a conversation first"
+          >
+            <Download size={16} />
+          </button>
+        </div>
+      </div>
+    );
+
     return (
-      <div className="conversation-detail-empty">
-        <p>Select a conversation to view details</p>
+      <div className="conversation-detail">
+        <NoLogoHeader
+          title={<h2>{noDataTitle}</h2>}
+          topRightControls={emptyHeaderActions}
+          subtitle={emptyTabButtons}
+          bottomRightControls={emptyStatsInfo}
+          className="conversation-header"
+          heightAdjustment={2}
+        />
+        <div className="conversation-detail-empty">
+          <p>{conversations.length === 0 ? "Upload a JSON file to get started" : "Select a conversation to view details"}</p>
+        </div>
       </div>
     );
   }
@@ -276,6 +363,8 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
         promptConfig.promptContent,
         parameterValues
       );
+      
+      console.log('LLM Response:', response);
       
       const duration = Date.now() - startTime;
       

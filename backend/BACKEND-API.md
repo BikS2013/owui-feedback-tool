@@ -524,16 +524,19 @@ Reload agent configuration from the `agent-config.yaml` file.
 
 ### GET /api/agent/threads
 
-Get paginated thread data from a specific agent's database.
+Get paginated thread data from a specific agent's database with optional date filtering.
 
 **Query Parameters:**
 - `agentName` (required): Name of the agent whose threads to retrieve
 - `page` (optional, default: 1): Page number (minimum: 1)
 - `limit` (optional, default: 50): Number of items per page (range: 1-100)
+- `fromDate` (optional): Filter threads created from this date (inclusive). ISO 8601 format.
+- `toDate` (optional): Filter threads created until this date (inclusive). ISO 8601 format.
 
 **Example Request:**
 ```
 GET /api/agent/threads?agentName=Customer Facing&page=1&limit=20
+GET /api/agent/threads?agentName=Customer Facing&fromDate=2025-01-01T00:00:00Z&toDate=2025-01-31T23:59:59Z
 ```
 
 **Response:**

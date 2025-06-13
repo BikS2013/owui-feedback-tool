@@ -185,6 +185,22 @@ router.get('/', (req: Request, res: Response): void => {
  *           type: boolean
  *           default: false
  *         description: Whether to include retrieved_docs in the values field of each thread
+ *       - in: query
+ *         name: fromDate
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Filter threads created from this date (inclusive). ISO 8601 format.
+ *         example: "2025-01-01T00:00:00Z"
+ *       - in: query
+ *         name: toDate
+ *         required: false
+ *         schema:
+ *           type: string
+ *           format: date-time
+ *         description: Filter threads created until this date (inclusive). ISO 8601 format.
+ *         example: "2025-01-31T23:59:59Z"
  *     responses:
  *       200:
  *         description: Threads retrieved successfully
@@ -242,8 +258,9 @@ router.get('/', (req: Request, res: Response): void => {
  *                   example: "Error details"
  */
 router.get('/threads', async (req: Request, res: Response): Promise<void> => {
+  console.log('🔍 Agent threads endpoint hit with params:', req.query);
   try {
-    const { agentName, page = '1', limit = '50', include_retrieved_docs } = req.query;
+    const { agentName, page = '1', limit = '50', include_retrieved_docs, fromDate, toDate } = req.query;
 
     // Validate agent name
     if (!agentName || typeof agentName !== 'string') {
@@ -274,6 +291,41 @@ router.get('/threads', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
+    // Validate date parameters if provided
+    let fromDateTime: Date | undefined;
+    let toDateTime: Date | undefined;
+    
+    if (fromDate && typeof fromDate === 'string') {
+      fromDateTime = new Date(fromDate);
+      if (isNaN(fromDateTime.getTime())) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid fromDate parameter. Must be a valid date string.'
+        });
+        return;
+      }
+    }
+    
+    if (toDate && typeof toDate === 'string') {
+      toDateTime = new Date(toDate);
+      if (isNaN(toDateTime.getTime())) {
+        res.status(400).json({
+          success: false,
+          error: 'Invalid toDate parameter. Must be a valid date string.'
+        });
+        return;
+      }
+    }
+    
+    // Validate date range
+    if (fromDateTime && toDateTime && fromDateTime > toDateTime) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid date range. fromDate must be before toDate.'
+      });
+      return;
+    }
+
     // Get agent by name
     const agent = agentService.getAgentByName(agentName);
     if (!agent) {
@@ -286,7 +338,7 @@ router.get('/threads', async (req: Request, res: Response): Promise<void> => {
 
     // Fetch threads from database
     const includeRetrievedDocs = include_retrieved_docs === 'true';
-    const result = await databaseService.getThreads(agent, pageNum, limitNum, includeRetrievedDocs);
+    const result = await databaseService.getThreads(agent, pageNum, limitNum, includeRetrievedDocs, fromDateTime, toDateTime);
     
     res.json({
       success: true,

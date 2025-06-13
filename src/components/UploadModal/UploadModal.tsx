@@ -22,6 +22,8 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
   const [isLoadingAgents, setIsLoadingAgents] = useState(false);
   const [isLoadingThreads, setIsLoadingThreads] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fromDate, setFromDate] = useState<string>('');
+  const [toDate, setToDate] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { loadFromFile, loadFromAgentThreads } = useFeedbackStore();
 
@@ -32,11 +34,14 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
   }, [isOpen, activeTab]);
 
   const fetchAgents = async () => {
+    console.log('🔍 Fetching agents list...');
     setIsLoadingAgents(true);
     setError(null);
     try {
       const apiUrl = import.meta.env.VITE_API_URL;
-      const response = await fetch(`${apiUrl}/agent`);
+      const url = `${apiUrl}/agent`;
+      console.log('📡 Fetching from:', url);
+      const response = await fetch(url);
       
       if (!response.ok) {
         throw new Error('Failed to fetch agents');
@@ -82,8 +87,31 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
   };
 
   const handleLoadAgentThreads = async () => {
+    console.log('🎯 Load Threads button clicked!', { selectedAgent, fromDate, toDate });
+    
     if (!selectedAgent) {
       setError('Please select an agent');
+      return;
+    }
+
+    // Validate date range
+    let fromDateTime: Date | undefined;
+    let toDateTime: Date | undefined;
+    
+    if (fromDate) {
+      // Set to start of day for fromDate
+      fromDateTime = new Date(fromDate);
+      fromDateTime.setHours(0, 0, 0, 0);
+    }
+    
+    if (toDate) {
+      // Set to end of day for toDate
+      toDateTime = new Date(toDate);
+      toDateTime.setHours(23, 59, 59, 999);
+    }
+    
+    if (fromDateTime && toDateTime && fromDateTime > toDateTime) {
+      setError('From date must be before To date');
       return;
     }
 
@@ -91,7 +119,8 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
     setError(null);
 
     try {
-      await loadFromAgentThreads(selectedAgent);
+      console.log('📤 Calling loadFromAgentThreads with:', selectedAgent, fromDateTime, toDateTime);
+      await loadFromAgentThreads(selectedAgent, 1, fromDateTime, toDateTime);
       onClose();
     } catch (error) {
       console.error('Error loading agent threads:', error);
@@ -182,6 +211,30 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
                         </option>
                       ))}
                     </select>
+                  </div>
+                  
+                  <div className="date-filter-container">
+                    <div className="date-input-group">
+                      <label htmlFor="from-date">From Date (Optional):</label>
+                      <input
+                        id="from-date"
+                        type="date"
+                        value={fromDate}
+                        onChange={(e) => setFromDate(e.target.value)}
+                        className="date-input"
+                      />
+                    </div>
+                    
+                    <div className="date-input-group">
+                      <label htmlFor="to-date">To Date (Optional):</label>
+                      <input
+                        id="to-date"
+                        type="date"
+                        value={toDate}
+                        onChange={(e) => setToDate(e.target.value)}
+                        className="date-input"
+                      />
+                    </div>
                   </div>
                   
                   <button

@@ -15,7 +15,7 @@ interface FeedbackStore {
   dataExpiresAt: number | null; // Unix timestamp when data expires
   loadData: () => Promise<void>;
   loadFromFile: (file: File) => Promise<void>;
-  loadFromAgentThreads: (agentName: string) => Promise<void>;
+  loadFromAgentThreads: (agentName: string, page?: number, fromDate?: Date, toDate?: Date, isJump?: boolean) => Promise<void>;
   clearData: () => void;
   filters: FilterOptions;
   setFilters: (filters: FilterOptions) => void;
@@ -26,6 +26,17 @@ interface FeedbackStore {
   dataFormat: string | null;
   dataWarnings: string[];
   dataSource: 'file' | 'agent' | null;
+  agentPagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  } | null;
+  currentAgent: string | null;
+  agentDateRange: {
+    fromDate?: Date;
+    toDate?: Date;
+  } | null;
 }
 
 const FeedbackContext = createContext<FeedbackStore | undefined>(undefined);
@@ -58,6 +69,17 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
   const [dataFormat, setDataFormat] = useState<string | null>(null);
   const [dataWarnings, setDataWarnings] = useState<string[]>([]);
   const [dataSource, setDataSource] = useState<'file' | 'agent' | null>(null);
+  const [agentPagination, setAgentPagination] = useState<{
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  } | null>(null);
+  const [currentAgent, setCurrentAgent] = useState<string | null>(null);
+  const [agentDateRange, setAgentDateRange] = useState<{
+    fromDate?: Date;
+    toDate?: Date;
+  } | null>(null);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     // Load saved view mode from localStorage
     const savedViewMode = localStorage.getItem(VIEW_MODE_KEY);
@@ -127,6 +149,9 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
     setDataFormat(null);
     setDataWarnings([]);
     setDataSource(null);
+    setAgentPagination(null);
+    setCurrentAgent(null);
+    setAgentDateRange(null);
     // Clear local storage metadata
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(STORAGE_KEY + '-metadata');
@@ -212,35 +237,80 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
     }
   };
 
-  const loadFromAgentThreads = async (agentName: string) => {
+  const loadFromAgentThreads = async (agentName: string, page: number = 1, fromDate?: Date, toDate?: Date, isJump: boolean = false) => {
     try {
       setIsLoading(true);
       setLoadingSource('agent');
       setError(null);
       
       const apiUrl = import.meta.env.VITE_API_URL;
-      const response = await fetch(`${apiUrl}/agent/threads?agentName=${encodeURIComponent(agentName)}&limit=100`);
+      const limit = 50; // Show 50 threads per page
+      let url = `${apiUrl}/agent/threads?agentName=${encodeURIComponent(agentName)}&page=${page}&limit=${limit}`;
+      
+      // Add date parameters if provided
+      if (fromDate) {
+        url += `&fromDate=${fromDate.toISOString()}`;
+      }
+      if (toDate) {
+        url += `&toDate=${toDate.toISOString()}`;
+      }
+      
+      console.log('🚀 Fetching agent threads from:', url);
+      const response = await fetch(url);
+      
+      console.log('📡 Response status:', response.status);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch agent threads');
+        const errorText = await response.text();
+        console.error('❌ Error response:', errorText);
+        throw new Error(`Failed to fetch agent threads: ${response.status} ${response.statusText}`);
       }
       
       const data = await response.json();
+      console.log('✅ Agent threads data received:', data);
       
       if (!data.success || !data.data || !data.data.threads) {
         throw new Error('Invalid response format');
       }
+      
+      // Store pagination info and date range
+      setAgentPagination(data.data.pagination);
+      setCurrentAgent(agentName);
+      setAgentDateRange({ fromDate, toDate });
       
       // Convert agent threads to conversation format
       const threads = data.data.threads;
       const conversations: Conversation[] = [];
       const qaPairs: QAPair[] = [];
       
+      // If it's a new page (not page 1), append to existing conversations
+      // BUT if it's a jump (like going to last page), replace instead of append
+      const isNewAgent = currentAgent !== agentName;
+      const startWithExisting = page > 1 && !isNewAgent && !isJump;
+      
       threads.forEach((thread: any) => {
         // Extract messages from thread values
         const messages: Message[] = [];
         if (thread.values && thread.values.messages) {
-          thread.values.messages.forEach((msg: any) => {
+          thread.values.messages.forEach((msg: any, index: number) => {
+            // Extract model name from response_metadata if available
+            const modelName = msg.response_metadata?.model_name || msg.model || 'unknown';
+            
+            // For timestamps, check if message has its own timestamp field first
+            // Otherwise use thread timestamps
+            let messageTimestamp: number;
+            if (msg.timestamp) {
+              // If timestamp exists, it might be ISO string or milliseconds
+              messageTimestamp = typeof msg.timestamp === 'string' 
+                ? new Date(msg.timestamp).getTime()
+                : msg.timestamp;
+            } else {
+              // For human messages, use created_at; for AI messages, use updated_at
+              messageTimestamp = msg.type === 'human' 
+                ? new Date(thread.created_at).getTime()
+                : new Date(thread.updated_at || thread.created_at).getTime();
+            }
+            
             messages.push({
               id: msg.id || `${thread.thread_id}-${messages.length}`,
               parentId: null,
@@ -250,24 +320,58 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
                        typeof msg.text === 'string' ? msg.text :
                        typeof msg.content === 'object' && msg.content?.text ? msg.content.text :
                        JSON.stringify(msg.content || msg.text || ''),
-              timestamp: new Date(msg.timestamp || thread.created_at).getTime(),
-              model: msg.model || 'unknown'
+              timestamp: messageTimestamp,
+              model: modelName,
+              modelName: modelName // Add modelName for display
             });
           });
         }
         
         // Create conversation from thread
+        // Use the first message content as title if available, otherwise use thread ID
+        let title = `Thread ${thread.thread_id.slice(0, 8)}...`;
+        if (messages.length > 0 && messages[0].content) {
+          // Truncate the first message to create a meaningful title
+          const firstMessage = messages[0].content;
+          title = firstMessage.length > 50 
+            ? firstMessage.substring(0, 50) + '...'
+            : firstMessage;
+        }
+        
+        // Parse timestamps with error handling
+        let createdAtTimestamp: number;
+        let updatedAtTimestamp: number;
+        
+        try {
+          createdAtTimestamp = new Date(thread.created_at).getTime();
+          updatedAtTimestamp = new Date(thread.updated_at || thread.created_at).getTime();
+          
+          // Validate timestamps
+          if (isNaN(createdAtTimestamp) || createdAtTimestamp < 0) {
+            console.warn('Invalid created_at timestamp:', thread.created_at);
+            createdAtTimestamp = Date.now();
+          }
+          if (isNaN(updatedAtTimestamp) || updatedAtTimestamp < 0) {
+            console.warn('Invalid updated_at timestamp:', thread.updated_at);
+            updatedAtTimestamp = createdAtTimestamp;
+          }
+        } catch (error) {
+          console.error('Error parsing timestamps:', error);
+          createdAtTimestamp = Date.now();
+          updatedAtTimestamp = Date.now();
+        }
+        
         const conversation: Conversation = {
           id: thread.thread_id,
-          title: `Thread ${thread.thread_id.slice(0, 8)}...`,
+          title: title,
           userId: thread.metadata?.user_id || 'agent-user',
-          createdAt: new Date(thread.created_at).getTime(),
-          updatedAt: new Date(thread.updated_at || thread.created_at).getTime(),
+          createdAt: createdAtTimestamp,
+          updatedAt: updatedAtTimestamp,
           messages: messages,
           averageRating: null,
           totalRatings: 0,
           feedbackEntries: [],
-          modelsUsed: Array.from(new Set(messages.filter(m => m.model).map(m => m.model!))),
+          modelsUsed: Array.from(new Set(messages.filter(m => m.model && m.model !== 'unknown').map(m => m.model!))),
           qaPairCount: Math.floor(messages.length / 2)
         };
         
@@ -297,8 +401,16 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
       setDataWarnings([]);
       setDataSource('agent');
       
-      setConversations(conversations);
-      setQAPairs(qaPairs);
+      // Update conversations and QA pairs
+      if (startWithExisting) {
+        // Append new conversations to existing ones
+        setConversations(prev => [...prev, ...conversations]);
+        setQAPairs(prev => [...prev, ...qaPairs]);
+      } else {
+        // Replace all conversations (new agent or first page)
+        setConversations(conversations);
+        setQAPairs(qaPairs);
+      }
       
     } catch (err) {
       console.error('Error loading agent threads:', err);
@@ -326,12 +438,17 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
     dataFormat,
     dataWarnings,
     dataSource,
+    agentPagination,
+    currentAgent,
+    agentDateRange,
     loadData,
     loadFromFile,
     loadFromAgentThreads,
     clearData,
     filters,
     setFilters,
+    viewMode,
+    setViewMode,
     selectedAnalyticsModel,
     setSelectedAnalyticsModel
   };

@@ -37,8 +37,9 @@ export function ThreadDetail({ conversation, qaPairs }: ThreadDetailProps) {
     success: boolean;
     message: string;
     timestamp: Date;
-    data?: any;
+    response?: string;
     error?: string;
+    duration?: number;
     promptName?: string;
     llmConfiguration?: any;
   } | null>(null);
@@ -58,12 +59,132 @@ export function ThreadDetail({ conversation, qaPairs }: ThreadDetailProps) {
     };
   }, []);
 
+  // Setup header elements - reusable for both empty and populated states
+  const tabButtons = conversation ? (
+    <div className="tab-buttons-header">
+      <button
+        type="button"
+        className={`tab-button-header ${activeTab === 'text' ? 'active' : ''}`}
+        onClick={() => setActiveTab('text')}
+      >
+        {MessageSquare && <MessageSquare size={16} />}
+        <span>Text</span>
+      </button>
+      <button
+        type="button"
+        className={`tab-button-header ${activeTab === 'analytics' ? 'active' : ''}`}
+        onClick={() => setActiveTab('analytics')}
+      >
+        {BarChart3 && <BarChart3 size={16} />}
+        <span>Analytics</span>
+      </button>
+    </div>
+  ) : (
+    <div className="tab-buttons-header">
+      <button
+        type="button"
+        className="tab-button-header active"
+        disabled
+      >
+        {MessageSquare && <MessageSquare size={16} />}
+        <span>Text</span>
+      </button>
+      <button
+        type="button"
+        className="tab-button-header"
+        disabled
+      >
+        {BarChart3 && <BarChart3 size={16} />}
+        <span>Analytics</span>
+      </button>
+    </div>
+  );
+
+  const statsInfo = conversation ? (
+    <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+      <div className="stats-info">
+        <span>Q&A pairs: {conversation.qaPairCount}</span>
+        <span>Rated responses: {conversation.totalRatings}</span>
+        {conversation.averageRating && (
+          <span>Average rating: {conversation.averageRating.toFixed(1)}/10</span>
+        )}
+      </div>
+    </div>
+  ) : (
+    <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+      <div className="stats-info">
+        <span>No thread selected</span>
+      </div>
+    </div>
+  );
+
   if (!conversation) {
+    const noDataTitle = conversations.length === 0 ? "No Threads Available" : "No Thread Selected";
+    const noDataMessage = conversations.length === 0 ? "No threads loaded" : "No thread selected";
+    
+    const emptyHeaderActions = (
+      <div className="header-actions">
+        <button
+          type="button"
+          className="prompt-selector-button"
+          onClick={() => setShowPromptSelector(true)}
+          title="Select and execute prompt"
+        >
+          <FileSearch size={16} />
+        </button>
+        <button
+          type="button"
+          className="llm-execute-button"
+          disabled
+          title="Select a thread first"
+        >
+          <Sparkles size={16} />
+        </button>
+        <button
+          type="button"
+          className="export-backend-button"
+          disabled
+          title="Select a thread first"
+        >
+          <Send size={16} />
+        </button>
+        <button 
+          className="view-toggle-button"
+          disabled
+          title="Select a thread first"
+        >
+          <Code size={16} />
+        </button>
+        <div className="download-container">
+          <button 
+            className="download-button"
+            disabled
+            title="Select a thread first"
+          >
+            <Download size={16} />
+          </button>
+        </div>
+      </div>
+    );
+
     return (
-      <div className="conversation-detail no-selection">
-        <NoLogoHeader />
+      <div className="conversation-detail thread-detail">
+        <NoLogoHeader
+          title={<h2>{noDataTitle}</h2>}
+          topRightControls={emptyHeaderActions}
+          subtitle={tabButtons}
+          bottomRightControls={
+            <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
+              <div className="stats-info">
+                <span>{noDataMessage}</span>
+              </div>
+            </div>
+          }
+          className="conversation-header"
+          heightAdjustment={2}
+        />
         <div className="empty-state">
-          <p>Select a thread to view its messages</p>
+          <p>{conversations.length === 0 ? "Connect to an agent to load threads" : "Select a thread to view its messages"}</p>
         </div>
       </div>
     );
@@ -155,20 +276,84 @@ export function ThreadDetail({ conversation, qaPairs }: ThreadDetailProps) {
         return;
       }
       
-      const { promptId, promptName } = JSON.parse(savedConfig);
+      const promptConfig = JSON.parse(savedConfig);
+      if (!promptConfig.selectedFile || !promptConfig.promptContent) {
+        alert('Please select a prompt template in the Prompt Selector first.');
+        setShowPromptSelector(true);
+        setIsExecutingPrompt(false);
+        return;
+      }
       
-      // Execute the prompt
-      const result = await llmService.executePrompt({
-        promptId,
-        promptName,
-        conversation,
-        llmConfiguration
+      console.log('Executing prompt with saved configuration:', {
+        llmConfiguration,
+        promptFile: promptConfig.selectedFile,
+        parameters: promptConfig.parameters
       });
       
+      // Build parameter values based on the saved configuration
+      const parameterValues: Record<string, string> = {};
+      
+      if (promptConfig.parameters) {
+        for (const param of promptConfig.parameters) {
+          switch (param.source) {
+            case 'conversation':
+              parameterValues[param.name] = JSON.stringify(conversation);
+              break;
+            case 'qa':
+              parameterValues[param.name] = JSON.stringify(qaPairs);
+              break;
+            case 'current-date':
+              parameterValues[param.name] = new Date().toLocaleDateString();
+              break;
+            case 'current-datetime':
+              parameterValues[param.name] = new Date().toLocaleString();
+              break;
+            case 'custom-text':
+              parameterValues[param.name] = param.customValue || '';
+              break;
+            default:
+              parameterValues[param.name] = '';
+          }
+        }
+      }
+      
+      console.log('Parameter values:', parameterValues);
+      
+      const startTime = Date.now();
+      
+      // Use the parameterized execution method
+      const response = await llmService.executePromptWithParameters(
+        llmConfiguration,
+        promptConfig.promptContent,
+        parameterValues
+      );
+      
+      console.log('LLM Response:', response);
+      
+      const duration = Date.now() - startTime;
+      
+      // Extract prompt name from file path
+      const promptName = promptConfig.selectedFile.split('/').pop() || 'Unknown Prompt';
+      
       // Display results
-      if (result.success) {
+      if (response.success) {
         setPromptExecutionResult({
-          ...result,
+          success: true,
+          message: 'Prompt executed successfully!',
+          response: response.result,
+          timestamp: new Date(),
+          duration,
+          promptName,
+          llmConfiguration
+        });
+        setShowPromptResults(true);
+      } else {
+        setPromptExecutionResult({
+          success: false,
+          message: response.error || 'Execution failed',
+          error: response.error,
+          timestamp: new Date(),
+          duration,
           promptName,
           llmConfiguration
         });
@@ -180,46 +365,15 @@ export function ThreadDetail({ conversation, qaPairs }: ThreadDetailProps) {
         success: false,
         message: 'Failed to execute prompt',
         error: error instanceof Error ? error.message : 'Unknown error',
-        timestamp: new Date()
+        timestamp: new Date(),
+        promptName: promptConfig?.selectedFile?.split('/').pop() || 'Unknown Prompt',
+        llmConfiguration
       });
       setShowPromptResults(true);
     } finally {
       setIsExecutingPrompt(false);
     }
   };
-
-  const tabButtons = (
-    <div className="tab-buttons-header">
-      <button
-        type="button"
-        className={`tab-button-header ${activeTab === 'text' ? 'active' : ''}`}
-        onClick={() => setActiveTab('text')}
-      >
-        {MessageSquare && <MessageSquare size={16} />}
-        <span>Text</span>
-      </button>
-      <button
-        type="button"
-        className={`tab-button-header ${activeTab === 'analytics' ? 'active' : ''}`}
-        onClick={() => setActiveTab('analytics')}
-      >
-        {BarChart3 && <BarChart3 size={16} />}
-        <span>Analytics</span>
-      </button>
-    </div>
-  );
-
-  const statsInfo = (
-    <div style={{ width: '100%', display: 'flex', justifyContent: 'flex-end' }}>
-      <div className="stats-info">
-        <span>Q&A pairs: {conversation.qaPairCount}</span>
-        <span>Rated responses: {conversation.totalRatings}</span>
-        {conversation.averageRating && (
-          <span>Average rating: {conversation.averageRating.toFixed(1)}/10</span>
-        )}
-      </div>
-    </div>
-  );
 
   const headerActions = (
     <div className="header-actions">

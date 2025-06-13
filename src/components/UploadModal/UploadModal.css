@@ -15,7 +15,7 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 400px;
+  width: 600px;
   max-width: 90vw;
 }
 
@@ -34,8 +34,8 @@
 .upload-modal.modal-content {
   width: 100%;
   height: auto;
-  min-height: 300px;
-  max-height: 400px;
+  min-height: 360px;
+  max-height: 480px;
 }
 
 .modal-header {
@@ -115,7 +115,7 @@
   padding: 20px;
   flex: 1;
   overflow-y: auto;
-  min-height: 200px;
+  min-height: 240px;
 }
 
 .upload-description {
@@ -224,4 +224,50 @@
   border: 1px solid rgba(255, 123, 123, 0.3);
   word-wrap: break-word;
   overflow-wrap: break-word;
+}
+
+.date-filter-container {
+  margin: 16px 0;
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+}
+
+.date-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.date-input-group label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  font-weight: 500;
+}
+
+.date-input {
+  padding: 8px 12px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background-color: var(--bg-secondary);
+  color: var(--text-primary);
+  font-size: 14px;
+  transition: border-color 0.2s ease;
+}
+
+.date-input:focus {
+  outline: none;
+  border-color: var(--primary);
+}
+
+/* Style the calendar icon for dark theme */
+[data-theme="dark"] .date-input::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+  cursor: pointer;
+}
+
+/* Style the calendar icon for light theme */
+[data-theme="light"] .date-input::-webkit-calendar-picker-indicator {
+  cursor: pointer;
 }

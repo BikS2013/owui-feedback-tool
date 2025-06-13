@@ -44,6 +44,12 @@
   font-size: 1.5rem;
   flex: 0 0 165px;
   margin-right: 20px;
+  font-weight: 600;
+}
+
+/* Ensure header text is visible in light theme */
+[data-theme="light"] .modal-header h2 {
+  color: var(--text-primary);
 }
 
 .model-controls {
@@ -110,6 +116,8 @@
   justify-content: center;
   background: none;
   border: none;
+  display: flex;
+  align-items: center;
 }
 
 .llm-test-button:hover:not(:disabled) {
@@ -127,6 +135,14 @@
   cursor: not-allowed;
 }
 
+/* Ensure button stays visible during testing */
+.llm-test-button.icon-only:disabled {
+  opacity: 0.8;
+  background-color: var(--bg-primary);
+  min-width: 32px;
+  min-height: 32px;
+}
+
 /* Spinner animation */
 .spinner {
   width: 16px;
@@ -135,6 +151,18 @@
   border-top-color: var(--accent-primary);
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+
+/* Ensure spinner is visible in test button */
+.llm-test-button .spinner {
+  border-color: rgba(255, 255, 255, 0.3);
+  border-top-color: var(--text-primary);
+}
+
+[data-theme="light"] .llm-test-button .spinner {
+  border-color: rgba(0, 0, 0, 0.2);
+  border-top-color: var(--text-primary);
 }
 
 @keyframes spin {

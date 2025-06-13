@@ -48,12 +48,25 @@ export function processRawFeedbackData(feedbackEntries: FeedbackEntry[]): {
     // Get or create conversation
     let conversation = conversationsMap.get(chatId);
     if (!conversation) {
+      // Convert timestamps from seconds to milliseconds if needed
+      let createdAt = chatSnapshot.created_at;
+      let updatedAt = chatSnapshot.updated_at;
+      
+      // Check if timestamps are in seconds (Unix timestamp) instead of milliseconds
+      // Unix timestamps in seconds are typically 10 digits, in milliseconds 13 digits
+      if (createdAt && createdAt < 10000000000) {
+        createdAt = createdAt * 1000;
+      }
+      if (updatedAt && updatedAt < 10000000000) {
+        updatedAt = updatedAt * 1000;
+      }
+      
       conversation = {
         id: chatId,
         title: chatSnapshot.title || 'Untitled Conversation',
         userId: chatSnapshot.user_id,
-        createdAt: chatSnapshot.created_at,
-        updatedAt: chatSnapshot.updated_at,
+        createdAt: createdAt,
+        updatedAt: updatedAt,
         messages: [],
         averageRating: null,
         totalRatings: 0,

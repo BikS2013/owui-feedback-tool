@@ -75,14 +75,34 @@
   cursor: pointer;
 }
 
-.conversation-header .settings-button:hover,
-.conversation-header .prompt-selector-button:hover,
-.conversation-header .llm-execute-button:hover,
-.conversation-header .export-backend-button:hover,
-.conversation-header .view-toggle-button:hover,
-.conversation-header .download-button:hover {
+.conversation-header .settings-button:hover:not(:disabled),
+.conversation-header .prompt-selector-button:hover:not(:disabled),
+.conversation-header .llm-execute-button:hover:not(:disabled),
+.conversation-header .export-backend-button:hover:not(:disabled),
+.conversation-header .view-toggle-button:hover:not(:disabled),
+.conversation-header .download-button:hover:not(:disabled) {
   background-color: var(--hover-bg);
   color: #FFFFFF;
+}
+
+.conversation-header .settings-button:disabled,
+.conversation-header .prompt-selector-button:disabled,
+.conversation-header .llm-execute-button:disabled,
+.conversation-header .export-backend-button:disabled,
+.conversation-header .view-toggle-button:disabled,
+.conversation-header .download-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.tab-button-header:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.tab-button-header:disabled:hover {
+  background: none;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .messages-container {

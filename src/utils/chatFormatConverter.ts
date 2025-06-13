@@ -29,6 +29,15 @@ export function convertChatFormatToFeedbackFormat(chatEntries: ChatExportEntry[]
   chatEntries.forEach(chatEntry => {
     // Extract messages and find the earliest and latest timestamps
     const messages = Object.values(chatEntry.chat.history.messages);
+    
+    // Convert message timestamps to milliseconds if they're in seconds
+    const messagesWithConvertedTimestamps = messages.map(msg => ({
+      ...msg,
+      timestamp: msg.timestamp && msg.timestamp < 10000000000 
+        ? msg.timestamp * 1000 
+        : msg.timestamp
+    }));
+    
     const timestamps = messages.map(m => m.timestamp).filter(t => t !== undefined);
     const earliestTimestamp = timestamps.length > 0 ? Math.min(...timestamps) : Date.now() / 1000;
     const latestTimestamp = timestamps.length > 0 ? Math.max(...timestamps) : Date.now() / 1000;
@@ -69,16 +78,24 @@ export function convertChatFormatToFeedbackFormat(chatEntries: ChatExportEntry[]
             models: chatEntry.chat.models,
             params: chatEntry.chat.params,
             history: {
-              messages: chatEntry.chat.history.messages,
+              messages: messagesWithConvertedTimestamps.reduce((acc, msg) => {
+                acc[msg.id] = msg;
+                return acc;
+              }, {} as Record<string, Message>),
               currentId: '' // No current ID available in chat export format
             },
-            messages: messages, // Convert to array format
+            messages: messagesWithConvertedTimestamps, // Convert to array format with converted timestamps
             tags: [],
-            timestamp: earliestTimestamp,
+            timestamp: earliestTimestamp * 1000, // Convert to milliseconds
             files: []
           },
-          updated_at: chatEntry.updated_at || latestTimestamp,
-          created_at: chatEntry.created_at || earliestTimestamp,
+          // Convert timestamps to milliseconds if they're in seconds
+          updated_at: (chatEntry.updated_at && chatEntry.updated_at < 10000000000)
+            ? chatEntry.updated_at * 1000
+            : (chatEntry.updated_at || latestTimestamp * 1000),
+          created_at: (chatEntry.created_at && chatEntry.created_at < 10000000000)
+            ? chatEntry.created_at * 1000
+            : (chatEntry.created_at || earliestTimestamp * 1000),
           share_id: chatEntry.share_id || null,
           archived: chatEntry.archived || false,
           pinned: chatEntry.pinned || false,
@@ -86,8 +103,13 @@ export function convertChatFormatToFeedbackFormat(chatEntries: ChatExportEntry[]
           folder_id: chatEntry.folder_id || null
         }
       },
-      created_at: chatEntry.created_at || earliestTimestamp,
-      updated_at: chatEntry.updated_at || latestTimestamp
+      // Convert timestamps to milliseconds if they're in seconds
+      created_at: (chatEntry.created_at && chatEntry.created_at < 10000000000) 
+        ? chatEntry.created_at * 1000 
+        : (chatEntry.created_at || earliestTimestamp * 1000),
+      updated_at: (chatEntry.updated_at && chatEntry.updated_at < 10000000000)
+        ? chatEntry.updated_at * 1000
+        : (chatEntry.updated_at || latestTimestamp * 1000)
     };
     
     feedbackEntries.push(syntheticFeedbackEntry);

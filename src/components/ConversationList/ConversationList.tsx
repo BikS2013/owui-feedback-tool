@@ -10,6 +10,7 @@ import { ListItem } from '../ListItem/ListItem';
 import { List } from '../List/List';
 import { LogoHeader } from '../LogoHeader/LogoHeader';
 import { SettingsModal } from '../SettingsModal/SettingsModal';
+import { Pagination } from '../Pagination/Pagination';
 import { useFeedbackStore } from '../../store/feedbackStore';
 import { useTheme } from '../../store/themeStore';
 import './ConversationList.css';
@@ -38,6 +39,7 @@ export function ConversationList({
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const { colorScheme } = useTheme();
+  const { dataSource, agentPagination, currentAgent, agentDateRange, loadFromAgentThreads, isLoading } = useFeedbackStore();
   
   // Calculate total Q&A pairs
   const totalQAPairs = conversations.reduce((sum, conv) => sum + conv.qaPairCount, 0);
@@ -100,9 +102,9 @@ export function ConversationList({
             {conv.id.substring(0, 8)}...{conv.id.substring(conv.id.length - 4)}
           </div>
           <span className="timestamp">
-            {format(new Date(conv.updatedAt * 1000), 'yyyy-MM-dd')}
+            {format(new Date(conv.updatedAt), 'yyyy-MM-dd')}
             {' '}
-            {format(new Date(conv.updatedAt * 1000), 'HH:mm a')}
+            {format(new Date(conv.updatedAt), 'hh:mm a')}
           </span>
         </>
       }
@@ -136,20 +138,39 @@ export function ConversationList({
     </ListItem>
   );
 
+  const handlePageChange = (page: number, isJump?: boolean) => {
+    if (currentAgent) {
+      loadFromAgentThreads(currentAgent, page, agentDateRange?.fromDate, agentDateRange?.toDate, isJump);
+    }
+  };
+
   return (
     <>
-      <List
-        items={conversations}
-        renderItem={renderConversationItem}
-        keyExtractor={(conv) => conv.id}
-        header={conversationHeader}
-        searchable={true}
-        searchValue={searchTerm}
-        onSearchChange={onSearchChange}
-        searchPlaceholder="Search conversations..."
-        emptyState={emptyState}
-        className="conversation-list"
-      />
+      <div className="conversation-list-wrapper">
+        <List
+          items={conversations}
+          renderItem={renderConversationItem}
+          keyExtractor={(conv) => conv.id}
+          header={conversationHeader}
+          searchable={true}
+          searchValue={searchTerm}
+          onSearchChange={onSearchChange}
+          searchPlaceholder="Search conversations..."
+          emptyState={emptyState}
+          className="conversation-list"
+        />
+        {dataSource === 'agent' && agentPagination && agentPagination.totalPages > 1 && (
+          <Pagination
+            currentPage={agentPagination.page}
+            totalPages={agentPagination.totalPages}
+            totalRows={agentPagination.total}
+            pageSize={agentPagination.limit}
+            onPageChange={handlePageChange}
+            isLoading={isLoading}
+            displayedRows={conversations.length}
+          />
+        )}
+      </div>
       <FilterPanel
         filters={filters}
         onFiltersChange={onFiltersChange}
