@@ -82,6 +82,16 @@ The built files will be in the `dist` directory.
    - User feedback comments
    - Timestamps for each message
 
+## Data Sources
+
+The application handles three distinct data sources:
+
+1. **LangGraph chats** - Conversations retrieved through API integration with LangGraph
+2. **Unrated OWUI chats** - Conversations loaded from file that do not contain rating data
+3. **Rated OWUI chats** - Conversations loaded from file that include rating data
+
+These standardized terms are used throughout the codebase and documentation to ensure clear communication about data sources.
+
 ## Data Format
 
 The application loads data from `public/feedback-history-export.json`. The data structure includes:

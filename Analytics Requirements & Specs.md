@@ -3,6 +3,16 @@
 ## Overview
 This document outlines the requirements and specifications for adding an analytics dashboard to the OWUI Feedback application. The dashboard will provide insights into conversation ratings and quality metrics, with the ability to switch between conversation details and analytics views.
 
+## Data Source Terminology
+
+The application handles three distinct data sources:
+
+1. **LangGraph chats** - Conversations retrieved through API integration with LangGraph
+2. **Unrated OWUI chats** - Conversations loaded from file that do not contain rating data
+3. **Rated OWUI chats** - Conversations loaded from file that include rating data
+
+These standardized terms should be used consistently throughout the codebase and documentation to ensure clear communication about data sources.
+
 ## Core Requirements
 
 ### 1. View Toggle Switch

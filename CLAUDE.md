@@ -51,6 +51,16 @@ Configuration is managed through environment variables in the `.env` file:
   - Increases API rate limit from 60 to 5,000 requests/hour
   - Create at: https://github.com/settings/tokens
 
+## Data Sources Terminology
+
+The application handles three distinct data sources:
+
+1. **LangGraph chats** - Conversations retrieved through API integration with LangGraph
+2. **Unrated OWUI chats** - Conversations loaded from file that do not contain rating data
+3. **Rated OWUI chats** - Conversations loaded from file that include rating data
+
+These standardized terms should be used consistently throughout the codebase and documentation to ensure clear communication about data sources.
+
 ## Architecture Overview
 
 This is a React-based SPA for exploring AI assistant feedback data. Key architectural decisions:
