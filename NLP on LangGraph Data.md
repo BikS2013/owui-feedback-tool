@@ -1065,6 +1065,131 @@ router.post('/convert-to-filter', async (req: Request, res: Response): Promise<v
 4. Visual feedback for user actions
 5. Fallback handling for clipboard API
 
+## Static Filters Implementation (Added 2025-01-14)
+
+### Overview
+
+In addition to the Natural Language filtering system, the application now includes a separate tab for static filters. These filters are completely decoupled from the Natural Language filters and can be used independently or in combination.
+
+### Filter Types
+
+1. **Date Range Filter**
+   - From/To date inputs
+   - Filters conversations based on `updatedAt` timestamp
+   - Inclusive date range (end date includes the entire day)
+
+2. **Model Filter**
+   - Checkbox list of all models found in conversations
+   - Dynamically populated from conversation data
+   - Filters conversations that used any of the selected models
+
+3. **Rating Filter**
+   - Min/Max rating sliders (1-10 scale)
+   - "Include unrated" checkbox
+   - Filters based on average rating of conversations
+
+### Technical Implementation
+
+#### Type Definition
+```typescript
+export interface FilterOptions {
+  searchTerm: string;
+  // Natural Language filters (script-based)
+  customJavaScriptFilter?: string;
+  customRenderScript?: string;
+  naturalLanguageQuery?: string;
+  renderScriptTimestamp?: number;
+  // Static filters
+  dateRange?: {
+    start: Date | null;
+    end: Date | null;
+  };
+  modelFilter?: string[];
+  ratingFilter?: {
+    min: number;
+    max: number;
+    includeUnrated: boolean;
+  };
+}
+```
+
+#### Static Filter Utility
+Created `src/utils/staticFilters.ts`:
+```typescript
+export function applyStaticFilters(conversations: Conversation[], filters: FilterOptions): Conversation[] {
+  let filtered = [...conversations];
+
+  // Apply date range filter
+  if (filters.dateRange && (filters.dateRange.start || filters.dateRange.end)) {
+    // Filter by date range
+  }
+
+  // Apply model filter
+  if (filters.modelFilter && filters.modelFilter.length > 0) {
+    // Filter by selected models
+  }
+
+  // Apply rating filter
+  if (filters.ratingFilter) {
+    // Filter by rating range
+  }
+
+  return filtered;
+}
+```
+
+#### UI Implementation
+
+1. **Tab System**
+   - Two tabs: "Static Filters" and "Natural Language"
+   - Visual indicators on tabs when filters are active
+   - Independent state management for each tab
+
+2. **FilterPanel Updates**
+   - Added `activeTab` state to switch between filter types
+   - Separate handlers for applying static vs natural language filters
+   - Clear visual separation between filter paradigms
+
+3. **App Integration**
+   - Static filters applied after JavaScript/Natural Language filters
+   - Both filter types can be active simultaneously
+   - Search term filter always applied regardless of filter type
+
+### User Experience
+
+1. **Visual Feedback**
+   - Filter button shows indicator when any filters active
+   - Tooltip displays all active filters
+   - Tab indicators show which filter types are active
+
+2. **Filter Application Flow**
+   ```
+   1. Natural Language Filter (if active) → Filters threads
+   2. Convert filtered threads → Conversations
+   3. Apply search term filter
+   4. Apply static filters (date, model, rating)
+   5. Display final filtered list
+   ```
+
+3. **Independence**
+   - Static filters don't affect Natural Language filters
+   - Each tab maintains its own state
+   - Users can combine both filter types for precise control
+
+### Benefits
+
+1. **Flexibility**: Users choose between AI-powered natural language queries or precise manual filters
+2. **Precision**: Static filters provide exact control over date ranges, models, and ratings
+3. **Simplicity**: No need to craft complex queries for simple filtering needs
+4. **Performance**: Static filters execute instantly without LLM calls
+5. **Combination**: Both filter types can work together for powerful data exploration
+
 ## Conclusion
 
-This enhanced NLP system with dual-script support provides a powerful way to both filter and visualize LangGraph data using natural language. By separating filtering logic from rendering logic, the system offers maximum flexibility while maintaining clean separation of concerns. The rendering overlay adds a new dimension to data exploration, allowing users to generate reports, summaries, and visualizations on demand without leaving the conversation view.
+This enhanced NLP system with dual-script support and static filters provides a comprehensive way to explore LangGraph data. Users can leverage:
+- **Natural Language filters** for complex, AI-powered queries
+- **Static filters** for precise, manual control
+- **Rendering overlays** for data visualization and reporting
+- **Combined approaches** for maximum flexibility
+
+By separating filtering logic from rendering logic and providing both AI-powered and manual filtering options, the system offers maximum flexibility while maintaining clean separation of concerns. The rendering overlay adds a new dimension to data exploration, allowing users to generate reports, summaries, and visualizations on demand without leaving the conversation view.
