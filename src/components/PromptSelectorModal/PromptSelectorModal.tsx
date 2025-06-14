@@ -81,6 +81,22 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
       loadLLMConfigurations();
     }
   }, [isOpen]);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isOpen, onClose]);
   
   // Update parameter configs when parameters change
   useEffect(() => {

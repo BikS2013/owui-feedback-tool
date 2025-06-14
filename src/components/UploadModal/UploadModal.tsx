@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import ReactDOM from 'react-dom';
 import { X, Upload, Database } from 'lucide-react';
 import { useFeedbackStore } from '../../store/feedbackStore';
+import { useResizable } from '../../hooks/useResizable';
 import './UploadModal.css';
 
 interface UploadModalProps {
@@ -15,23 +16,103 @@ interface Agent {
   database_connection_string: string;
 }
 
+const UPLOAD_MODAL_STORAGE_KEY = 'uploadModalCriteria';
+
+interface SavedCriteria {
+  activeTab: 'file' | 'agent';
+  selectedAgent: string;
+  fromDate: string;
+  toDate: string;
+}
+
 export function UploadModal({ isOpen, onClose }: UploadModalProps) {
-  const [activeTab, setActiveTab] = useState<'file' | 'agent'>('file');
+  // Load saved criteria from localStorage
+  const loadSavedCriteria = (): SavedCriteria => {
+    try {
+      const saved = localStorage.getItem(UPLOAD_MODAL_STORAGE_KEY);
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (error) {
+      console.error('Error loading saved upload criteria:', error);
+    }
+    return {
+      activeTab: 'file',
+      selectedAgent: '',
+      fromDate: '',
+      toDate: ''
+    };
+  };
+
+  const savedCriteria = loadSavedCriteria();
+  
+  const [activeTab, setActiveTab] = useState<'file' | 'agent'>(savedCriteria.activeTab);
   const [agents, setAgents] = useState<Agent[]>([]);
-  const [selectedAgent, setSelectedAgent] = useState<string>('');
+  const [selectedAgent, setSelectedAgent] = useState<string>(savedCriteria.selectedAgent);
   const [isLoadingAgents, setIsLoadingAgents] = useState(false);
   const [isLoadingThreads, setIsLoadingThreads] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [fromDate, setFromDate] = useState<string>('');
-  const [toDate, setToDate] = useState<string>('');
+  const [fromDate, setFromDate] = useState<string>(savedCriteria.fromDate);
+  const [toDate, setToDate] = useState<string>(savedCriteria.toDate);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const { loadFromFile, loadFromAgentThreads } = useFeedbackStore();
+  
+  // Use resizable hook
+  const {
+    modalRef,
+    modalSize,
+    isResizing,
+    handleResizeStart,
+    handleOverlayClick
+  } = useResizable({
+    defaultWidth: 600,
+    defaultHeight: 500,
+    minWidth: 400,
+    minHeight: 400,
+    storageKey: 'uploadModalSize'
+  });
+
+  // Save criteria to localStorage whenever they change
+  const saveCriteria = () => {
+    const criteria: SavedCriteria = {
+      activeTab,
+      selectedAgent,
+      fromDate,
+      toDate
+    };
+    try {
+      localStorage.setItem(UPLOAD_MODAL_STORAGE_KEY, JSON.stringify(criteria));
+    } catch (error) {
+      console.error('Error saving upload criteria:', error);
+    }
+  };
+
+  // Save criteria whenever they change
+  useEffect(() => {
+    saveCriteria();
+  }, [activeTab, selectedAgent, fromDate, toDate]);
 
   useEffect(() => {
     if (isOpen && activeTab === 'agent') {
       fetchAgents();
     }
   }, [isOpen, activeTab]);
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isOpen, onClose]);
 
   const fetchAgents = async () => {
     console.log('🔍 Fetching agents list...');
@@ -133,9 +214,29 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
   if (!isOpen) return null;
 
   return ReactDOM.createPortal(
-    <div className="modal-overlay" onClick={onClose}>
+    <div className="modal-overlay" onClick={(e) => handleOverlayClick(e, onClose)}>
       <div className="modal-wrapper">
-        <div className="upload-modal modal-content" onClick={(e) => e.stopPropagation()}>
+        <div 
+          ref={modalRef}
+          className={`upload-modal modal-content resizable ${isResizing ? 'resizing' : ''}`} 
+          onClick={(e) => e.stopPropagation()}
+          style={{
+            width: `${modalSize.width}px`,
+            height: `${modalSize.height}px`,
+            maxWidth: '90vw',
+            maxHeight: '90vh'
+          }}
+        >
+          {/* Resize handles */}
+          <div className="resize-handle resize-handle-n" onMouseDown={(e) => handleResizeStart(e, 'top')} />
+          <div className="resize-handle resize-handle-s" onMouseDown={(e) => handleResizeStart(e, 'bottom')} />
+          <div className="resize-handle resize-handle-e" onMouseDown={(e) => handleResizeStart(e, 'right')} />
+          <div className="resize-handle resize-handle-w" onMouseDown={(e) => handleResizeStart(e, 'left')} />
+          <div className="resize-handle resize-handle-ne" onMouseDown={(e) => handleResizeStart(e, 'top-right')} />
+          <div className="resize-handle resize-handle-nw" onMouseDown={(e) => handleResizeStart(e, 'top-left')} />
+          <div className="resize-handle resize-handle-se" onMouseDown={(e) => handleResizeStart(e, 'bottom-right')} />
+          <div className="resize-handle resize-handle-sw" onMouseDown={(e) => handleResizeStart(e, 'bottom-left')} />
+          
         <div className="modal-header">
           <h2>Load Data</h2>
           <button className="modal-close" onClick={onClose}>

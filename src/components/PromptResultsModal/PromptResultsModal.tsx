@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { X, CheckCircle, AlertCircle, Clock, Copy, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { useResizable } from '../../hooks/useResizable';
@@ -37,6 +37,22 @@ export const PromptResultsModal: React.FC<PromptResultsModalProps> = ({
     minHeight: 300,
     storageKey: 'promptResultsModalSize'
   });
+
+  // Handle ESC key to close modal
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isOpen, onClose]);
 
   const handleCopyToClipboard = () => {
     if (result?.response) {

@@ -271,3 +271,114 @@
 [data-theme="light"] .date-input::-webkit-calendar-picker-indicator {
   cursor: pointer;
 }
+
+/* Resizable modal styles */
+.upload-modal.resizable {
+  resize: none;
+  overflow: hidden;
+  min-width: 400px;
+  min-height: 400px;
+  position: relative;
+}
+
+/* Resize handles */
+.resize-handle {
+  position: absolute;
+  background: transparent;
+  user-select: none;
+  z-index: 10;
+}
+
+.resize-handle:hover {
+  background: var(--accent-primary);
+  opacity: 0.3;
+}
+
+/* Edge handles */
+.resize-handle-n {
+  top: 0;
+  left: 8px;
+  right: 8px;
+  height: 8px;
+  cursor: ns-resize;
+}
+
+.resize-handle-s {
+  bottom: 0;
+  left: 8px;
+  right: 8px;
+  height: 8px;
+  cursor: ns-resize;
+}
+
+.resize-handle-e {
+  top: 8px;
+  right: 0;
+  bottom: 8px;
+  width: 8px;
+  cursor: ew-resize;
+}
+
+.resize-handle-w {
+  top: 8px;
+  left: 0;
+  bottom: 8px;
+  width: 8px;
+  cursor: ew-resize;
+}
+
+/* Corner handles */
+.resize-handle-ne {
+  top: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nesw-resize;
+}
+
+.resize-handle-nw {
+  top: 0;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+}
+
+.resize-handle-se {
+  bottom: 0;
+  right: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nwse-resize;
+}
+
+.resize-handle-sw {
+  bottom: 0;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  cursor: nesw-resize;
+}
+
+/* Visual indicator on corners */
+.resize-handle-se::after {
+  content: '';
+  position: absolute;
+  bottom: 3px;
+  right: 3px;
+  width: 10px;
+  height: 10px;
+  border-right: 2px solid var(--border-color);
+  border-bottom: 2px solid var(--border-color);
+  opacity: 0.5;
+}
+
+/* Prevent text selection during resize */
+.upload-modal.resizing {
+  user-select: none;
+}
+
+.upload-modal.resizing * {
+  user-select: none;
+  cursor: inherit !important;
+}
