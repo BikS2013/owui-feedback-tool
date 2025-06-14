@@ -297,6 +297,57 @@
   font-style: italic;
 }
 
+/* Radio options for display mode */
+.settings-mode-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.settings-radio-option {
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-color: var(--bg-card);
+}
+
+.settings-radio-option:hover {
+  border-color: var(--accent-primary);
+  background-color: var(--bg-secondary);
+}
+
+.settings-radio-option input[type="radio"] {
+  margin-top: 2px;
+  cursor: pointer;
+}
+
+.settings-radio-content {
+  flex: 1;
+}
+
+.settings-radio-content strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text-primary);
+}
+
+.settings-radio-content p {
+  margin: 0;
+  font-size: 13px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.settings-status.info {
+  background-color: rgba(51, 153, 255, 0.1);
+  color: var(--accent-primary);
+  border: 1px solid rgba(51, 153, 255, 0.2);
+}
+
 /* GitHub specific styles */
 .settings-input.readonly svg {
   margin-right: 8px;

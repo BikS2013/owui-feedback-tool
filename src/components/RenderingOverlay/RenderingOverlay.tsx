@@ -46,6 +46,22 @@ export const RenderingOverlay: React.FC<RenderingOverlayProps> = ({
     }
   }, [isVisible]);
 
+  // Handle ESC key to close overlay
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isVisible) {
+        onClose();
+      }
+    };
+
+    if (isVisible) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isVisible, onClose]);
+
   if (!isVisible) {
     return null;
   }

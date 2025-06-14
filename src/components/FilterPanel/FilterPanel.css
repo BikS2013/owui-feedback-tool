@@ -774,3 +774,45 @@
   transform: none;
   box-shadow: none;
 }
+
+/* Magic mode specific styles */
+.natural-language-section.magic-mode .natural-query-input textarea {
+  min-height: 150px;
+  height: 300px;
+}
+
+.natural-language-section.magic-mode .filter-expression,
+.natural-language-section.magic-mode .prompt-preview {
+  display: none;
+}
+
+.natural-language-section.magic-mode .natural-language-content {
+  padding-bottom: 80px; /* Adjust for button footer */
+}
+
+/* Console hint notification for magic mode */
+.magic-mode-console-hint {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border: 1px solid var(--border-color);
+  font-size: 14px;
+  z-index: 1000;
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

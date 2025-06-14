@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Filter, Settings } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Filter, Settings, Eye } from 'lucide-react';
 import { Conversation, FilterOptions } from '../../types/conversation';
 import { format } from 'date-fns';
 import { FilterPanel } from '../FilterPanel/FilterPanel';
@@ -13,6 +13,7 @@ import { SettingsModal } from '../SettingsModal/SettingsModal';
 import { Pagination } from '../Pagination/Pagination';
 import { useFeedbackStore } from '../../store/feedbackStore';
 import { useTheme } from '../../store/themeStore';
+import { storageUtils } from '../../utils/storageUtils';
 import './ConversationList.css';
 
 interface ConversationListProps {
@@ -23,6 +24,8 @@ interface ConversationListProps {
   onSearchChange: (term: string) => void;
   filters: FilterOptions;
   onFiltersChange: (filters: FilterOptions) => void;
+  hasRenderingOutput?: boolean;
+  onShowOutput?: () => void;
 }
 
 export function ConversationList({
@@ -32,12 +35,23 @@ export function ConversationList({
   searchTerm,
   onSearchChange,
   filters,
-  onFiltersChange
+  onFiltersChange,
+  hasRenderingOutput,
+  onShowOutput
 }: ConversationListProps) {
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const { colorScheme } = useTheme();
   const { dataSource, agentPagination, currentAgent, agentDateRange, loadFromAgentThreads, isLoading, langGraphThreads } = useFeedbackStore();
+  const [displayMode, setDisplayMode] = useState(storageUtils.getDisplayMode());
+  
+  // Listen for display mode changes
+  useEffect(() => {
+    const cleanup = storageUtils.onDisplayModeChange((mode) => {
+      setDisplayMode(mode);
+    });
+    return cleanup;
+  }, []);
   
   // Get the current LangGraph thread if selected, or the first one if none selected
   const currentThread = dataSource === 'agent' 
@@ -69,6 +83,17 @@ export function ConversationList({
   const topRightControls = (
     <>
       <DataControls />
+      {displayMode === 'magic' && hasRenderingOutput && onShowOutput && (
+        <button
+          type="button"
+          className="show-output-button"
+          onClick={onShowOutput}
+          title="Show rendering output"
+        >
+          <Eye size={16} />
+          <span>Show Output</span>
+        </button>
+      )}
       <button 
         className={`filter-btn ${(filters.naturalLanguageQuery || filters.dateRange || filters.modelFilter || filters.ratingFilter) ? 'filter-active' : ''}`} 
         onClick={() => setIsFilterPanelOpen(true)}

@@ -156,6 +156,45 @@
 
 ## Pending Items
 
+### Display Mode Differences in Natural Language Filter Generation
+**Date Added:** 2025-01-14
+**Status:** Investigation Complete
+**Description:** Scripts generated in magic mode might be different from those in engineering mode, but investigation shows they are currently identical.
+
+**Findings:**
+1. **Frontend FilterPanel Component:**
+   - The `displayMode` state is tracked in FilterPanel (line 38)
+   - Display mode only affects UI visibility, not the actual API calls
+   - Both modes call the same `executeNaturalLanguageQuery` function
+   - The API request body sent to backend is identical for both modes:
+     ```javascript
+     {
+       llmConfiguration: selectedLLM,
+       query: naturalQuery,
+       sampleData: currentThread // if available
+     }
+     ```
+
+2. **Backend Processing:**
+   - The `/api/llm/convert-to-filter` endpoint (lines 889-1159 in llm.routes.ts)
+   - No display mode information is passed to the backend
+   - The same prompt template is used regardless of how the user triggered generation
+   - Script generation logic is identical for all requests
+
+3. **UI Differences Between Modes:**
+   - **Engineering Mode:**
+     - Shows separate Generate, Show Prompt, and Apply Filter buttons
+     - Displays generated scripts before applying
+     - Allows viewing the prompt that will be sent to LLM
+   - **Magic Mode:**
+     - Shows only a single Apply button
+     - Automatically generates and applies filter in one action
+     - Hides the intermediate steps from the user
+
+**Conclusion:** The scripts generated are identical between magic and engineering modes. The difference is purely in the UI/UX presentation. Magic mode simplifies the workflow by combining generate + apply into a single action, while engineering mode provides visibility into the intermediate steps.
+
+**No Action Required:** The current implementation is working as designed. Both modes generate the same scripts using the same backend logic.
+
 ### Prompt Execution with LangGraph Data Fixed (Completed: 2025-01-14)
 **Issue**: Evaluation prompts weren't receiving the chat data displayed on screen for LangGraph threads
 **Root Cause**: When in agent mode, the conversation object passed to prompts had empty messages array

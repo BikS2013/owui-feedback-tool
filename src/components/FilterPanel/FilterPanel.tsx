@@ -3,6 +3,7 @@ import { X, MessageSquare, Sparkles, Copy, Calendar, Bot, Star } from 'lucide-re
 import { FilterOptions, Conversation } from '../../types/conversation';
 import { useFeedbackStore } from '../../store/feedbackStore';
 import { format } from 'date-fns';
+import { storageUtils } from '../../utils/storageUtils';
 import './FilterPanel.css';
 
 interface LLMConfiguration {
@@ -34,6 +35,7 @@ type FilterTab = 'static' | 'natural';
 export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, currentThread, conversations }: FilterPanelProps) {
   const { dataSource } = useFeedbackStore();
   const [activeTab, setActiveTab] = useState<FilterTab>('static');
+  const [displayMode, setDisplayMode] = useState(storageUtils.getDisplayMode());
   
   // Natural Language filter state
   const [naturalQuery, setNaturalQuery] = useState(filters.naturalLanguageQuery || '');
@@ -133,6 +135,30 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
       localStorage.setItem(LLM_STORAGE_KEY, selectedLLM);
     }
   }, [selectedLLM]);
+
+  // Listen for display mode changes
+  useEffect(() => {
+    const cleanup = storageUtils.onDisplayModeChange((mode) => {
+      setDisplayMode(mode);
+    });
+    return cleanup;
+  }, []);
+
+  // Handle ESC key to close panel
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape' && isOpen) {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [isOpen, onClose]);
 
   // Handle mouse move for resizing
   useEffect(() => {
@@ -502,10 +528,39 @@ Generate the filter expression:`;
           console.log(`✅ [FilterPanel] Generated ${data.responseType} script(s)`);
           if (data.filterScript) console.log('   • Filter script: ✓');
           if (data.renderScript) console.log('   • Render script: ✓');
+          
+          // In magic mode, log the generated scripts to console for debugging
+          if (displayMode === 'magic') {
+            console.log('🎩 [MAGIC MODE] Generated Scripts:');
+            console.log('=====================================');
+            if (data.filterScript) {
+              console.log('📝 FILTER SCRIPT:');
+              console.log(data.filterScript);
+              console.log('-------------------------------------');
+            }
+            if (data.renderScript) {
+              console.log('🎨 RENDER SCRIPT:');
+              console.log(data.renderScript);
+              console.log('-------------------------------------');
+            }
+            console.log('Query:', naturalQuery);
+            console.log('LLM:', selectedLLM);
+            console.log('=====================================');
+          }
         } else if (data.rawResponse) {
           // Raw response fallback
           setFilterExpression(data.rawResponse);
           console.log('📄 [FilterPanel] Showing raw response');
+          
+          // In magic mode, log the raw response too
+          if (displayMode === 'magic') {
+            console.log('🎩 [MAGIC MODE] Raw Response:');
+            console.log('=====================================');
+            console.log(data.rawResponse);
+            console.log('Query:', naturalQuery);
+            console.log('LLM:', selectedLLM);
+            console.log('=====================================');
+          }
         } else {
           throw new Error('No filter expression generated');
         }
@@ -631,11 +686,10 @@ Generate the filter expression:`;
   };
 
   return (
-    <div className="filter-panel-overlay" onClick={onClose}>
+    <div className="filter-panel-overlay">
       <div 
         ref={panelRef}
-        className={`filter-panel ${isResizing ? 'resizing' : ''}`} 
-        onClick={e => e.stopPropagation()}
+        className={`filter-panel ${isResizing ? 'resizing' : ''}`}
         style={{
           width: `${size.width}px`,
           height: `${size.height}px`,
@@ -800,7 +854,7 @@ Generate the filter expression:`;
               </div>
             </div>
           ) : (
-            <div className="natural-language-section">
+            <div className={`natural-language-section ${displayMode === 'magic' ? 'magic-mode' : ''}`}>
               <div className="filter-section natural-language-content">
                 <div className="filter-section-header">
                   <MessageSquare size={16} />
@@ -845,115 +899,157 @@ Generate the filter expression:`;
                   </div>
                 )}
 
-                {naturalQuery.trim() && showPrompt ? (
-                  <div className="filter-expression">
-                    <div className="expression-header">
-                      <h5>Prompt Preview</h5>
-                      <button
-                        className="copy-btn"
-                        onClick={() => handleCopy(fetchedPrompt || generatePrompt(naturalQuery), 'prompt')}
-                        title="Copy prompt"
-                      >
-                        <Copy size={14} />
-                        {copiedItem === 'prompt' && <span className="copied-text">Copied!</span>}
-                      </button>
+                {displayMode === 'engineering' && (
+                  naturalQuery.trim() && showPrompt ? (
+                    <div className="filter-expression">
+                      <div className="expression-header">
+                        <h5>Prompt Preview</h5>
+                        <button
+                          className="copy-btn"
+                          onClick={() => handleCopy(fetchedPrompt || generatePrompt(naturalQuery), 'prompt')}
+                          title="Copy prompt"
+                        >
+                          <Copy size={14} />
+                          {copiedItem === 'prompt' && <span className="copied-text">Copied!</span>}
+                        </button>
+                      </div>
+                      <pre>{fetchedPrompt || generatePrompt(naturalQuery)}</pre>
                     </div>
-                    <pre>{fetchedPrompt || generatePrompt(naturalQuery)}</pre>
-                  </div>
-                ) : (
-                  <>
-                    {filterExpression && (
-                      <div className="filter-expression">
-                        <div className="expression-header">
-                          <h5>Generated Filter Expression:</h5>
-                          <button
-                            className="copy-btn"
-                            onClick={() => handleCopy(filterExpression, 'filter')}
-                            title="Copy filter expression"
-                          >
-                            <Copy size={14} />
-                            {copiedItem === 'filter' && <span className="copied-text">Copied!</span>}
-                          </button>
+                  ) : (
+                    <>
+                      {filterExpression && (
+                        <div className="filter-expression">
+                          <div className="expression-header">
+                            <h5>Generated Filter Expression:</h5>
+                            <button
+                              className="copy-btn"
+                              onClick={() => handleCopy(filterExpression, 'filter')}
+                              title="Copy filter expression"
+                            >
+                              <Copy size={14} />
+                              {copiedItem === 'filter' && <span className="copied-text">Copied!</span>}
+                            </button>
+                          </div>
+                          <pre>{filterExpression}</pre>
                         </div>
-                        <pre>{filterExpression}</pre>
-                      </div>
-                    )}
-                    
-                    {!filterExpression && filters.customJavaScriptFilter && (
-                      <div className="filter-expression">
-                        <div className="expression-header">
-                          <h5>Active JavaScript Filter:</h5>
-                          <button
-                            className="copy-btn"
-                            onClick={() => handleCopy(filters.customJavaScriptFilter || '', 'filter')}
-                            title="Copy active filter"
-                          >
-                            <Copy size={14} />
-                            {copiedItem === 'filter' && <span className="copied-text">Copied!</span>}
-                          </button>
+                      )}
+                      
+                      {!filterExpression && filters.customJavaScriptFilter && (
+                        <div className="filter-expression">
+                          <div className="expression-header">
+                            <h5>Active JavaScript Filter:</h5>
+                            <button
+                              className="copy-btn"
+                              onClick={() => handleCopy(filters.customJavaScriptFilter || '', 'filter')}
+                              title="Copy active filter"
+                            >
+                              <Copy size={14} />
+                              {copiedItem === 'filter' && <span className="copied-text">Copied!</span>}
+                            </button>
+                          </div>
+                          <pre>{filters.customJavaScriptFilter}</pre>
+                          <p className="filter-info">
+                            This filter is currently active. Generate a new filter to replace it, or use the Clear button to remove it.
+                          </p>
                         </div>
-                        <pre>{filters.customJavaScriptFilter}</pre>
-                        <p className="filter-info">
-                          This filter is currently active. Generate a new filter to replace it, or use the Clear button to remove it.
-                        </p>
-                      </div>
-                    )}
-                  </>
+                      )}
+                    </>
+                  )
                 )}
               </div>
               
               <div className="natural-language-actions">
                 <div className="actions-left">
-                  <button
-                    className="generate-btn"
-                    onClick={executeNaturalLanguageQuery}
-                    disabled={!naturalQuery.trim() || !selectedLLM || isExecuting}
-                    title={!naturalQuery.trim() ? "Enter a query" : !selectedLLM ? "Select a model" : "Generate filter"}
-                  >
-                    {isExecuting ? (
-                      <>
-                        <div className="button-spinner" />
-                        <span>Generating...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles size={16} />
-                        <span>Generate</span>
-                      </>
-                    )}
-                  </button>
-                  
-                  <button 
-                    className="toggle-prompt-btn-action"
-                    onClick={() => {
-                      if (showPrompt) {
-                        setShowPrompt(false);
-                        setFetchedPrompt('');
-                      } else {
-                        fetchPromptFromServer();
-                      }
-                    }}
-                    disabled={!naturalQuery.trim() || !selectedLLM || isFetchingPrompt}
-                    title={!naturalQuery.trim() ? "Enter a query to see prompt" : !selectedLLM ? "Select a model first" : isFetchingPrompt ? "Fetching prompt..." : showPrompt ? "Hide prompt preview" : "Show prompt preview"}
-                  >
-                    {isFetchingPrompt ? (
-                      <>
-                        <div className="button-spinner" />
-                        <span>Loading...</span>
-                      </>
-                    ) : (
-                      showPrompt ? 'Hide' : 'Show'
-                    )} Prompt
-                  </button>
-                  
-                  <button
-                    className="apply-filter-btn"
-                    onClick={applyGeneratedFilter}
-                    disabled={!filterExpression || showPrompt}
-                    title={showPrompt ? "Hide prompt to apply filter" : !filterExpression ? "Generate a filter first" : "Apply the generated filter"}
-                  >
-                    Apply Filter
-                  </button>
+                  {displayMode === 'engineering' ? (
+                    // Engineering mode: Show all buttons
+                    <>
+                      <button
+                        className="generate-btn"
+                        onClick={executeNaturalLanguageQuery}
+                        disabled={!naturalQuery.trim() || !selectedLLM || isExecuting}
+                        title={!naturalQuery.trim() ? "Enter a query" : !selectedLLM ? "Select a model" : "Generate filter"}
+                      >
+                        {isExecuting ? (
+                          <>
+                            <div className="button-spinner" />
+                            <span>Generating...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Sparkles size={16} />
+                            <span>Generate</span>
+                          </>
+                        )}
+                      </button>
+                      
+                      <button 
+                        className="toggle-prompt-btn-action"
+                        onClick={() => {
+                          if (showPrompt) {
+                            setShowPrompt(false);
+                            setFetchedPrompt('');
+                          } else {
+                            fetchPromptFromServer();
+                          }
+                        }}
+                        disabled={!naturalQuery.trim() || !selectedLLM || isFetchingPrompt}
+                        title={!naturalQuery.trim() ? "Enter a query to see prompt" : !selectedLLM ? "Select a model first" : isFetchingPrompt ? "Fetching prompt..." : showPrompt ? "Hide prompt preview" : "Show prompt preview"}
+                      >
+                        {isFetchingPrompt ? (
+                          <>
+                            <div className="button-spinner" />
+                            <span>Loading...</span>
+                          </>
+                        ) : (
+                          showPrompt ? 'Hide' : 'Show'
+                        )} Prompt
+                      </button>
+                      
+                      <button
+                        className="apply-filter-btn"
+                        onClick={applyGeneratedFilter}
+                        disabled={!filterExpression || showPrompt}
+                        title={showPrompt ? "Hide prompt to apply filter" : !filterExpression ? "Generate a filter first" : "Apply the generated filter"}
+                      >
+                        Apply Filter
+                      </button>
+                    </>
+                  ) : (
+                    // Magic mode: Only show Apply button
+                    <button
+                      className="apply-filter-btn"
+                      onClick={async () => {
+                        if (!filterExpression) {
+                          await executeNaturalLanguageQuery();
+                          // Show a temporary message about console logging
+                          // Note: We'll check if script was generated by checking state after a brief delay
+                          setTimeout(() => {
+                            const hasScript = document.querySelector('.filter-expression pre')?.textContent;
+                            if (hasScript) {
+                              const tempMsg = document.createElement('div');
+                              tempMsg.className = 'magic-mode-console-hint';
+                              tempMsg.textContent = '💡 Generated script logged to browser console (F12)';
+                              document.body.appendChild(tempMsg);
+                              setTimeout(() => tempMsg.remove(), 4000);
+                            }
+                          }, 100);
+                        } else {
+                          applyGeneratedFilter();
+                        }
+                      }}
+                      disabled={!naturalQuery.trim() || !selectedLLM || isExecuting}
+                      title={!naturalQuery.trim() ? "Enter a query" : !selectedLLM ? "Select a model first" : "Apply filter"}
+                    >
+                      {isExecuting ? (
+                        <>
+                          <div className="button-spinner" />
+                          <span>Generating...</span>
+                        </>
+                      ) : (
+                        'Apply'
+                      )}
+                    </button>
+                  )}
                 </div>
                 
                 <div className="actions-right">

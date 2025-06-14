@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { X, Activity, Github, ChevronRight, ChevronDown, FileText, Folder } from 'lucide-react';
-import { storageUtils } from '../../utils/storageUtils';
+import { X, Activity, Github, ChevronRight, ChevronDown, FileText, Folder, Monitor } from 'lucide-react';
+import { storageUtils, DisplayMode } from '../../utils/storageUtils';
 import { ApiService } from '../../services/api.service';
 import { GitHubService } from '../../services/github.service';
 import { buildFileTree, FileTreeNode } from '../../utils/githubUtils';
@@ -50,7 +50,7 @@ function TreeNode({ node, level = 0 }: { node: FileTreeNode; level?: number }) {
   );
 }
 
-type TabType = 'api' | 'github';
+type TabType = 'api' | 'github' | 'display';
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>('api');
@@ -60,6 +60,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [githubStatus, setGitHubStatus] = useState<'success' | 'error' | null>(null);
   const [githubTree, setGitHubTree] = useState<FileTreeNode | null>(null);
   const [githubError, setGitHubError] = useState<string | null>(null);
+  const [displayMode, setDisplayMode] = useState<DisplayMode>(storageUtils.getDisplayMode());
   
   // Use resizable hook
   const {
@@ -173,6 +174,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
   };
   
+  const handleDisplayModeChange = (mode: DisplayMode) => {
+    setDisplayMode(mode);
+    storageUtils.setDisplayMode(mode);
+    // Mode change will be reflected immediately without reload
+  };
 
   if (!isOpen) return null;
 
@@ -226,6 +232,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           >
             <Github size={16} />
             GitHub Settings
+          </button>
+          <button
+            type="button"
+            className={`settings-tab ${activeTab === 'display' ? 'active' : ''}`}
+            onClick={() => setActiveTab('display')}
+          >
+            <Monitor size={16} />
+            Display
           </button>
         </div>
         
@@ -334,6 +348,46 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   </div>
                 </div>
               )}
+            </div>
+          )}
+          
+          {activeTab === 'display' && (
+            <div className="settings-tab-panel">
+              <div className="settings-field">
+                <label>Display Mode</label>
+                <div className="settings-mode-options">
+                  <label className="settings-radio-option">
+                    <input
+                      type="radio"
+                      name="displayMode"
+                      value="engineering"
+                      checked={displayMode === 'engineering'}
+                      onChange={() => handleDisplayModeChange('engineering')}
+                    />
+                    <div className="settings-radio-content">
+                      <strong>Engineering Mode</strong>
+                      <p>Full access to all technical features including prompt editing, script generation, and detailed filter controls.</p>
+                    </div>
+                  </label>
+                  <label className="settings-radio-option">
+                    <input
+                      type="radio"
+                      name="displayMode"
+                      value="magic"
+                      checked={displayMode === 'magic'}
+                      onChange={() => handleDisplayModeChange('magic')}
+                    />
+                    <div className="settings-radio-content">
+                      <strong>Magic Mode</strong>
+                      <p>Simplified interface with streamlined controls. Natural language filters show only Apply button, scripts and prompts are hidden.</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+              
+              <div className="settings-status info">
+                ℹ️ Display mode changes are applied immediately.
+              </div>
             </div>
           )}
         </div>

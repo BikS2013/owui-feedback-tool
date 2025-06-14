@@ -170,6 +170,8 @@ function AppContent() {
           onSearchChange={handleSearchChange}
           filters={filters}
           onFiltersChange={setFilters}
+          hasRenderingOutput={!!renderingOverlay.result && !renderingOverlay.isVisible}
+          onShowOutput={() => setRenderingOverlay(prev => ({ ...prev, isVisible: true }))}
         />
       </ResizablePanel>
       <main className="main-content">
