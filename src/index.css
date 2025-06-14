@@ -22,6 +22,7 @@
   --header-bg: #345085;
   --hover-bg: rgba(255, 255, 255, 0.1);
   --accent-primary-hover: #4A6CA8;
+  --color-success: #52C77E;
 }
 
 /* Green theme - Dark mode (based on the provided image) */
@@ -48,6 +49,7 @@
   --header-bg: #2C5F6F;
   --hover-bg: rgba(255, 255, 255, 0.1);
   --accent-primary-hover: #7CCFDC;
+  --color-success: #52C77E;
 }
 
 /* Blue theme - Light mode */
@@ -74,6 +76,7 @@
   --header-bg: #345085;
   --hover-bg: rgba(0, 0, 0, 0.05);
   --accent-primary-hover: #E8EFF6;
+  --color-success: #52C77E;
 }
 
 /* Green theme - Light mode */
@@ -100,6 +103,7 @@
   --header-bg: #2C5F6F;
   --hover-bg: rgba(0, 0, 0, 0.05);
   --accent-primary-hover: #E8F4F6;
+  --color-success: #52C77E;
 }
 
 * {

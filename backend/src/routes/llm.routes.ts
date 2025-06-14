@@ -616,18 +616,26 @@ router.post('/execute-prompt-direct', async (req: Request, res: Response): Promi
  *                 responseType:
  *                   type: string
  *                   description: The type of response generated
- *                   enum: [json, javascript, unknown]
- *                   example: "javascript"
+ *                   enum: [filter, render, both, json, unknown]
+ *                   example: "both"
  *                 filterCode:
  *                   type: string
- *                   description: Generated JavaScript filter code (when responseType is javascript)
+ *                   description: Generated JavaScript filter code (legacy - same as filterScript)
  *                   example: "function filterThreads(threads) { return threads.filter(thread => { return thread.created_at > '2024-01-01'; }); }"
+ *                 filterScript:
+ *                   type: string
+ *                   description: Generated JavaScript filter function
+ *                   example: "function filterThreads(threads) { return threads.filter(thread => { return thread.created_at > '2024-01-01'; }); }"
+ *                 renderScript:
+ *                   type: string
+ *                   description: Generated JavaScript render function for markdown or graphs
+ *                   example: "function renderContent(threads) { return `# Report\\n\\nTotal: ${threads.length} conversations`; }"
  *                 rawResponse:
  *                   type: string
  *                   description: The raw LLM response for debugging
  *                 usedSampleData:
  *                   type: boolean
- *                   description: Whether sample data was used to generate the filter
+ *                   description: Whether sample data was used to generate the scripts
  *       400:
  *         description: Invalid request
  *       500:
@@ -712,9 +720,12 @@ router.post('/get-prompt', async (req: Request, res: Response): Promise<void> =>
     
     if (sampleData) {
       // Use actual sample data to guide the LLM
-      prompt = `You are a JavaScript code generator for filtering LangGraph conversation data. Generate a safe, executable JavaScript function that filters data based on the user's natural language query.
+      prompt = `You are a JavaScript code generator for processing LangGraph conversation data. Based on the user's query, generate one or both types of scripts:
 
-IMPORTANT: The complete dataset is an array of objects similar to the sample provided below. Study the structure carefully to understand the data format.
+1. FILTER SCRIPT: For narrowing down the conversation list
+2. RENDER SCRIPT: For creating visualizations (markdown or graphs)
+
+IMPORTANT: The complete dataset is an array of objects similar to the sample provided below.
 
 SAMPLE DATA (one object from the array):
 ${JSON.stringify(sampleData, null, 2)}
@@ -729,13 +740,9 @@ The complete dataset is an array of similar objects. Each object represents a co
 
 NATURAL LANGUAGE QUERY: "${query}"
 
-Generate a JavaScript function that:
-1. Accepts an array called 'threads' containing objects like the sample above
-2. Returns a filtered array based on the query
-3. Handles edge cases (null values, missing fields)
-4. Is optimized for performance
+ANALYZE THE QUERY AND GENERATE APPROPRIATE SCRIPTS:
 
-The function should follow this template:
+If filtering is needed, create:
 function filterThreads(threads) {
   // Your filtering logic here
   return threads.filter(thread => {
@@ -743,87 +750,124 @@ function filterThreads(threads) {
   });
 }
 
+If visualization is needed, create:
+function renderContent(threads) {
+  // For markdown rendering:
+  return \`# Report Title\\n\\nContent here...\`;
+  
+  // OR for graph rendering:
+  return {
+    type: 'bar', // or 'line', 'pie', etc.
+    data: {
+      labels: [...],
+      datasets: [...]
+    },
+    options: {...}
+  };
+}
+
+RESPONSE FORMAT:
+{
+  "filterScript": "...", // Include if filtering needed
+  "renderScript": "..."  // Include if visualization needed
+}
+
 IMPORTANT RULES:
-- Return ONLY executable JavaScript code, no explanations
+- Generate ONLY the needed scripts based on query intent
 - Use only safe JavaScript features (no eval, fetch, or DOM manipulation)
 - Include helpful comments explaining the logic
-- The code will be executed client-side in a sandboxed environment`;
+- For graphs, use Chart.js compatible format
+- For markdown, use GitHub-flavored markdown
+- Return a valid JSON object with the appropriate scripts`;
     } else {
-      // Fall back to schema-based approach
-      const dataSchema = {
-        description: "Conversation and feedback data structure",
-        conversation: {
-          id: "string",
-          title: "string",
-          createdAt: "timestamp (milliseconds)",
-          updatedAt: "timestamp (milliseconds)",
-          userId: "string",
-          messages: [{
-            role: "user | assistant",
-            content: "string",
-            timestamp: "timestamp",
-            model: "string (optional)",
-            modelName: "string (optional)"
-          }],
-          averageRating: "number (1-10) | null",
-          totalRatings: "number",
-          qaPairCount: "number",
-          modelsUsed: "string[]"
-        },
-        qaPair: {
-          id: "string",
-          conversationId: "string",
-          question: "message object",
-          answer: "message object",
-          rating: "number (1-10) | null",
-          sentiment: "1 | -1 | null",
-          comment: "string"
-        }
-      };
+      // Fall back to schema-based approach with dual-script support
+      prompt = `You are a JavaScript code generator for processing conversation data. Based on the user's query, generate one or both types of scripts:
 
-      prompt = `You are a filter expression generator. Convert the following natural language query into a JSON filter expression that can be used to filter conversations and Q&A pairs.
+1. FILTER SCRIPT: For narrowing down the conversation list
+2. RENDER SCRIPT: For creating visualizations (markdown or graphs)
 
-Data Schema:
-${JSON.stringify(dataSchema, null, 2)}
-
-Natural Language Query: "${query}"
-
-Generate a JSON filter expression that can be applied to filter the data. The expression should follow this structure:
+DATA SCHEMA:
+The dataset is an array of conversation objects with this structure:
 {
-  "dateRange": {
-    "start": null or ISO date string,
-    "end": null or ISO date string
+  "thread_id": "string - unique identifier",
+  "created_at": "ISO timestamp",
+  "updated_at": "ISO timestamp (optional)",
+  "metadata": {
+    "user_id": "string (optional)",
+    // other metadata fields
   },
-  "ratingFilter": {
-    "min": number (1-10),
-    "max": number (1-10),
-    "includeUnrated": boolean
-  },
-  "filterLevel": "conversation" or "qa",
-  "modelFilter": array of model names to include (empty array means all),
-  "customConditions": {
-    // Optional: Additional conditions that can't be expressed in standard filters
-    "description": "Human readable description of custom conditions",
-    "conditions": []
+  "values": {
+    "messages": [
+      {
+        "type": "human | ai | string",
+        "content": "string or object with text field",
+        "text": "string (alternative to content)",
+        "timestamp": "string or number",
+        "response_metadata": {
+          "model_name": "string (optional)"
+        },
+        "model": "string (optional)"
+      }
+    ],
+    "retrieved_docs": [ // optional array
+      {
+        "page_content": "string",
+        "metadata": {
+          "source": "string",
+          "title": "string",
+          "url": "string"
+        }
+      }
+    ]
   }
 }
 
-Important:
-- Return ONLY valid JSON, no explanations
-- Use null for unspecified date ranges
-- Default to includeUnrated: true unless explicitly mentioned
-- Default to filterLevel: "conversation" unless Q&A or answer-specific filtering is mentioned
-- For model filtering, match against modelsUsed array in conversations
-- If the query mentions specific time periods (like "last week", "yesterday"), calculate the appropriate dates
-- Today's date is: ${new Date().toISOString().split('T')[0]}
+NATURAL LANGUAGE QUERY: "${query}"
 
-Example queries and their filters:
-- "Show me conversations from last week": dateRange with calculated start/end
-- "Only highly rated conversations": ratingFilter with min: 7, max: 10
-- "Claude 3 conversations": modelFilter: ["claude-3", "claude-3-opus", "claude-3-sonnet"]
-- "Unrated Q&A pairs": filterLevel: "qa", includeUnrated: true, ratingFilter max: 0
+ANALYZE THE QUERY AND GENERATE APPROPRIATE SCRIPTS:
 
-Generate the filter expression:`;
+If filtering is needed, create:
+function filterThreads(threads) {
+  // Your filtering logic here
+  return threads.filter(thread => {
+    // Conditions based on user query
+  });
+}
+
+If visualization is needed, create:
+function renderContent(threads) {
+  // For markdown rendering:
+  return \`# Report Title\\n\\nContent here...\`;
+  
+  // OR for graph rendering:
+  return {
+    type: 'bar', // or 'line', 'pie', etc.
+    data: {
+      labels: [...],
+      datasets: [...]
+    },
+    options: {...}
+  };
+}
+
+RESPONSE FORMAT:
+{
+  "filterScript": "...", // Include if filtering needed
+  "renderScript": "..."  // Include if visualization needed
+}
+
+IMPORTANT RULES:
+- Generate ONLY the needed scripts based on query intent
+- Use only safe JavaScript features (no eval, fetch, or DOM manipulation)
+- Include helpful comments explaining the logic
+- For graphs, use Chart.js compatible format
+- For markdown, use GitHub-flavored markdown
+- Return a valid JSON object with the appropriate scripts
+
+QUERY INTENT DETECTION:
+- FILTERING: "show", "find", "filter", "get", "search", "from", "with", "where"
+- VISUALIZATION: "render", "graph", "chart", "plot", "visualize", "create", "display", "summary", "report"
+- If unsure, prefer generating a render script for visualization queries`;
     }
     
     console.log('✅ Prompt generated successfully');
@@ -873,7 +917,7 @@ router.post('/convert-to-filter', async (req: Request, res: Response): Promise<v
       return;
     }
     
-    console.log('🔍 Natural Language to Filter Conversion Request:');
+    console.log('🔍 Natural Language to Filter/Render Conversion Request:');
     console.log(`   • LLM Configuration: ${llmConfiguration}`);
     console.log(`   • Query: ${query}`);
     console.log(`   • Sample data provided: ${sampleData ? 'Yes' : 'No'}`);
@@ -883,9 +927,12 @@ router.post('/convert-to-filter', async (req: Request, res: Response): Promise<v
     
     if (sampleData) {
       // Use actual sample data to guide the LLM
-      prompt = `You are a JavaScript code generator for filtering LangGraph conversation data. Generate a safe, executable JavaScript function that filters data based on the user's natural language query.
+      prompt = `You are a JavaScript code generator for processing LangGraph conversation data. Based on the user's query, generate one or both types of scripts:
 
-IMPORTANT: The complete dataset is an array of objects similar to the sample provided below. Study the structure carefully to understand the data format.
+1. FILTER SCRIPT: For narrowing down the conversation list
+2. RENDER SCRIPT: For creating visualizations (markdown or graphs)
+
+IMPORTANT: The complete dataset is an array of objects similar to the sample provided below.
 
 SAMPLE DATA (one object from the array):
 ${JSON.stringify(sampleData, null, 2)}
@@ -900,13 +947,9 @@ The complete dataset is an array of similar objects. Each object represents a co
 
 NATURAL LANGUAGE QUERY: "${query}"
 
-Generate a JavaScript function that:
-1. Accepts an array called 'threads' containing objects like the sample above
-2. Returns a filtered array based on the query
-3. Handles edge cases (null values, missing fields)
-4. Is optimized for performance
+ANALYZE THE QUERY AND GENERATE APPROPRIATE SCRIPTS:
 
-The function should follow this template:
+If filtering is needed, create:
 function filterThreads(threads) {
   // Your filtering logic here
   return threads.filter(thread => {
@@ -914,87 +957,124 @@ function filterThreads(threads) {
   });
 }
 
+If visualization is needed, create:
+function renderContent(threads) {
+  // For markdown rendering:
+  return \`# Report Title\\n\\nContent here...\`;
+  
+  // OR for graph rendering:
+  return {
+    type: 'bar', // or 'line', 'pie', etc.
+    data: {
+      labels: [...],
+      datasets: [...]
+    },
+    options: {...}
+  };
+}
+
+RESPONSE FORMAT:
+{
+  "filterScript": "...", // Include if filtering needed
+  "renderScript": "..."  // Include if visualization needed
+}
+
 IMPORTANT RULES:
-- Return ONLY executable JavaScript code, no explanations
+- Generate ONLY the needed scripts based on query intent
 - Use only safe JavaScript features (no eval, fetch, or DOM manipulation)
 - Include helpful comments explaining the logic
-- The code will be executed client-side in a sandboxed environment`;
+- For graphs, use Chart.js compatible format
+- For markdown, use GitHub-flavored markdown
+- Return a valid JSON object with the appropriate scripts`;
     } else {
-      // Fall back to schema-based approach
-      const dataSchema = {
-        description: "Conversation and feedback data structure",
-        conversation: {
-          id: "string",
-          title: "string",
-          createdAt: "timestamp (milliseconds)",
-          updatedAt: "timestamp (milliseconds)",
-          userId: "string",
-          messages: [{
-            role: "user | assistant",
-            content: "string",
-            timestamp: "timestamp",
-            model: "string (optional)",
-            modelName: "string (optional)"
-          }],
-          averageRating: "number (1-10) | null",
-          totalRatings: "number",
-          qaPairCount: "number",
-          modelsUsed: "string[]"
-        },
-        qaPair: {
-          id: "string",
-          conversationId: "string",
-          question: "message object",
-          answer: "message object",
-          rating: "number (1-10) | null",
-          sentiment: "1 | -1 | null",
-          comment: "string"
-        }
-      };
+      // Fall back to schema-based approach with dual-script support
+      prompt = `You are a JavaScript code generator for processing conversation data. Based on the user's query, generate one or both types of scripts:
 
-      prompt = `You are a filter expression generator. Convert the following natural language query into a JSON filter expression that can be used to filter conversations and Q&A pairs.
+1. FILTER SCRIPT: For narrowing down the conversation list
+2. RENDER SCRIPT: For creating visualizations (markdown or graphs)
 
-Data Schema:
-${JSON.stringify(dataSchema, null, 2)}
-
-Natural Language Query: "${query}"
-
-Generate a JSON filter expression that can be applied to filter the data. The expression should follow this structure:
+DATA SCHEMA:
+The dataset is an array of conversation objects with this structure:
 {
-  "dateRange": {
-    "start": null or ISO date string,
-    "end": null or ISO date string
+  "thread_id": "string - unique identifier",
+  "created_at": "ISO timestamp",
+  "updated_at": "ISO timestamp (optional)",
+  "metadata": {
+    "user_id": "string (optional)",
+    // other metadata fields
   },
-  "ratingFilter": {
-    "min": number (1-10),
-    "max": number (1-10),
-    "includeUnrated": boolean
-  },
-  "filterLevel": "conversation" or "qa",
-  "modelFilter": array of model names to include (empty array means all),
-  "customConditions": {
-    // Optional: Additional conditions that can't be expressed in standard filters
-    "description": "Human readable description of custom conditions",
-    "conditions": []
+  "values": {
+    "messages": [
+      {
+        "type": "human | ai | string",
+        "content": "string or object with text field",
+        "text": "string (alternative to content)",
+        "timestamp": "string or number",
+        "response_metadata": {
+          "model_name": "string (optional)"
+        },
+        "model": "string (optional)"
+      }
+    ],
+    "retrieved_docs": [ // optional array
+      {
+        "page_content": "string",
+        "metadata": {
+          "source": "string",
+          "title": "string",
+          "url": "string"
+        }
+      }
+    ]
   }
 }
 
-Important:
-- Return ONLY valid JSON, no explanations
-- Use null for unspecified date ranges
-- Default to includeUnrated: true unless explicitly mentioned
-- Default to filterLevel: "conversation" unless Q&A or answer-specific filtering is mentioned
-- For model filtering, match against modelsUsed array in conversations
-- If the query mentions specific time periods (like "last week", "yesterday"), calculate the appropriate dates
-- Today's date is: ${new Date().toISOString().split('T')[0]}
+NATURAL LANGUAGE QUERY: "${query}"
 
-Example queries and their filters:
-- "Show me conversations from last week": dateRange with calculated start/end
-- "Only highly rated conversations": ratingFilter with min: 7, max: 10
-- "Claude 3 conversations": modelFilter: ["claude-3", "claude-3-opus", "claude-3-sonnet"]
-- "Unrated Q&A pairs": filterLevel: "qa", includeUnrated: true, ratingFilter max: 0
+ANALYZE THE QUERY AND GENERATE APPROPRIATE SCRIPTS:
 
-Generate the filter expression:`;
+If filtering is needed, create:
+function filterThreads(threads) {
+  // Your filtering logic here
+  return threads.filter(thread => {
+    // Conditions based on user query
+  });
+}
+
+If visualization is needed, create:
+function renderContent(threads) {
+  // For markdown rendering:
+  return \`# Report Title\\n\\nContent here...\`;
+  
+  // OR for graph rendering:
+  return {
+    type: 'bar', // or 'line', 'pie', etc.
+    data: {
+      labels: [...],
+      datasets: [...]
+    },
+    options: {...}
+  };
+}
+
+RESPONSE FORMAT:
+{
+  "filterScript": "...", // Include if filtering needed
+  "renderScript": "..."  // Include if visualization needed
+}
+
+IMPORTANT RULES:
+- Generate ONLY the needed scripts based on query intent
+- Use only safe JavaScript features (no eval, fetch, or DOM manipulation)
+- Include helpful comments explaining the logic
+- For graphs, use Chart.js compatible format
+- For markdown, use GitHub-flavored markdown
+- Return a valid JSON object with the appropriate scripts
+
+QUERY INTENT DETECTION:
+- FILTERING: "show", "find", "filter", "get", "search", "from", "with", "where"
+- VISUALIZATION: "render", "graph", "chart", "plot", "visualize", "create", "display", "summary", "report"
+- If unsure, prefer generating a render script for visualization queries`;
     }
     
     // Create the chat model
@@ -1017,28 +1097,45 @@ Generate the filter expression:`;
       rawResponse = String(response.content);
     }
     
-    console.log(`✅ Filter conversion completed in ${duration}ms`);
+    console.log(`✅ Script generation completed in ${duration}ms`);
     
     // Determine response type and handle accordingly
-    let filterExpression = null;
-    let filterCode = null;
+    let filterScript = null;
+    let renderScript = null;
     let responseType = 'unknown';
     
-    // Check if response contains JavaScript function
-    if (rawResponse.includes('function filterThreads') || rawResponse.includes('function processThreads')) {
-      responseType = 'javascript';
-      filterCode = rawResponse;
-      console.log('📄 Response type: JavaScript code');
-    } else {
-      // Try to parse as JSON
-      try {
-        const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          filterExpression = JSON.parse(jsonMatch[0]);
-          responseType = 'json';
-          console.log('📄 Response type: JSON filter');
+    // Try to parse as JSON with dual scripts
+    try {
+      const jsonMatch = rawResponse.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        
+        // Check for dual-script format
+        if (parsed.filterScript || parsed.renderScript) {
+          filterScript = parsed.filterScript || null;
+          renderScript = parsed.renderScript || null;
+          
+          // Determine response type based on what scripts are present
+          if (filterScript && renderScript) {
+            responseType = 'both';
+          } else if (filterScript) {
+            responseType = 'filter';
+          } else if (renderScript) {
+            responseType = 'render';
+          }
+          
+          console.log(`📄 Response type: ${responseType}`);
+          if (filterScript) console.log('   • Filter script: ✓');
+          if (renderScript) console.log('   • Render script: ✓');
         }
-      } catch (parseError) {
+      }
+    } catch (parseError) {
+      // Fall back to checking for raw JavaScript code
+      if (rawResponse.includes('function filterThreads') || rawResponse.includes('function processThreads')) {
+        responseType = 'filter';
+        filterScript = rawResponse;
+        console.log('📄 Response type: Raw JavaScript filter');
+      } else {
         console.error('Failed to parse response:', parseError);
       }
     }
@@ -1046,8 +1143,8 @@ Generate the filter expression:`;
     res.json({
       success: true,
       responseType,
-      filterExpression,
-      filterCode,
+      filterScript,
+      renderScript,
       rawResponse,
       usedSampleData: !!sampleData
     });

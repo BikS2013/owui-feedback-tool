@@ -27,18 +27,21 @@ export interface QAPair {
 }
 
 export interface FilterOptions {
-  dateRange: {
+  searchTerm: string;
+  // Natural Language filters (script-based)
+  customJavaScriptFilter?: string;
+  customRenderScript?: string;
+  naturalLanguageQuery?: string;
+  renderScriptTimestamp?: number;
+  // Static filters
+  dateRange?: {
     start: Date | null;
     end: Date | null;
   };
-  ratingFilter: {
+  modelFilter?: string[];
+  ratingFilter?: {
     min: number;
     max: number;
     includeUnrated: boolean;
   };
-  searchTerm: string;
-  filterLevel: 'conversation' | 'qa';
-  modelFilter: string[];
-  customJavaScriptFilter?: string;
-  naturalLanguageQuery?: string;
 }

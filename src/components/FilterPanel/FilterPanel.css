@@ -382,36 +382,48 @@
 /* Filter Tabs */
 .filter-tabs {
   display: flex;
-  gap: 8px;
-  padding: 0 20px;
-  margin-bottom: 0;
   border-bottom: 1px solid var(--border-color);
-  flex-shrink: 0;
+  background: var(--bg-secondary);
 }
 
 .filter-tab {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 10px 16px;
+  flex: 1;
+  padding: 12px 20px;
   background: none;
   border: none;
   border-bottom: 2px solid transparent;
   color: var(--text-secondary);
-  cursor: pointer;
-  transition: all 0.2s ease;
   font-size: 14px;
   font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
 }
 
 .filter-tab:hover {
   color: var(--text-primary);
-  background: var(--hover-bg);
+  background: var(--bg-tertiary);
 }
 
 .filter-tab.active {
   color: var(--accent-primary);
   border-bottom-color: var(--accent-primary);
+  background: var(--bg-card);
+}
+
+.filter-tab .filter-indicator {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 6px;
+  height: 6px;
+  background: var(--accent-primary);
+  border-radius: 50%;
+}
+
+/* Static Filters Section */
+.static-filters-section {
+  padding: 20px;
 }
 
 /* Natural Language Section */

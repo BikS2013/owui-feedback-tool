@@ -23,7 +23,6 @@ interface ConversationListProps {
   onSearchChange: (term: string) => void;
   filters: FilterOptions;
   onFiltersChange: (filters: FilterOptions) => void;
-  availableModels: string[];
 }
 
 export function ConversationList({
@@ -33,17 +32,18 @@ export function ConversationList({
   searchTerm,
   onSearchChange,
   filters,
-  onFiltersChange,
-  availableModels
+  onFiltersChange
 }: ConversationListProps) {
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const { colorScheme } = useTheme();
   const { dataSource, agentPagination, currentAgent, agentDateRange, loadFromAgentThreads, isLoading, langGraphThreads } = useFeedbackStore();
   
-  // Get the current LangGraph thread if selected
-  const currentThread = dataSource === 'agent' && selectedId 
-    ? langGraphThreads.find(thread => thread.thread_id === selectedId)
+  // Get the current LangGraph thread if selected, or the first one if none selected
+  const currentThread = dataSource === 'agent' 
+    ? (selectedId 
+        ? langGraphThreads.find(thread => thread.thread_id === selectedId)
+        : langGraphThreads.length > 0 ? langGraphThreads[0] : null)
     : null;
   
   // Calculate total Q&A pairs
@@ -56,16 +56,26 @@ export function ConversationList({
     return 'var(--accent-red)';
   };
 
+  const getFilterTooltip = () => {
+    const active = [];
+    if (filters.naturalLanguageQuery) active.push(`Natural Language: "${filters.naturalLanguageQuery}"`);
+    if (filters.dateRange) active.push('Date Range');
+    if (filters.modelFilter) active.push(`${filters.modelFilter.length} Model(s)`);
+    if (filters.ratingFilter) active.push('Rating Filter');
+    
+    return active.length > 0 ? `Active Filters: ${active.join(', ')}` : 'Open filters';
+  };
+
   const topRightControls = (
     <>
       <DataControls />
       <button 
-        className={`filter-btn ${filters.naturalLanguageQuery ? 'filter-active' : ''}`} 
+        className={`filter-btn ${(filters.naturalLanguageQuery || filters.dateRange || filters.modelFilter || filters.ratingFilter) ? 'filter-active' : ''}`} 
         onClick={() => setIsFilterPanelOpen(true)}
-        title={filters.naturalLanguageQuery ? `Natural Language Filter: "${filters.naturalLanguageQuery}"` : 'Open filters'}
+        title={getFilterTooltip()}
       >
         <Filter size={16} />
-        {filters.naturalLanguageQuery && <span className="filter-indicator" />}
+        {(filters.naturalLanguageQuery || filters.dateRange || filters.modelFilter || filters.ratingFilter) && <span className="filter-indicator" />}
       </button>
     </>
   );
@@ -190,8 +200,8 @@ export function ConversationList({
         onFiltersChange={onFiltersChange}
         isOpen={isFilterPanelOpen}
         onClose={() => setIsFilterPanelOpen(false)}
-        availableModels={availableModels}
         currentThread={currentThread}
+        conversations={conversations}
       />
       <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </>

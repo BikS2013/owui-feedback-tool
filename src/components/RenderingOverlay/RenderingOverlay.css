@@ -1,0 +1,432 @@
+.rendering-overlay {
+  position: fixed;
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.3s ease;
+}
+
+/* Position variants */
+.rendering-overlay.full {
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  bottom: 20px;
+}
+
+.rendering-overlay.top {
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  height: 50vh;
+  max-height: 600px;
+}
+
+.rendering-overlay.bottom {
+  bottom: 20px;
+  left: 20px;
+  right: 20px;
+  height: 50vh;
+  max-height: 600px;
+}
+
+/* Minimized state */
+.rendering-overlay.minimized {
+  height: auto;
+  bottom: auto;
+}
+
+.rendering-overlay.minimized.full,
+.rendering-overlay.minimized.top {
+  height: 48px;
+}
+
+.rendering-overlay.minimized.bottom {
+  top: auto;
+  height: 48px;
+}
+
+/* Header */
+.rendering-overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.rendering-overlay-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rendering-overlay-controls {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.rendering-overlay-button {
+  min-width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 1.2rem;
+  cursor: pointer;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  padding: 0 8px;
+  position: relative;
+}
+
+.rendering-overlay-button:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.action-button {
+  font-size: 1rem;
+}
+
+.action-button:hover {
+  background: var(--color-primary);
+  color: white;
+}
+
+.close-button:hover {
+  background: var(--color-error);
+  color: white;
+}
+
+.feedback-text {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 4px;
+  background: var(--color-success);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 10;
+  animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* Content */
+.rendering-overlay-content {
+  flex: 1;
+  overflow: auto;
+  padding: 20px;
+  min-height: 0;
+}
+
+/* Markdown content */
+.rendering-overlay-markdown {
+  max-width: 900px;
+  margin: 0 auto;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+}
+
+.rendering-overlay-markdown h1,
+.rendering-overlay-markdown h2,
+.rendering-overlay-markdown h3,
+.rendering-overlay-markdown h4,
+.rendering-overlay-markdown h5,
+.rendering-overlay-markdown h6 {
+  color: var(--text-primary);
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.rendering-overlay-markdown h1 {
+  font-size: 2.25em;
+  border-bottom: 2px solid var(--border-color);
+  padding-bottom: 0.3em;
+}
+
+.rendering-overlay-markdown h2 {
+  font-size: 1.75em;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 0.2em;
+}
+
+.rendering-overlay-markdown h3 {
+  font-size: 1.5em;
+}
+
+.rendering-overlay-markdown h4 {
+  font-size: 1.25em;
+}
+
+.rendering-overlay-markdown h5 {
+  font-size: 1.1em;
+}
+
+.rendering-overlay-markdown h6 {
+  font-size: 1em;
+  color: var(--text-secondary);
+}
+
+.rendering-overlay-markdown p {
+  margin: 1em 0;
+  line-height: 1.7;
+  color: var(--text-secondary);
+}
+
+.rendering-overlay-markdown ul,
+.rendering-overlay-markdown ol {
+  margin: 1em 0;
+  padding-left: 2em;
+  line-height: 1.7;
+}
+
+.rendering-overlay-markdown li {
+  margin: 0.25em 0;
+  color: var(--text-secondary);
+}
+
+.rendering-overlay-markdown li > ul,
+.rendering-overlay-markdown li > ol {
+  margin: 0.25em 0;
+}
+
+/* Task lists (GFM) */
+.rendering-overlay-markdown input[type="checkbox"] {
+  margin-right: 0.5em;
+}
+
+.rendering-overlay-markdown code {
+  background: var(--bg-hover);
+  padding: 0.2em 0.4em;
+  border-radius: 3px;
+  font-family: 'SF Mono', Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+  font-size: 0.85em;
+  color: var(--text-primary);
+}
+
+.rendering-overlay-markdown pre {
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  overflow-x: auto;
+  margin: 1em 0;
+  position: relative;
+}
+
+.rendering-overlay-markdown pre code {
+  display: block;
+  background: transparent;
+  padding: 1em;
+  font-size: 0.875em;
+  line-height: 1.5;
+}
+
+/* Syntax highlighting */
+.rendering-overlay-markdown pre code.hljs {
+  background: transparent;
+  color: var(--text-primary);
+}
+
+/* Tables */
+.rendering-overlay-markdown .table-wrapper {
+  overflow-x: auto;
+  margin: 1em 0;
+}
+
+.rendering-overlay-markdown table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 600px;
+}
+
+.rendering-overlay-markdown th,
+.rendering-overlay-markdown td {
+  border: 1px solid var(--border-color);
+  padding: 8px 12px;
+  text-align: left;
+}
+
+.rendering-overlay-markdown th {
+  background: var(--bg-secondary);
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.rendering-overlay-markdown tr:nth-child(even) {
+  background: var(--bg-hover);
+}
+
+/* Blockquotes */
+.rendering-overlay-markdown blockquote {
+  border-left: 4px solid var(--color-primary);
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  color: var(--text-secondary);
+  background: var(--bg-hover);
+  border-radius: 0 4px 4px 0;
+}
+
+.rendering-overlay-markdown blockquote p {
+  margin: 0.5em 0;
+}
+
+/* Links */
+.rendering-overlay-markdown a {
+  color: var(--color-primary);
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition: border-bottom-color 0.2s;
+}
+
+.rendering-overlay-markdown a:hover {
+  border-bottom-color: var(--color-primary);
+}
+
+/* Images */
+.rendering-overlay-markdown img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  margin: 1em 0;
+}
+
+/* Horizontal rules */
+.rendering-overlay-markdown hr {
+  border: none;
+  border-top: 2px solid var(--border-color);
+  margin: 2em 0;
+}
+
+/* Definition lists */
+.rendering-overlay-markdown dl {
+  margin: 1em 0;
+}
+
+.rendering-overlay-markdown dt {
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 1em;
+}
+
+.rendering-overlay-markdown dd {
+  margin-left: 2em;
+  margin-top: 0.25em;
+  color: var(--text-secondary);
+}
+
+/* Strikethrough */
+.rendering-overlay-markdown del {
+  color: var(--text-secondary);
+  text-decoration: line-through;
+}
+
+/* Emphasis */
+.rendering-overlay-markdown em {
+  font-style: italic;
+}
+
+.rendering-overlay-markdown strong {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Footnotes */
+.rendering-overlay-markdown .footnotes {
+  margin-top: 2em;
+  padding-top: 1em;
+  border-top: 2px solid var(--border-color);
+  font-size: 0.9em;
+}
+
+.rendering-overlay-markdown .footnotes ol {
+  padding-left: 1.5em;
+}
+
+/* Details/Summary */
+.rendering-overlay-markdown details {
+  margin: 1em 0;
+  padding: 0.5em 1em;
+  background: var(--bg-hover);
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.rendering-overlay-markdown summary {
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--text-primary);
+  user-select: none;
+}
+
+.rendering-overlay-markdown details[open] summary {
+  margin-bottom: 0.5em;
+}
+
+/* Graph content */
+.rendering-overlay-graph {
+  width: 100%;
+  height: 100%;
+  min-height: 400px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+/* Error content */
+.rendering-overlay-error {
+  text-align: center;
+  padding: 40px;
+}
+
+.rendering-overlay-error h3 {
+  color: var(--color-error);
+  margin-bottom: 1em;
+}
+
+.rendering-overlay-error p {
+  color: var(--text-secondary);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .rendering-overlay.full,
+  .rendering-overlay.top,
+  .rendering-overlay.bottom {
+    top: 10px;
+    left: 10px;
+    right: 10px;
+    bottom: 10px;
+  }
+  
+  .rendering-overlay.top,
+  .rendering-overlay.bottom {
+    height: 60vh;
+  }
+}

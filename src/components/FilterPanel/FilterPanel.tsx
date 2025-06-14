@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef } from 'react';
-import { Calendar, Sliders, X, Bot, MessageSquare, Sparkles, Copy } from 'lucide-react';
-import { FilterOptions } from '../../types/conversation';
+import { X, MessageSquare, Sparkles, Copy, Calendar, Bot, Star } from 'lucide-react';
+import { FilterOptions, Conversation } from '../../types/conversation';
 import { useFeedbackStore } from '../../store/feedbackStore';
+import { format } from 'date-fns';
 import './FilterPanel.css';
 
 interface LLMConfiguration {
@@ -17,11 +18,9 @@ interface FilterPanelProps {
   onFiltersChange: (filters: FilterOptions) => void;
   isOpen: boolean;
   onClose: () => void;
-  availableModels: string[];
   currentThread?: any; // Current selected thread for sample data
+  conversations: Conversation[]; // For extracting available models
 }
-
-type TabType = 'manual' | 'natural';
 
 const STORAGE_KEY = 'filterPanelSize';
 const LLM_STORAGE_KEY = 'filterPanelSelectedLLM';
@@ -30,16 +29,29 @@ const MIN_HEIGHT = 500;
 const DEFAULT_WIDTH = 480;
 const DEFAULT_HEIGHT = 600;
 
-export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, availableModels, currentThread }: FilterPanelProps) {
+type FilterTab = 'static' | 'natural';
+
+export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, currentThread, conversations }: FilterPanelProps) {
   const { dataSource } = useFeedbackStore();
-  const [activeTab, setActiveTab] = useState<TabType>(() => {
-    // Start with natural tab if we have an active natural language filter
-    return filters.naturalLanguageQuery ? 'natural' : 'manual';
-  });
+  const [activeTab, setActiveTab] = useState<FilterTab>('static');
+  
+  // Natural Language filter state
   const [naturalQuery, setNaturalQuery] = useState(filters.naturalLanguageQuery || '');
   const [selectedLLM, setSelectedLLM] = useState<string>(() => {
     // Try to restore from localStorage
     return localStorage.getItem(LLM_STORAGE_KEY) || '';
+  });
+  
+  // Static filter state
+  const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
+    start: filters.dateRange?.start ? format(filters.dateRange.start, 'yyyy-MM-dd') : '',
+    end: filters.dateRange?.end ? format(filters.dateRange.end, 'yyyy-MM-dd') : ''
+  });
+  const [selectedModels, setSelectedModels] = useState<string[]>(filters.modelFilter || []);
+  const [ratingRange, setRatingRange] = useState({
+    min: filters.ratingFilter?.min || 1,
+    max: filters.ratingFilter?.max || 10,
+    includeUnrated: filters.ratingFilter?.includeUnrated ?? true
   });
   const [llmConfigurations, setLlmConfigurations] = useState<LLMConfiguration[]>([]);
   const [isExecuting, setIsExecuting] = useState(false);
@@ -49,6 +61,16 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, availab
   const [copiedItem, setCopiedItem] = useState<'prompt' | 'filter' | null>(null);
   const [fetchedPrompt, setFetchedPrompt] = useState<string>('');
   const [isFetchingPrompt, setIsFetchingPrompt] = useState(false);
+  const [lastGeneratedScripts, setLastGeneratedScripts] = useState<{
+    filterScript?: string;
+    renderScript?: string;
+    responseType?: string;
+  } | null>(null);
+  
+  // Extract available models from conversations
+  const availableModels = Array.from(new Set(
+    conversations.flatMap(conv => conv.modelsUsed || [])
+  )).sort();
   
   const panelRef = useRef<HTMLDivElement>(null);
   const [size, setSize] = useState(() => {
@@ -74,12 +96,31 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, availab
     // Load LLM configurations from backend when panel opens
     if (isOpen) {
       fetchLLMConfigurations();
-      // If there's an active JavaScript filter, show it
-      if (filters.customJavaScriptFilter) {
-        setFilterExpression(filters.customJavaScriptFilter);
+      // If there's an active JavaScript filter or render script, show it
+      if (filters.customJavaScriptFilter || filters.customRenderScript) {
+        let displayText = '';
+        
+        if (filters.customJavaScriptFilter) {
+          displayText += '// FILTER SCRIPT\n' + filters.customJavaScriptFilter;
+        }
+        
+        if (filters.customRenderScript) {
+          if (displayText) displayText += '\n\n';
+          displayText += '// RENDER SCRIPT\n' + filters.customRenderScript;
+        }
+        
+        setFilterExpression(displayText);
+        
+        // Also restore the last generated scripts
+        setLastGeneratedScripts({
+          filterScript: filters.customJavaScriptFilter,
+          renderScript: filters.customRenderScript,
+          responseType: filters.customJavaScriptFilter && filters.customRenderScript ? 'both' : 
+                       filters.customJavaScriptFilter ? 'filter' : 'render'
+        });
       }
     }
-  }, [isOpen, filters.customJavaScriptFilter]);
+  }, [isOpen, filters.customJavaScriptFilter, filters.customRenderScript]);
 
   // Save size to localStorage when it changes
   useEffect(() => {
@@ -190,66 +231,6 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, availab
 
   if (!isOpen) return null;
 
-  const handleDateChange = (field: 'start' | 'end', value: string) => {
-    onFiltersChange({
-      ...filters,
-      dateRange: {
-        ...filters.dateRange,
-        [field]: value ? new Date(value) : null
-      }
-    });
-  };
-
-  const handleRatingChange = (field: 'min' | 'max', value: number) => {
-    onFiltersChange({
-      ...filters,
-      ratingFilter: {
-        ...filters.ratingFilter,
-        [field]: value
-      }
-    });
-  };
-
-  const handleFilterLevelChange = (level: 'conversation' | 'qa') => {
-    onFiltersChange({
-      ...filters,
-      filterLevel: level
-    });
-  };
-
-  const handleIncludeUnratedChange = (checked: boolean) => {
-    onFiltersChange({
-      ...filters,
-      ratingFilter: {
-        ...filters.ratingFilter,
-        includeUnrated: checked
-      }
-    });
-  };
-
-  const handleModelToggle = (model: string) => {
-    const newModels = filters.modelFilter.includes(model)
-      ? filters.modelFilter.filter(m => m !== model)
-      : [...filters.modelFilter, model];
-    
-    onFiltersChange({
-      ...filters,
-      modelFilter: newModels
-    });
-  };
-
-  const resetFilters = () => {
-    onFiltersChange({
-      dateRange: { start: null, end: null },
-      ratingFilter: { min: 1, max: 10, includeUnrated: true },
-      searchTerm: filters.searchTerm,
-      filterLevel: 'conversation',
-      modelFilter: [],
-      customJavaScriptFilter: undefined,
-      naturalLanguageQuery: undefined
-    });
-  };
-
   const handleCopy = async (text: string, type: 'prompt' | 'filter') => {
     try {
       await navigator.clipboard.writeText(text);
@@ -268,6 +249,7 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, availab
 
     try {
       console.log('🔍 [FilterPanel] Fetching prompt from server:', naturalQuery);
+      console.log('   Sample data available:', !!currentThread);
       
       const requestBody: any = {
         llmConfiguration: selectedLLM,
@@ -276,6 +258,10 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, availab
       
       if (currentThread) {
         requestBody.sampleData = currentThread;
+        console.log('   Including sample data from current thread');
+        console.log('   Sample thread ID:', currentThread.thread_id);
+      } else {
+        console.log('   No sample data available - using schema-based approach');
       }
       
       const apiUrl = import.meta.env.VITE_API_URL;
@@ -314,9 +300,12 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, availab
   const generatePrompt = (query: string) => {
     // If we have sample data (current thread), use it in the prompt
     if (currentThread) {
-      return `You are a JavaScript code generator for filtering LangGraph conversation data. Generate a safe, executable JavaScript function that filters data based on the user's natural language query.
+      return `You are a JavaScript code generator for processing LangGraph conversation data. Based on the user's query, generate one or both types of scripts:
 
-IMPORTANT: The complete dataset is an array of objects similar to the sample provided below. Study the structure carefully to understand the data format.
+1. FILTER SCRIPT: For narrowing down the conversation list
+2. RENDER SCRIPT: For creating visualizations (markdown or graphs)
+
+IMPORTANT: The complete dataset is an array of objects similar to the sample provided below.
 
 SAMPLE DATA (one object from the array):
 ${JSON.stringify(currentThread, null, 2)}
@@ -329,15 +318,11 @@ The complete dataset is an array of similar objects. Each object represents a co
 - values.retrieved_docs: array of retrieved documents (if any)
 - Other fields as shown in the sample
 
-Natural Language Query: "${query}"
+NATURAL LANGUAGE QUERY: "${query}"
 
-Generate a JavaScript function that:
-1. Accepts an array called 'threads' containing objects like the sample above
-2. Returns a filtered array based on the query
-3. Handles edge cases (null values, missing fields)
-4. Is optimized for performance
+ANALYZE THE QUERY AND GENERATE APPROPRIATE SCRIPTS:
 
-The function should follow this template:
+If filtering is needed, create:
 function filterThreads(threads) {
   // Your filtering logic here
   return threads.filter(thread => {
@@ -345,11 +330,35 @@ function filterThreads(threads) {
   });
 }
 
+If visualization is needed, create:
+function renderContent(threads) {
+  // For markdown rendering:
+  return \`# Report Title\\n\\nContent here...\`;
+  
+  // OR for graph rendering:
+  return {
+    type: 'bar', // or 'line', 'pie', etc.
+    data: {
+      labels: [...],
+      datasets: [...]
+    },
+    options: {...}
+  };
+}
+
+RESPONSE FORMAT:
+{
+  "filterScript": "...", // Include if filtering needed
+  "renderScript": "..."  // Include if visualization needed
+}
+
 IMPORTANT RULES:
-- Return ONLY executable JavaScript code, no explanations
+- Generate ONLY the needed scripts based on query intent
 - Use only safe JavaScript features (no eval, fetch, or DOM manipulation)
 - Include helpful comments explaining the logic
-- The code will be executed client-side in a sandboxed environment`;
+- For graphs, use Chart.js compatible format
+- For markdown, use GitHub-flavored markdown
+- Return a valid JSON object with the appropriate scripts`;
     }
     
     // Fallback to schema-based prompt
@@ -452,6 +461,9 @@ Generate the filter expression:`;
       if (currentThread) {
         requestBody.sampleData = currentThread;
         console.log('   Including sample data from current thread');
+        console.log('   Sample thread ID:', currentThread.thread_id);
+      } else {
+        console.log('   No sample data available - using schema-based approach');
       }
       
       // Call backend endpoint to convert natural language to filter
@@ -472,14 +484,24 @@ Generate the filter expression:`;
       const data = await response.json();
       
       if (data.success) {
-        if (data.responseType === 'javascript' && data.filterCode) {
-          // JavaScript code response
-          setFilterExpression(data.filterCode);
-          console.log('✅ [FilterPanel] Generated JavaScript filter code');
-        } else if (data.filterExpression) {
-          // JSON filter response
-          setFilterExpression(JSON.stringify(data.filterExpression, null, 2));
-          console.log('✅ [FilterPanel] Generated JSON filter expression:', data.filterExpression);
+        // Handle dual-script responses
+        if (data.responseType === 'both' || data.responseType === 'filter' || data.responseType === 'render') {
+          // New dual-script format
+          let displayText = '';
+          
+          if (data.filterScript) {
+            displayText += '// FILTER SCRIPT\n' + data.filterScript;
+          }
+          
+          if (data.renderScript) {
+            if (displayText) displayText += '\n\n';
+            displayText += '// RENDER SCRIPT\n' + data.renderScript;
+          }
+          
+          setFilterExpression(displayText);
+          console.log(`✅ [FilterPanel] Generated ${data.responseType} script(s)`);
+          if (data.filterScript) console.log('   • Filter script: ✓');
+          if (data.renderScript) console.log('   • Render script: ✓');
         } else if (data.rawResponse) {
           // Raw response fallback
           setFilterExpression(data.rawResponse);
@@ -487,6 +509,13 @@ Generate the filter expression:`;
         } else {
           throw new Error('No filter expression generated');
         }
+        
+        // Store the actual scripts in state for applying later
+        setLastGeneratedScripts({
+          filterScript: data.filterScript,
+          renderScript: data.renderScript,
+          responseType: data.responseType
+        });
       } else {
         throw new Error(data.error || 'Failed to generate filter');
       }
@@ -504,15 +533,43 @@ Generate the filter expression:`;
       return;
     }
 
-    console.log('📋 [FilterPanel] Applying generated filter:');
+    console.log('📋 [FilterPanel] Applying generated filter/render scripts');
     console.log('   Expression length:', filterExpression.length);
-    console.log('   Is JavaScript:', filterExpression.includes('function filterThreads') || filterExpression.includes('function processThreads'));
 
-    // Check if it's JavaScript code
+    // Check if we have dual-script data
+    if (lastGeneratedScripts && (lastGeneratedScripts.filterScript || lastGeneratedScripts.renderScript)) {
+      console.log('🎯 [FilterPanel] Applying dual-script response');
+      console.log('   Response type:', lastGeneratedScripts.responseType);
+      
+      try {
+        const newFilters: FilterOptions = {
+          ...filters,
+          customJavaScriptFilter: lastGeneratedScripts.filterScript || filters.customJavaScriptFilter,
+          customRenderScript: lastGeneratedScripts.renderScript || filters.customRenderScript,
+          naturalLanguageQuery: naturalQuery,
+          renderScriptTimestamp: lastGeneratedScripts.renderScript ? Date.now() : filters.renderScriptTimestamp
+        };
+
+        if (lastGeneratedScripts.filterScript) console.log('   • Applying filter script');
+        if (lastGeneratedScripts.renderScript) console.log('   • Applying render script with new timestamp:', Date.now());
+        
+        onFiltersChange(newFilters);
+        
+        // Close the panel after applying
+        onClose();
+      } catch (error) {
+        console.error('❌ [FilterPanel] Error applying dual scripts:', error);
+        setExecutionError('Failed to apply scripts.');
+      }
+      return;
+    }
+
+    // If we get here without lastGeneratedScripts, it means the filter expression
+    // might be raw JavaScript code (for backward compatibility)
     if (filterExpression.includes('function filterThreads') || filterExpression.includes('function processThreads')) {
       // Apply JavaScript filter
       try {
-        console.log('🚀 [FilterPanel] Applying JavaScript filter to data');
+        console.log('🚀 [FilterPanel] Applying raw JavaScript filter');
         console.log('   Filter code:', filterExpression.substring(0, 200) + '...');
         
         // Create the filter object with the JavaScript code
@@ -522,10 +579,7 @@ Generate the filter expression:`;
           naturalLanguageQuery: naturalQuery
         };
 
-        console.log('   New filters object:', { ...newFilters, customJavaScriptFilter: newFilters.customJavaScriptFilter?.substring(0, 50) + '...' });
         onFiltersChange(newFilters);
-        
-        // Close the panel after applying
         onClose();
       } catch (error) {
         console.error('❌ [FilterPanel] Error applying JavaScript filter:', error);
@@ -534,42 +588,46 @@ Generate the filter expression:`;
       return;
     }
 
-    try {
-      const generatedFilter = JSON.parse(filterExpression);
-      
-      // Apply the standard filters
-      const newFilters: FilterOptions = {
-        ...filters,
-        dateRange: {
-          start: generatedFilter.dateRange?.start ? new Date(generatedFilter.dateRange.start) : null,
-          end: generatedFilter.dateRange?.end ? new Date(generatedFilter.dateRange.end) : null
-        },
-        ratingFilter: {
-          min: generatedFilter.ratingFilter?.min ?? 1,
-          max: generatedFilter.ratingFilter?.max ?? 10,
-          includeUnrated: generatedFilter.ratingFilter?.includeUnrated ?? true
-        },
-        filterLevel: generatedFilter.filterLevel || 'conversation',
-        modelFilter: generatedFilter.modelFilter || [],
-        // Clear any previous JavaScript filter when applying JSON filter
-        customJavaScriptFilter: undefined,
-        naturalLanguageQuery: undefined
-      };
+    // If nothing matched, show an error
+    setExecutionError('No valid filter or render script found. Please generate a filter first.');
+  };
 
-      onFiltersChange(newFilters);
-      
-      // Store custom conditions if any (for future use)
-      if (generatedFilter.customConditions) {
-        console.log('📌 [FilterPanel] Custom conditions:', generatedFilter.customConditions);
-        // TODO: Implement custom condition handling
+  const applyStaticFilters = () => {
+    const newFilters: FilterOptions = {
+      ...filters,
+      dateRange: {
+        start: dateRange.start ? new Date(dateRange.start) : null,
+        end: dateRange.end ? new Date(dateRange.end) : null
+      },
+      modelFilter: selectedModels.length > 0 ? selectedModels : undefined,
+      ratingFilter: {
+        min: ratingRange.min,
+        max: ratingRange.max,
+        includeUnrated: ratingRange.includeUnrated
       }
+    };
+    
+    onFiltersChange(newFilters);
+    onClose();
+  };
 
-      // Close the panel after applying
-      onClose();
-    } catch (error) {
-      console.error('❌ [FilterPanel] Error applying filter:', error);
-      setExecutionError('Failed to apply filter. Please check the JSON format.');
-    }
+  const clearStaticFilters = () => {
+    setDateRange({ start: '', end: '' });
+    setSelectedModels([]);
+    setRatingRange({ min: 1, max: 10, includeUnrated: true });
+    
+    const newFilters: FilterOptions = {
+      ...filters,
+      dateRange: undefined,
+      modelFilter: undefined,
+      ratingFilter: undefined
+    };
+    
+    onFiltersChange(newFilters);
+  };
+
+  const hasActiveStaticFilters = () => {
+    return filters.dateRange || filters.modelFilter || filters.ratingFilter;
   };
 
   return (
@@ -607,152 +665,141 @@ Generate the filter expression:`;
         </div>
 
         <div className="filter-tabs">
-          <button
-            className={`filter-tab ${activeTab === 'manual' ? 'active' : ''}`}
-            onClick={() => setActiveTab('manual')}
+          <button 
+            className={`filter-tab ${activeTab === 'static' ? 'active' : ''}`}
+            onClick={() => setActiveTab('static')}
           >
-            <Sliders size={16} />
-            <span>Manual Filters</span>
+            Static Filters
+            {hasActiveStaticFilters() && <span className="filter-indicator" />}
           </button>
-          <button
+          <button 
             className={`filter-tab ${activeTab === 'natural' ? 'active' : ''}`}
             onClick={() => setActiveTab('natural')}
           >
-            <MessageSquare size={16} />
-            <span>Natural Language</span>
+            Natural Language
+            {filters.naturalLanguageQuery && <span className="filter-indicator" />}
           </button>
         </div>
 
         <div className="filter-panel-content">
-          {activeTab === 'manual' ? (
-            <>
-            <div className="filter-section">
-              <div className="filter-section-header">
-                <Calendar size={16} />
-                <h4>Date Range</h4>
-              </div>
-              
-              <div className="date-inputs">
-                <div className="input-group">
-                  <label>From</label>
-                  <input
-                    type="date"
-                    value={filters.dateRange.start ? filters.dateRange.start.toISOString().split('T')[0] : ''}
-                    onChange={(e) => handleDateChange('start', e.target.value)}
-                  />
+          {activeTab === 'static' ? (
+            <div className="static-filters-section">
+              {/* Date Range Filter */}
+              <div className="filter-section">
+                <div className="filter-section-header">
+                  <Calendar size={16} />
+                  <h4>Date Range</h4>
+                  {filters.dateRange && (
+                    <span className="active-filter-badge">Active</span>
+                  )}
                 </div>
-                
-                <div className="input-group">
-                  <label>To</label>
-                  <input
-                    type="date"
-                    value={filters.dateRange.end ? filters.dateRange.end.toISOString().split('T')[0] : ''}
-                    onChange={(e) => handleDateChange('end', e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-
-            <div className="filter-section">
-              <div className="filter-section-header">
-                <Sliders size={16} />
-                <h4>Rating Filter</h4>
-              </div>
-
-              <div className="filter-level-toggle">
-                <label>
-                  <input
-                    type="radio"
-                    name="filterLevel"
-                    value="conversation"
-                    checked={filters.filterLevel === 'conversation'}
-                    onChange={() => handleFilterLevelChange('conversation')}
-                  />
-                  Conversation Level
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="filterLevel"
-                    value="qa"
-                    checked={filters.filterLevel === 'qa'}
-                    onChange={() => handleFilterLevelChange('qa')}
-                  />
-                  Q&A Level
-                </label>
-              </div>
-
-              <div className="rating-range">
-                <div className="input-group">
-                  <label>Min Rating</label>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={filters.ratingFilter.min}
-                    onChange={(e) => handleRatingChange('min', Number(e.target.value))}
-                  />
-                  <span className="rating-value">{filters.ratingFilter.min}</span>
-                </div>
-
-                <div className="input-group">
-                  <label>Max Rating</label>
-                  <input
-                    type="range"
-                    min="1"
-                    max="10"
-                    value={filters.ratingFilter.max}
-                    onChange={(e) => handleRatingChange('max', Number(e.target.value))}
-                  />
-                  <span className="rating-value">{filters.ratingFilter.max}</span>
+                <div className="date-inputs">
+                  <div className="input-group">
+                    <label>From</label>
+                    <input
+                      type="date"
+                      value={dateRange.start}
+                      onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
+                    />
+                  </div>
+                  <div className="input-group">
+                    <label>To</label>
+                    <input
+                      type="date"
+                      value={dateRange.end}
+                      onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
+                    />
+                  </div>
                 </div>
               </div>
 
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={filters.ratingFilter.includeUnrated}
-                  onChange={(e) => handleIncludeUnratedChange(e.target.checked)}
-                />
-                Include unrated items
-              </label>
-            </div>
-
-            <div className="filter-section">
-              <div className="filter-section-header">
-                <Bot size={16} />
-                <h4>Model Filter</h4>
+              {/* Model Filter */}
+              <div className="filter-section">
+                <div className="filter-section-header">
+                  <Bot size={16} />
+                  <h4>Model Filter</h4>
+                  {filters.modelFilter && filters.modelFilter.length > 0 && (
+                    <span className="active-filter-badge">Active ({filters.modelFilter.length})</span>
+                  )}
+                </div>
+                <div className="model-checkboxes">
+                  {availableModels.length > 0 ? (
+                    availableModels.map(model => (
+                      <label key={model} className="checkbox-label">
+                        <input
+                          type="checkbox"
+                          checked={selectedModels.includes(model)}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setSelectedModels([...selectedModels, model]);
+                            } else {
+                              setSelectedModels(selectedModels.filter(m => m !== model));
+                            }
+                          }}
+                        />
+                        {model}
+                      </label>
+                    ))
+                  ) : (
+                    <p className="no-models">No models found in conversations</p>
+                  )}
+                </div>
               </div>
 
-              <div className="model-checkboxes">
-                {availableModels.length === 0 ? (
-                  <p className="no-models">No models found</p>
-                ) : (
-                  availableModels.map(model => (
-                    <label key={model} className="checkbox-label">
-                      <input
-                        type="checkbox"
-                        checked={filters.modelFilter.includes(model)}
-                        onChange={() => handleModelToggle(model)}
-                      />
-                      {model}
-                    </label>
-                  ))
-                )}
+              {/* Rating Filter */}
+              <div className="filter-section">
+                <div className="filter-section-header">
+                  <Star size={16} />
+                  <h4>Rating Filter</h4>
+                  {filters.ratingFilter && (
+                    <span className="active-filter-badge">Active</span>
+                  )}
+                </div>
+                <div className="rating-range">
+                  <div className="input-group">
+                    <label>Min Rating:</label>
+                    <input
+                      type="range"
+                      min="1"
+                      max="10"
+                      value={ratingRange.min}
+                      onChange={(e) => setRatingRange({ ...ratingRange, min: parseInt(e.target.value) })}
+                    />
+                    <span className="rating-value">{ratingRange.min}</span>
+                  </div>
+                  <div className="input-group">
+                    <label>Max Rating:</label>
+                    <input
+                      type="range"
+                      min="1"
+                      max="10"
+                      value={ratingRange.max}
+                      onChange={(e) => setRatingRange({ ...ratingRange, max: parseInt(e.target.value) })}
+                    />
+                    <span className="rating-value">{ratingRange.max}</span>
+                  </div>
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={ratingRange.includeUnrated}
+                      onChange={(e) => setRatingRange({ ...ratingRange, includeUnrated: e.target.checked })}
+                    />
+                    Include unrated conversations
+                  </label>
+                </div>
+              </div>
+
+              {/* Static Filter Actions */}
+              <div className="filter-actions">
+                <button className="reset-btn" onClick={clearStaticFilters}>
+                  Clear All
+                </button>
+                <button className="apply-btn" onClick={applyStaticFilters}>
+                  Apply Filters
+                </button>
               </div>
             </div>
-
-            <div className="filter-actions">
-              <button className="reset-btn" onClick={resetFilters}>
-                Reset Filters
-              </button>
-              <button className="apply-btn" onClick={onClose}>
-                Apply
-              </button>
-            </div>
-          </>
-        ) : (
-          <>
+          ) : (
             <div className="natural-language-section">
               <div className="filter-section natural-language-content">
                 <div className="filter-section-header">
@@ -838,7 +885,7 @@ Generate the filter expression:`;
                           <h5>Active JavaScript Filter:</h5>
                           <button
                             className="copy-btn"
-                            onClick={() => handleCopy(filters.customJavaScriptFilter, 'filter')}
+                            onClick={() => handleCopy(filters.customJavaScriptFilter || '', 'filter')}
                             title="Copy active filter"
                           >
                             <Copy size={14} />
@@ -942,8 +989,7 @@ Generate the filter expression:`;
                 </div>
               </div>
             </div>
-          </>
-        )}
+          )}
         </div>
       </div>
     </div>

@@ -1,6 +1,37 @@
 # Issues - Pending Items
 
-## Pending Items
+## Completed Items (Most Recent First)
+
+### Static Filters Tab Implementation (Completed: 2025-01-14)
+**Requirements**: Add a tab with static filters (date, model, rating) completely decoupled from Natural Language filters
+**Solution**:
+1. Added Tab System to FilterPanel:
+   - Two tabs: "Static Filters" and "Natural Language"
+   - Each tab operates independently
+   - Visual indicators show when filters are active
+
+2. Static Filters Implemented:
+   - **Date Range Filter**: From/To date inputs for conversation filtering
+   - **Model Filter**: Checkbox list of all models found in conversations
+   - **Rating Filter**: Min/Max rating sliders with "Include unrated" option
+
+3. Technical Implementation:
+   - Extended FilterOptions type to include static filter fields
+   - Created `staticFilters.ts` utility for applying filters
+   - Updated App.tsx to apply both filter types in sequence
+   - Filters are completely decoupled - can use either or both
+
+4. UI/UX Enhancements:
+   - Tab indicators show active filters
+   - Filter button tooltip shows all active filters
+   - Clear separation between filter types
+   - Apply/Clear buttons for static filters
+
+**Benefits:**
+- Users can combine static and natural language filters
+- Static filters provide precise control
+- Natural language filters handle complex queries
+- Clear visual feedback about active filters
 
 ### 1. **Backend API Swagger Documentation Review (Completed: 2025-01-14)**
 **Requirements**: Examine all API endpoints and verify their Swagger documentation is correct and complete.

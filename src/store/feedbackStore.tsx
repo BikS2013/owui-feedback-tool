@@ -113,20 +113,11 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
   });
   const [selectedAnalyticsModel, setSelectedAnalyticsModel] = useState<string | null>(null);
   const [filters, setFilters] = useState<FilterOptions>({
-    dateRange: {
-      start: null,
-      end: null
-    },
-    ratingFilter: {
-      min: 1,
-      max: 10,
-      includeUnrated: true
-    },
     searchTerm: '',
-    filterLevel: 'conversation',
-    modelFilter: [],
     customJavaScriptFilter: undefined,
-    naturalLanguageQuery: undefined
+    customRenderScript: undefined,
+    naturalLanguageQuery: undefined,
+    renderScriptTimestamp: undefined
   });
 
   const loadData = async () => {
@@ -213,18 +204,11 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
     localStorage.removeItem(STORAGE_KEY + '-agent-metadata');
     // Reset filters to default
     setFilters({
-      dateRange: {
-        start: null,
-        end: null
-      },
-      ratingFilter: {
-        min: 1,
-        max: 10,
-        includeUnrated: true
-      },
       searchTerm: '',
-      filterLevel: 'conversation',
-      modelFilter: []
+      customJavaScriptFilter: undefined,
+      customRenderScript: undefined,
+      naturalLanguageQuery: undefined,
+      renderScriptTimestamp: undefined
     });
     
     const endTime = performance.now();
