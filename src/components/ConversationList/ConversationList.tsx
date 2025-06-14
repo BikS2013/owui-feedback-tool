@@ -39,7 +39,12 @@ export function ConversationList({
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const { colorScheme } = useTheme();
-  const { dataSource, agentPagination, currentAgent, agentDateRange, loadFromAgentThreads, isLoading } = useFeedbackStore();
+  const { dataSource, agentPagination, currentAgent, agentDateRange, loadFromAgentThreads, isLoading, langGraphThreads } = useFeedbackStore();
+  
+  // Get the current LangGraph thread if selected
+  const currentThread = dataSource === 'agent' && selectedId 
+    ? langGraphThreads.find(thread => thread.thread_id === selectedId)
+    : null;
   
   // Calculate total Q&A pairs
   const totalQAPairs = conversations.reduce((sum, conv) => sum + conv.qaPairCount, 0);
@@ -54,8 +59,13 @@ export function ConversationList({
   const topRightControls = (
     <>
       <DataControls />
-      <button className="filter-btn" onClick={() => setIsFilterPanelOpen(true)}>
+      <button 
+        className={`filter-btn ${filters.naturalLanguageQuery ? 'filter-active' : ''}`} 
+        onClick={() => setIsFilterPanelOpen(true)}
+        title={filters.naturalLanguageQuery ? `Natural Language Filter: "${filters.naturalLanguageQuery}"` : 'Open filters'}
+      >
         <Filter size={16} />
+        {filters.naturalLanguageQuery && <span className="filter-indicator" />}
       </button>
     </>
   );
@@ -87,7 +97,11 @@ export function ConversationList({
   const emptyState = (
     <div className="no-conversations">
       <p>No conversations available</p>
-      <p className="no-conversations-hint">Upload a JSON file to get started</p>
+      <p className="no-conversations-hint">
+        {dataSource === 'agent' 
+          ? "Connect to an agent to load threads" 
+          : "Upload a JSON file to get started"}
+      </p>
     </div>
   );
 
@@ -177,6 +191,7 @@ export function ConversationList({
         isOpen={isFilterPanelOpen}
         onClose={() => setIsFilterPanelOpen(false)}
         availableModels={availableModels}
+        currentThread={currentThread}
       />
       <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </>

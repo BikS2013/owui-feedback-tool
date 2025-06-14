@@ -198,6 +198,26 @@
   color: var(--text-tertiary);
 }
 
+/* Filter button with active state */
+.filter-btn {
+  position: relative;
+}
+
+.filter-btn.filter-active {
+  color: var(--accent-primary);
+}
+
+.filter-indicator {
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 8px;
+  height: 8px;
+  background-color: var(--accent-primary);
+  border-radius: 50%;
+  border: 2px solid var(--bg-primary);
+}
+
 /* Responsive behavior for narrow panels */
 @media (max-width: 400px) {
   .counts-text {

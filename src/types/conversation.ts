@@ -39,4 +39,6 @@ export interface FilterOptions {
   searchTerm: string;
   filterLevel: 'conversation' | 'qa';
   modelFilter: string[];
+  customJavaScriptFilter?: string;
+  naturalLanguageQuery?: string;
 }

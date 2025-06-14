@@ -2,6 +2,174 @@
 
 ## Pending Items
 
+### 1. **Backend API Swagger Documentation Review (Completed: 2025-01-14)**
+**Requirements**: Examine all API endpoints and verify their Swagger documentation is correct and complete.
+
+**Findings**:
+
+#### Agent Routes (/api/agent)
+✅ All endpoints have complete Swagger documentation:
+- GET `/` - Get all configured agents
+- GET `/threads` - Get threads from agent's database (with pagination and filters)
+- GET `/thread/:threadId/documents` - Get documents for a specific thread
+- POST `/reload` - Reload agent configuration
+- GET `/test-connection` - Test database connection for an agent
+- GET `/:name` - Get a specific agent by name
+
+#### Export Routes (/api/export)
+✅ All endpoints have complete Swagger documentation:
+- POST `/conversation` - Export conversation to PDF or HTML
+- POST `/qa-pair` - Export single Q&A pair to PDF or HTML
+
+#### GitHub Routes (/api/github)
+✅ All endpoints have complete Swagger documentation:
+- GET `/status` - Check GitHub connection status
+- GET `/repository` - Get repository information
+- GET `/files` - List files in a directory
+- GET `/tree` - Get repository file tree
+- GET `/file/*` - Get file content
+- GET `/search` - Search for files in repository
+- GET `/files-by-extension/:extension` - List files by extension
+- GET `/rate-limit` - Get GitHub API rate limit status
+
+#### LLM Routes (/api/llm)
+✅ All endpoints have complete Swagger documentation:
+- POST `/execute-prompt` - Execute prompt from GitHub against conversation
+- GET `/status/:requestId` - Get prompt execution status
+- GET `/configurations` - Get all available LLM configurations
+- POST `/test` - Test LLM configuration with simple prompt
+- POST `/reload` - Reload LLM configurations from file
+- POST `/execute-prompt-direct` - Execute prompt directly with parameter values
+- POST `/convert-to-filter` - Convert natural language query to filter expression
+
+#### Main App Route
+✅ Health check endpoint documented:
+- GET `/health` - Health check endpoint
+
+**Documentation Quality Assessment**:
+1. **Consistent Structure**: All endpoints follow consistent documentation patterns
+2. **Complete Request/Response Schemas**: All request bodies and responses have detailed schemas
+3. **Parameter Documentation**: Query, path, and body parameters are well documented
+4. **Error Responses**: All endpoints document various error conditions (400, 404, 500)
+5. **Examples**: Many schemas include example values
+6. **Tags**: All routes are properly tagged for organization
+
+**Minor Issues Found**:
+1. Swagger config tags don't include "Agents" tag (only has Export, Health, GitHub, LLM)
+2. Some endpoints return void but still send responses (TypeScript typing issue, not Swagger)
+
+**Overall**: The Swagger documentation is comprehensive and well-maintained. All endpoints have proper documentation with detailed schemas, examples, and error handling.
+
+### 2. **Natural Language Query Filter with Sample Data (Completed: 2025-01-14)**
+**Requirements**: Send selected chat as sample data when invoking natural language filter API
+**Solution**:
+1. Backend Updates:
+   - Modified `/llm/convert-to-filter` endpoint to accept `sampleData` parameter
+   - Updated prompt generation to include sample data when provided
+   - Added support for both JSON and JavaScript code responses
+   - Emphasized in prompt that complete dataset is array of similar objects
+
+2. Frontend Updates:
+   - Added `currentThread` prop to FilterPanel component
+   - Modified ConversationList to pass current LangGraph thread to FilterPanel
+   - Updated executeNaturalLanguageQuery to include sample data in request
+   - Added response handling for JavaScript code generation
+   - Updated applyGeneratedFilter to detect JavaScript code (temporary message)
+
+3. Implementation Details:
+   - When sample data is provided, backend uses actual data structure for more accurate filtering
+   - Prompt includes the sample with explanation that full dataset is array of similar objects
+   - Backend can generate either JSON filters or JavaScript code based on query complexity
+   - Frontend shows appropriate error message for JavaScript code (future feature)
+
+**Benefits:**
+- LLM can see actual data structure for more accurate filter generation
+- Better handling of complex queries that require custom logic
+- Foundation for future client-side JavaScript execution of filters
+
+### 3. **JavaScript Filtering for LangGraph Data (Completed: 2025-01-14)**
+**Requirements**: Implement JavaScript filtering option on the client for LangGraph data
+**Solution**:
+1. Frontend Implementation:
+   - Created `javascriptFilter.ts` utility with `applyJavaScriptFilter` function
+   - Added validation to prevent dangerous code patterns (eval, fetch, DOM manipulation)
+   - Sandboxed execution using Function constructor
+   - Updated App component to detect and apply JavaScript filters for LangGraph data
+   
+2. Filter Application Flow:
+   - When JavaScript filter is active and viewing LangGraph data:
+     - Apply filter to raw threads first
+     - Convert only filtered threads to conversations
+   - Standard filters continue to work for non-JavaScript filtering
+   
+3. UI/UX Enhancements:
+   - Filter button shows active state with indicator dot
+   - Natural Language tab displays "Active" badge
+   - Tooltips show the active natural language query
+   - Different placeholder examples for LangGraph vs file-based data
+   
+4. Type System Updates:
+   - Extended FilterOptions to include `customJavaScriptFilter` and `naturalLanguageQuery`
+   - Created `langgraphConverter.ts` for thread-to-conversation conversion
+   
+**Implementation Details**:
+- Backend already supported JavaScript code generation when sample data provided
+- Frontend sends current thread as sample data for accurate filter generation
+- JavaScript filters execute client-side for performance
+- Graceful fallback to all data if filter execution fails
+- Clear visual feedback about active filters
+
+**Documentation**:
+- Created `docs/JAVASCRIPT-FILTERING.md` with examples and security notes
+- Updated FilterPanel with context-aware placeholder examples
+
+## Pending Items
+
+### Prompt Execution with LangGraph Data Fixed (Completed: 2025-01-14)
+**Issue**: Evaluation prompts weren't receiving the chat data displayed on screen for LangGraph threads
+**Root Cause**: When in agent mode, the conversation object passed to prompts had empty messages array
+**Solution**:
+1. Modified `handleExecutePrompt` to build proper conversation data:
+   - For LangGraph data: Creates conversation object with actual messages from currentThread
+   - For OWUI data: Uses existing conversation object as-is
+2. Updated PromptSelectorModal prop to include transformed messages for LangGraph
+3. Added debug logging to track conversation data being passed to prompts
+
+**Implementation**:
+- Transforms LangGraph messages to standard format when building parameters
+- Handles different content formats (string, text field, nested object)
+- Preserves timestamps and model information
+- Now prompts receive the complete chat history visible on screen
+
+### LangGraph Data Preservation and Separate Chat Rendering (Completed: 2025-01-14)
+**Requirements**: Keep LangGraph chat data intact and render them differently from OWUI data
+**Solution**:
+1. Modified feedbackStore to preserve original LangGraph data:
+   - Added `langGraphThreads: LangGraphThread[]` to store original API data
+   - Removed transformation logic that converted threads to conversations
+   - Clear OWUI data when loading LangGraph data and vice versa
+
+2. Created separate chat view components:
+   - `LangGraphChatView` - Renders LangGraph threads with original structure
+   - `OWUIChatView` - Renders OWUI conversations with ratings support
+   - Different visual styles (icons vs avatars)
+
+3. Updated ConversationDetail component:
+   - Uses LangGraphChatView when dataSource is 'agent'
+   - Uses OWUIChatView when dataSource is 'file'
+   - Documents tab only appears for LangGraph data
+   - Ratings tab only appears for OWUI data
+
+4. Created new type definitions:
+   - `src/types/langgraph.ts` - LangGraph-specific types preserving API structure
+
+**Benefits:**
+- LangGraph data remains in original format for accurate representation
+- Clear separation between data sources
+- Documents tab correctly handles only LangGraph format
+- Ratings tab correctly handles only OWUI ratings
+- Future flexibility for source-specific features
+
 ### Backend Docker Setup (Completed: 2025-01-13)
 **Requirements**: Build a Docker setup for the backend
 **Solution**:

@@ -1,7 +1,8 @@
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { FeedbackEntry, Message } from '../types/feedback';
+import { FeedbackEntry } from '../types/feedback';
 import { Conversation, QAPair, FilterOptions } from '../types/conversation';
 import { processRawData } from '../utils/dataProcessor';
+import { LangGraphThread } from '../types/langgraph';
 
 type ViewMode = 'details' | 'analytics';
 
@@ -9,6 +10,7 @@ interface FeedbackStore {
   rawData: FeedbackEntry[];
   conversations: Conversation[];
   qaPairs: QAPair[];
+  langGraphThreads: LangGraphThread[]; // Original LangGraph data
   isLoading: boolean;
   loadingSource: 'file' | 'agent' | null;
   error: string | null;
@@ -62,6 +64,7 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
   const [rawData, setRawData] = useState<FeedbackEntry[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [qaPairs, setQAPairs] = useState<QAPair[]>([]);
+  const [langGraphThreads, setLangGraphThreads] = useState<LangGraphThread[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [loadingSource, setLoadingSource] = useState<'file' | 'agent' | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -121,7 +124,9 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
     },
     searchTerm: '',
     filterLevel: 'conversation',
-    modelFilter: []
+    modelFilter: [],
+    customJavaScriptFilter: undefined,
+    naturalLanguageQuery: undefined
   });
 
   const loadData = async () => {
@@ -187,9 +192,13 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
   };
 
   const clearData = () => {
+    console.log('🧹 [FeedbackStore] clearData called');
+    const startTime = performance.now();
+    
     setRawData([]);
     setConversations([]);
     setQAPairs([]);
+    setLangGraphThreads([]);
     setError(null);
     setDataExpiresAt(null);
     setDataFormat(null);
@@ -217,9 +226,15 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
       filterLevel: 'conversation',
       modelFilter: []
     });
+    
+    const endTime = performance.now();
+    console.log(`✅ [FeedbackStore] clearData completed in ${(endTime - startTime).toFixed(2)}ms`);
   };
 
   const loadFromFile = async (file: File) => {
+    console.log(`📁 [FeedbackStore] loadFromFile called - ${file.name} (${(file.size / 1024 / 1024).toFixed(2)}MB)`);
+    const startTime = performance.now();
+    
     try {
       setIsLoading(true);
       setLoadingSource('file');
@@ -235,7 +250,15 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
       }
       
       // Process the data - this will handle format detection and conversion
+      console.log(`🔄 [FeedbackStore] Processing ${rawData.length} raw data entries...`);
+      const processStartTime = performance.now();
       const { conversations: convMap, qaPairs: qaList, format, warnings } = processRawData(rawData);
+      const processEndTime = performance.now();
+      console.log(`✅ [FeedbackStore] Data processing completed in ${(processEndTime - processStartTime).toFixed(2)}ms`);
+      console.log(`   - Format: ${format}`);
+      console.log(`   - Conversations: ${convMap.size}`);
+      console.log(`   - Q/A Pairs: ${qaList.length}`);
+      console.log(`   - Warnings: ${warnings.length}`);
       
       // For chat format, we need to extract the processed feedback entries
       // For feedback format, they're already in the correct format
@@ -274,19 +297,31 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
       setDataWarnings(warnings);
       setDataSource('file'); // Set data source to file
       
+      // Clear LangGraph data when loading OWUI data
+      setLangGraphThreads([]);
+      
+      console.log('🔄 [FeedbackStore] Setting state for file data...');
+      const stateStartTime = performance.now();
       setConversations(Array.from(convMap.values()));
       setQAPairs(qaList);
+      const stateEndTime = performance.now();
+      console.log(`✅ [FeedbackStore] State updated in ${(stateEndTime - stateStartTime).toFixed(2)}ms`);
       
     } catch (err) {
-      console.error('Error loading file:', err);
+      console.error('❌ [FeedbackStore] Error loading file:', err);
       setError(err instanceof Error ? err.message : 'Failed to load file');
     } finally {
       setIsLoading(false);
       setLoadingSource(null);
+      const endTime = performance.now();
+      console.log(`🏁 [FeedbackStore] loadFromFile total time: ${(endTime - startTime).toFixed(2)}ms`);
     }
   };
 
   const loadFromAgentThreads = async (agentName: string, page: number = 1, fromDate?: Date, toDate?: Date, isJump: boolean = false) => {
+    console.log(`🤖 [FeedbackStore] loadFromAgentThreads called - ${agentName}, page ${page}`);
+    const startTime = performance.now();
+    
     try {
       setIsLoading(true);
       setLoadingSource('agent');
@@ -304,8 +339,11 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
         url += `&toDate=${toDate.toISOString()}`;
       }
       
-      console.log('🚀 Fetching agent threads from:', url);
+      console.log('🚀 [FeedbackStore] Fetching agent threads from:', url);
+      const fetchStartTime = performance.now();
       const response = await fetch(url);
+      const fetchEndTime = performance.now();
+      console.log(`✅ [FeedbackStore] API fetch completed in ${(fetchEndTime - fetchStartTime).toFixed(2)}ms`);
       
       console.log('📡 Response status:', response.status);
       
@@ -327,124 +365,54 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
       setCurrentAgent(agentName);
       setAgentDateRange({ fromDate, toDate });
       
-      // Convert agent threads to conversation format
-      const threads = data.data.threads;
-      const conversations: Conversation[] = [];
-      const qaPairs: QAPair[] = [];
+      // Store original LangGraph threads without transformation
+      const threads: LangGraphThread[] = data.data.threads;
+      console.log(`📊 [FeedbackStore] Processing ${threads.length} threads...`);
       
-      // If it's a new page (not page 1), append to existing conversations
+      // If it's a new page (not page 1), append to existing threads
       // BUT if it's a jump (like going to last page), replace instead of append
       const isNewAgent = currentAgent !== agentName;
       const startWithExisting = page > 1 && !isNewAgent && !isJump;
+      console.log(`   - New agent: ${isNewAgent}`);
+      console.log(`   - Start with existing: ${startWithExisting}`);
       
-      threads.forEach((thread: any) => {
-        // Extract messages from thread values
-        const messages: Message[] = [];
-        if (thread.values && thread.values.messages) {
-          thread.values.messages.forEach((msg: any) => {
-            // Extract model name from response_metadata if available
-            const modelName = msg.response_metadata?.model_name || msg.model || 'unknown';
-            
-            // For timestamps, check if message has its own timestamp field first
-            // Otherwise use thread timestamps
-            let messageTimestamp: number;
-            if (msg.timestamp) {
-              // If timestamp exists, it might be ISO string or milliseconds
-              messageTimestamp = typeof msg.timestamp === 'string' 
-                ? new Date(msg.timestamp).getTime()
-                : msg.timestamp;
-            } else {
-              // For human messages, use created_at; for AI messages, use updated_at
-              messageTimestamp = msg.type === 'human' 
-                ? new Date(thread.created_at).getTime()
-                : new Date(thread.updated_at || thread.created_at).getTime();
-            }
-            
-            messages.push({
-              id: msg.id || `${thread.thread_id}-${messages.length}`,
-              parentId: null,
-              childrenIds: [],
-              role: msg.type === 'human' ? 'user' : 'assistant',
-              content: typeof msg.content === 'string' ? msg.content : 
-                       typeof msg.text === 'string' ? msg.text :
-                       typeof msg.content === 'object' && msg.content?.text ? msg.content.text :
-                       JSON.stringify(msg.content || msg.text || ''),
-              timestamp: messageTimestamp,
-              model: modelName,
-              modelName: modelName // Add modelName for display
-            });
-          });
-        }
+      // Create lightweight conversation objects for display in the list
+      const convStartTime = performance.now();
+      const conversationsForDisplay: Conversation[] = threads.map(thread => {
+        // Extract basic info for list display
+        const messageCount = thread.values?.messages?.length || 0;
+        const firstMessage = thread.values?.messages?.[0];
         
-        // Create conversation from thread
-        // Use the first message content as title if available, otherwise use thread ID
+        // Create a title from the first message or thread ID
         let title = `Thread ${thread.thread_id.slice(0, 8)}...`;
-        if (messages.length > 0 && messages[0].content) {
-          // Truncate the first message to create a meaningful title
-          const firstMessage = messages[0].content;
-          title = firstMessage.length > 50 
-            ? firstMessage.substring(0, 50) + '...'
-            : firstMessage;
+        if (firstMessage) {
+          const content = typeof firstMessage.content === 'string' 
+            ? firstMessage.content 
+            : firstMessage.text || JSON.stringify(firstMessage.content);
+          title = content.length > 50 
+            ? content.substring(0, 50) + '...'
+            : content;
         }
         
-        // Parse timestamps with error handling
-        let createdAtTimestamp: number;
-        let updatedAtTimestamp: number;
-        
-        try {
-          createdAtTimestamp = new Date(thread.created_at).getTime();
-          updatedAtTimestamp = new Date(thread.updated_at || thread.created_at).getTime();
-          
-          // Validate timestamps
-          if (isNaN(createdAtTimestamp) || createdAtTimestamp < 0) {
-            console.warn('Invalid created_at timestamp:', thread.created_at);
-            createdAtTimestamp = Date.now();
-          }
-          if (isNaN(updatedAtTimestamp) || updatedAtTimestamp < 0) {
-            console.warn('Invalid updated_at timestamp:', thread.updated_at);
-            updatedAtTimestamp = createdAtTimestamp;
-          }
-        } catch (error) {
-          console.error('Error parsing timestamps:', error);
-          createdAtTimestamp = Date.now();
-          updatedAtTimestamp = Date.now();
-        }
-        
-        const conversation: Conversation = {
+        return {
           id: thread.thread_id,
           title: title,
           userId: thread.metadata?.user_id || 'agent-user',
-          createdAt: createdAtTimestamp,
-          updatedAt: updatedAtTimestamp,
-          messages: messages,
+          createdAt: new Date(thread.created_at).getTime(),
+          updatedAt: new Date(thread.updated_at || thread.created_at).getTime(),
+          messages: [], // Empty for list display
           averageRating: null,
           totalRatings: 0,
           feedbackEntries: [],
-          modelsUsed: Array.from(new Set(messages.filter(m => m.model && m.model !== 'unknown').map(m => m.model!))),
-          qaPairCount: Math.floor(messages.length / 2)
+          modelsUsed: [], // Could extract from messages if needed
+          qaPairCount: Math.floor(messageCount / 2)
         };
-        
-        // Create Q/A pairs from messages
-        for (let i = 0; i < messages.length - 1; i += 2) {
-          if (messages[i].role === 'user' && messages[i + 1].role === 'assistant') {
-            qaPairs.push({
-              id: `${thread.thread_id}-qa-${i}`,
-              conversationId: conversation.id,
-              question: messages[i],
-              answer: messages[i + 1],
-              rating: null,
-              sentiment: null,
-              comment: '',
-              feedbackId: null,
-              timestamp: messages[i + 1].timestamp
-            });
-          }
-        }
-        
-        conversations.push(conversation);
       });
+      const convEndTime = performance.now();
+      console.log(`✅ [FeedbackStore] Created ${conversationsForDisplay.length} display conversations in ${(convEndTime - convStartTime).toFixed(2)}ms`);
       
-      setRawData([]);
+      console.log('🔄 [FeedbackStore] Updating state...');
+      const stateStartTime = performance.now();
       setDataExpiresAt(null);
       setDataFormat('agent');
       setDataWarnings([]);
@@ -465,23 +433,39 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
         console.warn('Could not save agent metadata to localStorage:', e);
       }
       
-      // Update conversations and QA pairs
+      // Update LangGraph threads and conversations
       if (startWithExisting) {
-        // Append new conversations to existing ones
-        setConversations(prev => [...prev, ...conversations]);
-        setQAPairs(prev => [...prev, ...qaPairs]);
+        // Append new threads to existing ones
+        console.log('   - Appending to existing data');
+        setLangGraphThreads(prev => {
+          const newLength = prev.length + threads.length;
+          console.log(`   - LangGraph threads: ${prev.length} + ${threads.length} = ${newLength}`);
+          return [...prev, ...threads];
+        });
+        setConversations(prev => {
+          const newLength = prev.length + conversationsForDisplay.length;
+          console.log(`   - Conversations: ${prev.length} + ${conversationsForDisplay.length} = ${newLength}`);
+          return [...prev, ...conversationsForDisplay];
+        });
       } else {
-        // Replace all conversations (new agent or first page)
-        setConversations(conversations);
-        setQAPairs(qaPairs);
+        // Replace all threads (new agent or first page)
+        console.log('   - Replacing all data');
+        console.log(`   - Setting ${threads.length} LangGraph threads`);
+        console.log(`   - Setting ${conversationsForDisplay.length} conversations`);
+        setLangGraphThreads(threads);
+        setConversations(conversationsForDisplay);
       }
+      const stateEndTime = performance.now();
+      console.log(`✅ [FeedbackStore] State updated in ${(stateEndTime - stateStartTime).toFixed(2)}ms`);
       
     } catch (err) {
-      console.error('Error loading agent threads:', err);
+      console.error('❌ [FeedbackStore] Error loading agent threads:', err);
       setError(err instanceof Error ? err.message : 'Failed to load agent threads');
     } finally {
       setIsLoading(false);
       setLoadingSource(null);
+      const endTime = performance.now();
+      console.log(`🏁 [FeedbackStore] loadFromAgentThreads total time: ${(endTime - startTime).toFixed(2)}ms`);
     }
   };
 
@@ -495,6 +479,7 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
     rawData,
     conversations,
     qaPairs,
+    langGraphThreads,
     isLoading,
     loadingSource,
     error,

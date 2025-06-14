@@ -2,10 +2,6 @@ import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { format } from 'date-fns';
 import { 
-  User, 
-  Bot, 
-  ThumbsUp, 
-  ThumbsDown, 
   Download, 
   FileJson, 
   FileText, 
@@ -24,6 +20,8 @@ import { Message } from '../../types/feedback';
 import { NoLogoHeader } from '../NoLogoHeader/NoLogoHeader';
 import { PromptSelectorModal } from '../PromptSelectorModal/PromptSelectorModal';
 import { PromptResultsModal } from '../PromptResultsModal/PromptResultsModal';
+import { LangGraphChatView } from '../LangGraphChatView/LangGraphChatView';
+import { OWUIChatView } from '../OWUIChatView/OWUIChatView';
 import { 
   downloadAsJSON, 
   downloadAsMarkdown,
@@ -44,13 +42,19 @@ interface ConversationDetailProps {
 }
 
 export function ConversationDetail({ conversation, qaPairs }: ConversationDetailProps) {
-  const { conversations, qaPairs: allQaPairs, dataSource, currentAgent } = useFeedbackStore();
+  const { conversations, qaPairs: allQaPairs, dataSource, currentAgent, langGraphThreads } = useFeedbackStore();
+  
+  // Get the current LangGraph thread if in agent mode
+  const currentThread = dataSource === 'agent' && conversation 
+    ? langGraphThreads.find(thread => thread.thread_id === conversation.id)
+    : null;
   
   // Debug logging
   useEffect(() => {
     console.log('ConversationDetail - dataSource:', dataSource);
     console.log('ConversationDetail - currentAgent:', currentAgent);
-  }, [dataSource, currentAgent]);
+    console.log('ConversationDetail - currentThread:', currentThread);
+  }, [dataSource, currentAgent, currentThread]);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [qaDownloadMenus, setQaDownloadMenus] = useState<{ [key: string]: boolean }>({});
   const [showSourceView, setShowSourceView] = useState<{
@@ -100,6 +104,7 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
   // Fetch documents when Documents tab is active and conversation changes
   useEffect(() => {
     if (activeTab === 'documents' && conversation && dataSource === 'agent' && currentAgent) {
+      console.log('📄 [ConversationDetail] Fetching documents...');
       fetchDocuments();
     }
   }, [activeTab, conversation?.id]);
@@ -353,23 +358,7 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     setQaDownloadMenus({ ...qaDownloadMenus, [answerMsg.id]: false });
   };
 
-  const toggleQaDownloadMenu = (messageId: string) => {
-    setQaDownloadMenus({
-      ...qaDownloadMenus,
-      [messageId]: !qaDownloadMenus[messageId]
-    });
-  };
 
-  const renderRating = (rating: number | null, sentiment: 1 | -1 | null) => {
-    if (rating === null && sentiment === null) return null;
-    
-    return (
-      <div className="rating-indicator">
-        {sentiment === 1 ? <ThumbsUp size={16} /> : <ThumbsDown size={16} />}
-        {rating && <span className="rating-value">{rating}/10</span>}
-      </div>
-    );
-  };
 
   const handleExecutePrompt = async () => {
     if (!conversation) return;
@@ -415,7 +404,36 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
         promptConfig.parameters.forEach((config: any) => {
           switch (config.source) {
             case 'conversation':
-              if (conversation) {
+              if (dataSource === 'agent' && currentThread) {
+                // For LangGraph data, build a conversation object with actual messages
+                const conversationWithMessages = {
+                  ...conversation,
+                  messages: currentThread.values?.messages?.map((msg: any, index: number) => ({
+                    id: msg.id || `${currentThread.thread_id}-${index}`,
+                    parentId: null,
+                    childrenIds: [],
+                    role: msg.type === 'human' ? 'user' : 'assistant',
+                    content: typeof msg.content === 'string' ? msg.content : 
+                             typeof msg.text === 'string' ? msg.text :
+                             typeof msg.content === 'object' && msg.content?.text ? msg.content.text :
+                             JSON.stringify(msg.content || msg.text || ''),
+                    timestamp: msg.timestamp || (msg.type === 'human' 
+                      ? new Date(currentThread.created_at).getTime()
+                      : new Date(currentThread.updated_at || currentThread.created_at).getTime()),
+                    model: msg.response_metadata?.model_name || msg.model || 'unknown',
+                    modelName: msg.response_metadata?.model_name || msg.model || 'AI Assistant'
+                  })) || []
+                };
+                console.log('📝 [ConversationDetail] Building conversation for prompt with LangGraph data:');
+                console.log(`   - Thread ID: ${currentThread.thread_id}`);
+                console.log(`   - Original messages: ${currentThread.values?.messages?.length || 0}`);
+                console.log(`   - Converted messages: ${conversationWithMessages.messages.length}`);
+                parameterValues[config.name] = JSON.stringify(conversationWithMessages, null, 2);
+              } else if (conversation) {
+                // For OWUI data, use the conversation as is
+                console.log('📝 [ConversationDetail] Using OWUI conversation for prompt:');
+                console.log(`   - Conversation ID: ${conversation.id}`);
+                console.log(`   - Messages: ${conversation.messages.length}`);
                 parameterValues[config.name] = JSON.stringify(conversation, null, 2);
               }
               break;
@@ -517,14 +535,16 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
           <span>Documents</span>
         </button>
       )}
-      <button
-        type="button"
-        className={`tab-button-header ${activeTab === 'analytics' ? 'active' : ''}`}
-        onClick={() => setActiveTab('analytics')}
-      >
-        {BarChart3 && <BarChart3 size={16} />}
-        <span>Ratings</span>
-      </button>
+      {dataSource !== 'agent' && (
+        <button
+          type="button"
+          className={`tab-button-header ${activeTab === 'analytics' ? 'active' : ''}`}
+          onClick={() => setActiveTab('analytics')}
+        >
+          {BarChart3 && <BarChart3 size={16} />}
+          <span>Ratings</span>
+        </button>
+      )}
     </div>
   );
 
@@ -633,100 +653,24 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
       />
 
       {activeTab === 'text' ? (
-        showSourceView.text ? (
-          <div className="raw-json-container">
-            <pre className="raw-json-content">
-              {JSON.stringify(conversation, null, 2)}
-            </pre>
+        dataSource === 'agent' && currentThread ? (
+          <LangGraphChatView 
+            thread={currentThread} 
+            showSourceView={showSourceView.text}
+          />
+        ) : dataSource === 'agent' ? (
+          <div className="messages-container">
+            <div className="empty-state">
+              <p>Thread data not found. The thread may have been deleted or is still loading.</p>
+            </div>
           </div>
         ) : (
-          <div className="messages-container">
-            {conversation.messages.map((message, index) => {
-          const ratingInfo = dataSource !== 'agent' && message.role === 'assistant' ? getRatingInfo(message) : null;
-          
-          return (
-            <div key={message.id} className={`message ${message.role}`}>
-              <div className="message-header">
-                <div className={dataSource === 'agent' ? "message-icon" : "message-avatar"}>
-                  {message.role === 'user' ? <User size={20} /> : <Bot size={20} />}
-                </div>
-                <div className="message-meta">
-                  <span className="message-role">
-                    {message.role === 'user' 
-                      ? (dataSource === 'agent' ? 'Human' : 'User') 
-                      : (dataSource === 'agent' && message.model ? message.model : message.modelName || 'AI Assistant')}
-                  </span>
-                  {dataSource !== 'agent' && message.model && (
-                    <span className="message-model">({message.model})</span>
-                  )}
-                  <span className="message-time">
-                    {format(new Date(dataSource === 'agent' ? message.timestamp : message.timestamp * 1000), dataSource === 'agent' ? 'h:mm a' : 'HH:mm:ss')}
-                  </span>
-                </div>
-                {dataSource !== 'agent' && ratingInfo && renderRating(ratingInfo.rating, ratingInfo.sentiment)}
-                {dataSource !== 'agent' && message.role === 'assistant' && index > 0 && conversation.messages[index - 1].role === 'user' && (
-                  <div className="qa-download-container">
-                    <button 
-                      className="qa-download-button"
-                      onClick={() => toggleQaDownloadMenu(message.id)}
-                      title="Download Q&A"
-                    >
-                      <Download size={14} />
-                    </button>
-                    {qaDownloadMenus[message.id] && (
-                      <div className="download-menu qa-download-menu">
-                        <button 
-                          className="download-menu-item"
-                          onClick={() => handleDownloadQAPair(conversation.messages[index - 1], message, 'json')}
-                        >
-                          <FileJson size={14} />
-                          <span>Q&A as JSON</span>
-                        </button>
-                        <button 
-                          className="download-menu-item"
-                          onClick={() => handleDownloadQAPair(conversation.messages[index - 1], message, 'markdown')}
-                        >
-                          <FileText size={14} />
-                          <span>Q&A as Markdown</span>
-                        </button>
-                        <button 
-                          className="download-menu-item"
-                          onClick={() => handleDownloadQAPair(conversation.messages[index - 1], message, 'docx')}
-                        >
-                          <File size={14} />
-                          <span>Q&A as Word</span>
-                        </button>
-                        <button 
-                          className="download-menu-item"
-                          onClick={() => handleDownloadQAPair(conversation.messages[index - 1], message, 'pdf')}
-                        >
-                          <File size={14} />
-                          <span>Q&A as PDF (Server)</span>
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-              
-              <div className="message-content">
-                {message.role === 'user' ? (
-                  <p>{message.content}</p>
-                ) : (
-                  <ReactMarkdown>{message.content}</ReactMarkdown>
-                )}
-              </div>
-              
-              {ratingInfo?.comment && (
-                <div className="feedback-comment">
-                  <span className="comment-label">Feedback:</span>
-                  <p>{ratingInfo.comment}</p>
-                </div>
-              )}
-            </div>
-          );
-        })}
-      </div>
+          <OWUIChatView 
+            conversation={conversation}
+            qaPairs={qaPairs}
+            showSourceView={showSourceView.text}
+            onDownloadQAPair={handleDownloadQAPair}
+          />
         )
       ) : activeTab === 'analytics' ? (
         showSourceView.analytics ? (
@@ -865,7 +809,26 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
       <PromptSelectorModal 
         isOpen={showPromptSelector} 
         onClose={() => setShowPromptSelector(false)} 
-        conversation={conversation}
+        conversation={
+          dataSource === 'agent' && currentThread && conversation ? {
+            ...conversation,
+            messages: currentThread.values?.messages?.map((msg: any, index: number) => ({
+              id: msg.id || `${currentThread.thread_id}-${index}`,
+              parentId: null,
+              childrenIds: [],
+              role: msg.type === 'human' ? 'user' : 'assistant',
+              content: typeof msg.content === 'string' ? msg.content : 
+                       typeof msg.text === 'string' ? msg.text :
+                       typeof msg.content === 'object' && msg.content?.text ? msg.content.text :
+                       JSON.stringify(msg.content || msg.text || ''),
+              timestamp: msg.timestamp || (msg.type === 'human' 
+                ? new Date(currentThread.created_at).getTime()
+                : new Date(currentThread.updated_at || currentThread.created_at).getTime()),
+              model: msg.response_metadata?.model_name || msg.model || 'unknown',
+              modelName: msg.response_metadata?.model_name || msg.model || 'AI Assistant'
+            })) || []
+          } : conversation
+        }
       />
       <PromptResultsModal
         isOpen={showPromptResults}

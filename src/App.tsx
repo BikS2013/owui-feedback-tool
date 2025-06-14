@@ -14,9 +14,12 @@ import {
   filterConversationsByModel,
   getAllModelsFromConversations
 } from './utils/dataProcessor';
+import { applyJavaScriptFilter } from './utils/javascriptFilter';
+import { convertLangGraphThreadsToConversations } from './utils/langgraphConverter';
 import './App.css';
 
 function AppContent() {
+  console.log('🎯 [App] AppContent rendering');
   let feedbackStore;
   try {
     feedbackStore = useFeedbackStore();
@@ -29,11 +32,13 @@ function AppContent() {
   const { 
     conversations, 
     qaPairs, 
+    langGraphThreads,
     isLoading,
     loadingSource, 
     error,
     filters,
-    setFilters
+    setFilters,
+    dataSource
   } = feedbackStore;
   
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);
@@ -45,33 +50,55 @@ function AppContent() {
 
   // Apply filters to conversations
   const filteredConversations = useMemo(() => {
+    console.log(`🎭 [App] Filtering conversations - dataSource: ${dataSource}, hasJSFilter: ${!!filters.customJavaScriptFilter}`);
+    const filterStartTime = performance.now();
+    
     let filtered = [...conversations];
     
-    // Apply date filter
-    filtered = filterConversationsByDate(
-      filtered,
-      filters.dateRange.start,
-      filters.dateRange.end
-    );
-    
-    // Apply model filter
-    filtered = filterConversationsByModel(filtered, filters.modelFilter);
-    
-    // Apply rating filter if at conversation level
-    if (filters.filterLevel === 'conversation') {
-      filtered = filterConversationsByRating(
+    // If we have a JavaScript filter and we're viewing LangGraph data, apply it at the thread level
+    if (dataSource === 'agent' && filters.customJavaScriptFilter && langGraphThreads.length > 0) {
+      console.log('🚀 [App] Applying JavaScript filter to LangGraph threads');
+      
+      // Apply JavaScript filter to threads
+      const filteredThreads = applyJavaScriptFilter(langGraphThreads, filters.customJavaScriptFilter);
+      
+      // Convert filtered threads to conversations
+      const { conversations: filteredConvs } = convertLangGraphThreadsToConversations(filteredThreads);
+      filtered = filteredConvs;
+      
+      console.log(`   Filtered ${langGraphThreads.length} threads to ${filteredThreads.length}, converted to ${filtered.length} conversations`);
+    } else {
+      // Apply standard filters
+      
+      // Apply date filter
+      filtered = filterConversationsByDate(
         filtered,
-        filters.ratingFilter.min,
-        filters.ratingFilter.max,
-        filters.ratingFilter.includeUnrated
+        filters.dateRange.start,
+        filters.dateRange.end
       );
+      
+      // Apply model filter
+      filtered = filterConversationsByModel(filtered, filters.modelFilter);
+      
+      // Apply rating filter if at conversation level
+      if (filters.filterLevel === 'conversation') {
+        filtered = filterConversationsByRating(
+          filtered,
+          filters.ratingFilter.min,
+          filters.ratingFilter.max,
+          filters.ratingFilter.includeUnrated
+        );
+      }
+      
+      // Apply search
+      filtered = searchInConversations(filtered, filters.searchTerm);
     }
     
-    // Apply search
-    filtered = searchInConversations(filtered, filters.searchTerm);
+    const filterEndTime = performance.now();
+    console.log(`✅ [App] Filtered to ${filtered.length} conversations in ${(filterEndTime - filterStartTime).toFixed(2)}ms`);
     
     return filtered;
-  }, [conversations, filters]);
+  }, [conversations, filters, dataSource, langGraphThreads]);
 
   // Get filtered Q&A pairs for selected conversation
   const filteredQAPairs = useMemo(() => {

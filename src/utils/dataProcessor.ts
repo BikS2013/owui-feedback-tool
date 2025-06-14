@@ -9,8 +9,14 @@ export function processRawData(rawData: any[]): {
   format: string;
   warnings: string[];
 } {
+  console.log(`🔍 [DataProcessor] processRawData called with ${rawData.length} items`);
+  const startTime = performance.now();
+  
   const detectionResult = detectDataFormat(rawData);
+  console.log(`   - Format detected: ${detectionResult.format}`);
+  
   const validationResult = validateDataIntegrity(rawData, detectionResult.format);
+  console.log(`   - Validation warnings: ${validationResult.warnings.length}`);
   
   let feedbackEntries: FeedbackEntry[];
   const warnings: string[] = [...validationResult.warnings];
@@ -26,6 +32,9 @@ export function processRawData(rawData: any[]): {
   }
   
   const result = processRawFeedbackData(feedbackEntries);
+  
+  const endTime = performance.now();
+  console.log(`✅ [DataProcessor] processRawData completed in ${(endTime - startTime).toFixed(2)}ms`);
   
   return {
     ...result,

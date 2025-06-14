@@ -33,6 +33,10 @@ const options: swaggerJsdoc.Options = {
       {
         name: 'LLM',
         description: 'LLM prompt execution endpoints'
+      },
+      {
+        name: 'Agents',
+        description: 'Agent management and database access endpoints'
       }
     ],
     components: {

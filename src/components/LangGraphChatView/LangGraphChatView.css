@@ -1,0 +1,29 @@
+/* LangGraph-specific chat styles */
+.langgraph-messages {
+  /* Inherit base styles from ConversationDetail.css */
+}
+
+.langgraph-messages .message-icon {
+  /* Use icon style instead of avatar for LangGraph messages */
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+.langgraph-messages .message.user .message-icon {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.langgraph-messages .message.assistant .message-icon {
+  background: var(--color-secondary-light);
+  color: var(--color-secondary);
+  border-color: var(--color-secondary);
+}

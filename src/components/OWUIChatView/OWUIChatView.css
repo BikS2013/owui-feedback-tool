@@ -1,0 +1,30 @@
+/* OWUI-specific chat styles */
+.owui-messages {
+  /* Inherit base styles from ConversationDetail.css */
+}
+
+.owui-messages .message-avatar {
+  /* Use avatar style for OWUI messages */
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+  font-size: 18px;
+}
+
+.owui-messages .message.user .message-avatar {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+}
+
+.owui-messages .message.assistant .message-avatar {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  color: white;
+  border: none;
+}
