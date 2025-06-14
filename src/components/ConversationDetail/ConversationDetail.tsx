@@ -53,7 +53,15 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
   }, [dataSource, currentAgent]);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [qaDownloadMenus, setQaDownloadMenus] = useState<{ [key: string]: boolean }>({});
-  const [showRawJson, setShowRawJson] = useState(false);
+  const [showSourceView, setShowSourceView] = useState<{
+    text: boolean;
+    analytics: boolean;
+    documents: boolean;
+  }>({
+    text: false,
+    analytics: false,
+    documents: false
+  });
   const [showPromptSelector, setShowPromptSelector] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const [isExecutingPrompt, setIsExecutingPrompt] = useState(false);
@@ -167,15 +175,7 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
           disabled
         >
           {MessageSquare && <MessageSquare size={16} />}
-          <span>Text</span>
-        </button>
-        <button
-          type="button"
-          className="tab-button-header"
-          disabled
-        >
-          {BarChart3 && <BarChart3 size={16} />}
-          <span>Analytics</span>
+          <span>Chat</span>
         </button>
         {dataSource === 'agent' && (
           <button
@@ -187,6 +187,14 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
             <span>Documents</span>
           </button>
         )}
+        <button
+          type="button"
+          className="tab-button-header"
+          disabled
+        >
+          {BarChart3 && <BarChart3 size={16} />}
+          <span>Ratings</span>
+        </button>
       </div>
     );
 
@@ -497,15 +505,7 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
         onClick={() => setActiveTab('text')}
       >
         {MessageSquare && <MessageSquare size={16} />}
-        <span>Text</span>
-      </button>
-      <button
-        type="button"
-        className={`tab-button-header ${activeTab === 'analytics' ? 'active' : ''}`}
-        onClick={() => setActiveTab('analytics')}
-      >
-        {BarChart3 && <BarChart3 size={16} />}
-        <span>Analytics</span>
+        <span>Chat</span>
       </button>
       {dataSource === 'agent' && (
         <button
@@ -517,6 +517,14 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
           <span>Documents</span>
         </button>
       )}
+      <button
+        type="button"
+        className={`tab-button-header ${activeTab === 'analytics' ? 'active' : ''}`}
+        onClick={() => setActiveTab('analytics')}
+      >
+        {BarChart3 && <BarChart3 size={16} />}
+        <span>Ratings</span>
+      </button>
     </div>
   );
 
@@ -571,10 +579,13 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
       <button
         type="button"
         className="view-toggle-button"
-        onClick={() => setShowRawJson(!showRawJson)}
-        title={showRawJson ? "Show formatted view" : "Show raw JSON"}
+        onClick={() => setShowSourceView({
+          ...showSourceView,
+          [activeTab]: !showSourceView[activeTab]
+        })}
+        title={showSourceView[activeTab] ? "Show formatted view" : "Show source"}
       >
-        {showRawJson ? <Eye size={16} /> : <Code size={16} />}
+        {showSourceView[activeTab] ? <Eye size={16} /> : <Code size={16} />}
       </button>
       <div className="download-container" ref={downloadRef}>
         <button 
@@ -622,7 +633,7 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
       />
 
       {activeTab === 'text' ? (
-        showRawJson ? (
+        showSourceView.text ? (
           <div className="raw-json-container">
             <pre className="raw-json-content">
               {JSON.stringify(conversation, null, 2)}
@@ -718,16 +729,35 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
       </div>
         )
       ) : activeTab === 'analytics' ? (
-        <div className="analytics-container">
-          <AnalyticsDashboardNoHeader
-            conversations={conversations}
-            qaPairs={allQaPairs}
-            selectedConversationId={conversation.id}
-          />
-        </div>
+        showSourceView.analytics ? (
+          <div className="raw-json-container">
+            <pre className="raw-json-content">
+              {JSON.stringify({
+                conversations: conversations,
+                qaPairs: allQaPairs,
+                selectedConversation: conversation
+              }, null, 2)}
+            </pre>
+          </div>
+        ) : (
+          <div className="analytics-container">
+            <AnalyticsDashboardNoHeader
+              conversations={conversations}
+              qaPairs={allQaPairs}
+              selectedConversationId={conversation.id}
+            />
+          </div>
+        )
       ) : activeTab === 'documents' ? (
-        <div className="documents-container">
-          {isLoadingDocuments ? (
+        showSourceView.documents ? (
+          <div className="raw-json-container">
+            <pre className="raw-json-content">
+              {JSON.stringify(documents || [], null, 2)}
+            </pre>
+          </div>
+        ) : (
+          <div className="documents-container">
+            {isLoadingDocuments ? (
             <div className="documents-loading">
               <div className="spinner" />
               <p>Loading documents...</p>
@@ -830,6 +860,7 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
             </div>
           )}
         </div>
+        )
       ) : null}
       <PromptSelectorModal 
         isOpen={showPromptSelector} 

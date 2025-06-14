@@ -181,6 +181,11 @@
   border-bottom-color: #52C77E; /* Light green */
 }
 
+/* Blue theme specific tab underline */
+[data-color-scheme="blue"] .tab-button-header.active {
+  border-bottom-color: #6FA7E6; /* Light blue */
+}
+
 /* Ensure the active tab border overlaps the header border */
 .conversation-header {
   overflow: visible !important;

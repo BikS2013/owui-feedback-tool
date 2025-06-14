@@ -26,6 +26,12 @@ export function AnalyticsDashboardNoHeader({
   
   // Check if we have rating data
   const hasRatingData = dataFormat !== 'chat' && dataFormat !== 'agent';
+  
+  // Check if there are any ratings at all
+  const hasAnyRatings = hasRatingData && (
+    conversations.some(c => c.averageRating !== null && c.averageRating !== undefined) ||
+    (qaPairs && qaPairs.some(qa => qa.rating !== null && qa.rating !== undefined))
+  );
 
 
 
@@ -115,7 +121,19 @@ export function AnalyticsDashboardNoHeader({
 
   return (
     <div className="analytics-dashboard">
-      <div className={`analytics-content ${!hasRatingData ? 'no-rating-data' : ''}`}>
+      {(!hasRatingData || !hasAnyRatings) && (
+        <div className="no-rating-overlay">
+          <div className="no-rating-message">
+            <h3>No Rating Data Available</h3>
+            <p>
+              {!hasRatingData 
+                ? "Rating data is not available for this data source. Ratings are only available for feedback data that includes user ratings."
+                : "No ratings have been recorded yet. Ratings will appear here once conversations are rated."}
+            </p>
+          </div>
+        </div>
+      )}
+      <div className={`analytics-content ${(!hasRatingData || !hasAnyRatings) ? 'no-rating-data' : ''}`}>
         <div className="metrics-section">
           <h3>Conversation Metrics</h3>
           
