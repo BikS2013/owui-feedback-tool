@@ -85,7 +85,10 @@ export function ResizablePanel({
     <div 
       ref={panelRef}
       className="resizable-panel"
-      style={{ width: `${width}px` }}
+      style={{ 
+        width: `${width}px`,
+        '--panel-width': `${width}px`
+      } as React.CSSProperties}
     >
       {children}
       <div 

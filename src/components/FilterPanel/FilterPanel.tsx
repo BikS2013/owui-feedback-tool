@@ -21,6 +21,7 @@ interface FilterPanelProps {
   onClose: () => void;
   currentThread?: any; // Current selected thread for sample data
   conversations: Conversation[]; // For extracting available models
+  containerRef?: HTMLElement; // Reference to container for positioning in magic mode
 }
 
 const STORAGE_KEY = 'filterPanelSize';
@@ -32,7 +33,7 @@ const DEFAULT_HEIGHT = 600;
 
 type FilterTab = 'static' | 'natural';
 
-export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, currentThread, conversations }: FilterPanelProps) {
+export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, currentThread, conversations, containerRef }: FilterPanelProps) {
   const { dataSource } = useFeedbackStore();
   const [activeTab, setActiveTab] = useState<FilterTab>('static');
   const [displayMode, setDisplayMode] = useState(storageUtils.getDisplayMode());
@@ -685,16 +686,31 @@ Generate the filter expression:`;
     return filters.dateRange || filters.modelFilter || filters.ratingFilter;
   };
 
+  // Get the conversation list width dynamically in magic mode
+  const getMagicModeOverlayStyle = () => {
+    if (displayMode === 'magic') {
+      const resizablePanel = document.querySelector('.resizable-panel');
+      if (resizablePanel) {
+        const width = resizablePanel.getBoundingClientRect().width;
+        return { width: `${width}px` };
+      }
+    }
+    return {};
+  };
+
   return (
-    <div className="filter-panel-overlay">
+    <div 
+      className={`filter-panel-overlay ${displayMode === 'magic' ? 'magic-mode-overlay' : ''}`}
+      style={getMagicModeOverlayStyle()}
+    >
       <div 
         ref={panelRef}
-        className={`filter-panel ${isResizing ? 'resizing' : ''}`}
+        className={`filter-panel ${isResizing ? 'resizing' : ''} ${displayMode === 'magic' ? 'magic-mode-panel' : ''}`}
         style={{
-          width: `${size.width}px`,
-          height: `${size.height}px`,
-          maxWidth: '90vw',
-          maxHeight: '90vh'
+          width: displayMode === 'magic' ? 'auto' : `${size.width}px`,
+          height: displayMode === 'magic' ? 'auto' : `${size.height}px`,
+          maxWidth: displayMode === 'magic' ? 'none' : '90vw',
+          maxHeight: displayMode === 'magic' ? 'none' : '90vh'
         }}
       >
         {/* Resize handles */}

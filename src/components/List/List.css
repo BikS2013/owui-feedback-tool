@@ -21,15 +21,24 @@
 /* Search container */
 .list-search-container {
   padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.list-search-wrapper {
   position: relative;
+  flex: 1 1 auto;
+  width: 100%;
 }
 
 .list-search-icon {
   position: absolute;
-  left: 28px;
+  left: 12px;
   top: 50%;
   transform: translateY(-50%);
   color: var(--text-tertiary);
+  pointer-events: none;
 }
 
 .list-search-input {
@@ -51,6 +60,14 @@
 
 .list-search-input::placeholder {
   color: var(--text-tertiary);
+}
+
+/* Search action button area */
+.list-search-action {
+  flex: 0 0 auto;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
 }
 
 /* List content area */

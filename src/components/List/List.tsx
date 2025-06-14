@@ -11,6 +11,7 @@ interface ListProps<T> {
   searchValue?: string;
   onSearchChange?: (value: string) => void;
   searchPlaceholder?: string;
+  searchAction?: ReactNode;
   emptyState?: ReactNode;
   className?: string;
 }
@@ -24,6 +25,7 @@ export function List<T>({
   searchValue = '',
   onSearchChange,
   searchPlaceholder = 'Search...',
+  searchAction,
   emptyState,
   className = ''
 }: ListProps<T>) {
@@ -39,14 +41,17 @@ export function List<T>({
       
       {searchable && (
         <div className="list-search-container">
-          <Search size={16} className="list-search-icon" />
-          <input
-            type="text"
-            placeholder={searchPlaceholder}
-            value={searchValue}
-            onChange={(e) => onSearchChange?.(e.target.value)}
-            className="list-search-input"
-          />
+          <div className="list-search-wrapper">
+            <Search size={16} className="list-search-icon" />
+            <input
+              type="text"
+              placeholder={searchPlaceholder}
+              value={searchValue}
+              onChange={(e) => onSearchChange?.(e.target.value)}
+              className="list-search-input"
+            />
+          </div>
+          {searchAction && <div className="list-search-action">{searchAction}</div>}
         </div>
       )}
 

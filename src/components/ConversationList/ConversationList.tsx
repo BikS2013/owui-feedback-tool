@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Filter, Settings, Eye } from 'lucide-react';
+import { Filter, Settings, Eye, X } from 'lucide-react';
 import { Conversation, FilterOptions } from '../../types/conversation';
 import { format } from 'date-fns';
 import { FilterPanel } from '../FilterPanel/FilterPanel';
@@ -94,14 +94,39 @@ export function ConversationList({
           <span>Show Output</span>
         </button>
       )}
+    </>
+  );
+
+  const hasActiveFilters = filters.naturalLanguageQuery || filters.dateRange || filters.modelFilter || filters.ratingFilter;
+
+  const filterButtons = (
+    <>
       <button 
-        className={`filter-btn ${(filters.naturalLanguageQuery || filters.dateRange || filters.modelFilter || filters.ratingFilter) ? 'filter-active' : ''}`} 
+        className={`filter-btn ${hasActiveFilters ? 'filter-active' : ''}`} 
         onClick={() => setIsFilterPanelOpen(true)}
         title={getFilterTooltip()}
       >
         <Filter size={16} />
-        {(filters.naturalLanguageQuery || filters.dateRange || filters.modelFilter || filters.ratingFilter) && <span className="filter-indicator" />}
+        {hasActiveFilters && <span className="filter-indicator" />}
       </button>
+      {hasActiveFilters && (
+        <button
+          className="filter-clear-btn"
+          onClick={() => onFiltersChange({
+            searchTerm: filters.searchTerm,
+            dateRange: undefined,
+            modelFilter: undefined,
+            ratingFilter: undefined,
+            naturalLanguageQuery: '',
+            customJavaScriptFilter: undefined,
+            customRenderScript: undefined,
+            renderScriptTimestamp: undefined
+          })}
+          title="Clear all filters"
+        >
+          <X size={16} />
+        </button>
+      )}
     </>
   );
 
@@ -205,6 +230,7 @@ export function ConversationList({
           searchValue={searchTerm}
           onSearchChange={onSearchChange}
           searchPlaceholder="Search conversations..."
+          searchAction={filterButtons}
           emptyState={emptyState}
           className="conversation-list"
         />
@@ -227,6 +253,7 @@ export function ConversationList({
         onClose={() => setIsFilterPanelOpen(false)}
         currentThread={currentThread}
         conversations={conversations}
+        containerRef={displayMode === 'magic' ? document.querySelector('.conversation-list-wrapper') as HTMLElement : undefined}
       />
       <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </>
