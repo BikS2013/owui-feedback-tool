@@ -78,12 +78,13 @@ const exportService = new ExportService();
  *       500:
  *         description: Server error
  */
-router.post('/conversation', async (req, res) => {
+router.post('/conversation', async (req, res): Promise<void> => {
   try {
     const exportRequest: ExportRequest = req.body;
     
     if (!exportRequest.conversation || !exportRequest.format) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      res.status(400).json({ error: 'Missing required fields' });
+      return;
     }
 
     const result = await exportService.exportConversation(
@@ -175,12 +176,13 @@ router.post('/conversation', async (req, res) => {
  *       500:
  *         description: Server error
  */
-router.post('/qa-pair', async (req, res) => {
+router.post('/qa-pair', async (req, res): Promise<void> => {
   try {
     const exportRequest: ExportQAPairRequest = req.body;
     
     if (!exportRequest.qaPair || !exportRequest.conversationId || !exportRequest.format) {
-      return res.status(400).json({ error: 'Missing required fields' });
+      res.status(400).json({ error: 'Missing required fields' });
+      return;
     }
 
     const result = await exportService.exportQAPair(

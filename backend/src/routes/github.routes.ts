@@ -25,10 +25,11 @@ const requireGitHub = (req: Request, res: Response, next: Function) => {
   initializeGitHubService();
   
   if (!githubService) {
-    return res.status(503).json({
+    res.status(503).json({
       error: 'GitHub integration not configured',
       message: initError || 'Please set GITHUB_REPO in environment variables'
     });
+    return;
   }
   next();
 };
@@ -67,7 +68,7 @@ const requireGitHub = (req: Request, res: Response, next: Function) => {
  *       503:
  *         description: GitHub not configured
  */
-router.get('/status', requireGitHub, async (req, res) => {
+router.get('/status', requireGitHub, async (req, res): Promise<void> => {
   try {
     const status = await githubService!.checkConnection();
     res.json(status);
@@ -110,7 +111,7 @@ router.get('/status', requireGitHub, async (req, res) => {
  *                 default_branch:
  *                   type: string
  */
-router.get('/repository', requireGitHub, async (req, res) => {
+router.get('/repository', requireGitHub, async (req, res): Promise<void> => {
   try {
     const repoInfo = await githubService!.getRepositoryInfo();
     res.json(repoInfo);
@@ -156,7 +157,7 @@ router.get('/repository', requireGitHub, async (req, res) => {
  *                   download_url:
  *                     type: string
  */
-router.get('/files', requireGitHub, async (req, res) => {
+router.get('/files', requireGitHub, async (req, res): Promise<void> => {
   try {
     const path = req.query.path as string || '';
     const files = await githubService!.getFiles(path);
@@ -205,7 +206,7 @@ router.get('/files', requireGitHub, async (req, res) => {
  *                       size:
  *                         type: number
  */
-router.get('/tree', requireGitHub, async (req, res) => {
+router.get('/tree', requireGitHub, async (req, res): Promise<void> => {
   try {
     const recursive = req.query.recursive !== 'false';
     const tree = await githubService!.getTree('HEAD', recursive);
@@ -256,13 +257,14 @@ router.get('/tree', requireGitHub, async (req, res) => {
  *                 sha:
  *                   type: string
  */
-router.get('/file/*', requireGitHub, async (req, res) => {
+router.get('/file/*', requireGitHub, async (req, res): Promise<void> => {
   try {
     const path = req.params[0];
     const format = req.query.format as string || 'raw';
     
     if (!path) {
-      return res.status(400).json({ error: 'File path is required' });
+      res.status(400).json({ error: 'File path is required' });
+      return;
     }
     
     if (format === 'raw') {
@@ -326,12 +328,13 @@ router.get('/file/*', requireGitHub, async (req, res) => {
  *                   html_url:
  *                     type: string
  */
-router.get('/search', requireGitHub, async (req, res) => {
+router.get('/search', requireGitHub, async (req, res): Promise<void> => {
   try {
     const query = req.query.q as string;
     
     if (!query) {
-      return res.status(400).json({ error: 'Search query is required' });
+      res.status(400).json({ error: 'Search query is required' });
+      return;
     }
     
     const results = await githubService!.searchFiles(query, {
@@ -372,7 +375,7 @@ router.get('/search', requireGitHub, async (req, res) => {
  *               items:
  *                 type: string
  */
-router.get('/files-by-extension/:extension', requireGitHub, async (req, res) => {
+router.get('/files-by-extension/:extension', requireGitHub, async (req, res): Promise<void> => {
   try {
     const extension = req.params.extension;
     const files = await githubService!.getFilesByExtension(extension);
@@ -413,7 +416,7 @@ router.get('/files-by-extension/:extension', requireGitHub, async (req, res) => 
  *                     used:
  *                       type: number
  */
-router.get('/rate-limit', requireGitHub, async (req, res) => {
+router.get('/rate-limit', requireGitHub, async (req, res): Promise<void> => {
   try {
     const rateLimit = await githubService!.getRateLimit();
     res.json(rateLimit);

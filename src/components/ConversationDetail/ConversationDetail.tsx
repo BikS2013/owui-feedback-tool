@@ -124,6 +124,8 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
   };
 
   const handleDownload = async (format: 'json' | 'markdown' | 'docx' | 'pdf') => {
+    if (!conversation) return;
+    
     const data = await formatConversationForDownload(conversation, qaPairs);
     const filename = `${dataSource === 'agent' ? 'thread' : 'conversation'}-${conversation.id.slice(0, 8)}`;
     
@@ -136,12 +138,12 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
         break;
       case 'docx':
         if (data.docxBlob) {
-          downloadAsDocx(data.docxBlob, filename);
+          await downloadAsDocx(data.docxBlob, filename);
         }
         break;
       case 'pdf':
         if (data.pdfBlob) {
-          downloadAsPDF(data.pdfBlob, filename);
+          await downloadAsPDF(data.pdfBlob, filename);
         }
         break;
     }
@@ -271,30 +273,6 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     };
   };
 
-  const handleDownloadConversation = async (format: 'json' | 'markdown' | 'docx' | 'pdf') => {
-    try {
-      console.log('Download conversation triggered:', format);
-      const { jsonFilename, jsonData, markdownFilename, markdownContent, docxFilename, docxBlob, pdfFilename, pdfBlob } = 
-        await formatConversationForDownload(conversation, qaPairs);
-      
-      if (format === 'json') {
-        console.log('Downloading JSON:', jsonFilename);
-        downloadAsJSON(jsonData, jsonFilename);
-      } else if (format === 'markdown') {
-        console.log('Downloading Markdown:', markdownFilename);
-        downloadAsMarkdown(markdownContent, markdownFilename);
-      } else if (format === 'docx') {
-        console.log('Downloading DOCX:', docxFilename);
-        await downloadAsDocx(docxBlob, docxFilename);
-      } else if (format === 'pdf' && pdfBlob) {
-        console.log('Downloading PDF:', pdfFilename);
-        await downloadAsPDF(pdfBlob, pdfFilename);
-      }
-      setShowDownloadMenu(false);
-    } catch (error) {
-      console.error('Download error:', error);
-    }
-  };
 
   const handleExportToBackend = async () => {
     if (!conversation) return;
@@ -307,16 +285,19 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     
     try {
       if (dataSource === 'agent') {
-        // For agent data, export conversation and Q&A pairs
-        const apiService = new ApiService();
-        await apiService.exportConversation(conversation);
+        // For agent data, export conversation and Q&A pairs using PDF endpoint
+        const blob = await ApiService.exportConversationPDF(conversation, qaPairs);
         
-        const conversationQaPairs = allQaPairs.filter(qa => qa.conversationId === conversation.id);
-        for (const qaPair of conversationQaPairs) {
-          await apiService.exportQAPair(qaPair);
-        }
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `thread_${conversation.id}_${format(new Date(), 'yyyy-MM-dd_HHmmss')}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
         
-        alert(`Successfully exported conversation and ${conversationQaPairs.length} Q&A pairs to backend`);
+        console.log('Export successful');
       } else {
         // For file data, export as PDF
         const blob = await ApiService.exportConversationPDF(conversation, qaPairs);
@@ -820,7 +801,6 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
                       
                       const isMarkdown = fileName.toLowerCase().endsWith('.md') || 
                                        fileName.toLowerCase().endsWith('.markdown');
-                      const isText = fileName.toLowerCase().endsWith('.txt');
                       
                       const content = doc.page_content || JSON.stringify(doc, null, 2);
                       

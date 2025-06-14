@@ -69,7 +69,7 @@ export class LLMConfigService {
       if (configData.defaultConfiguration) {
         this.defaultConfig = configData.defaultConfiguration;
       } else if (this.configs.size > 0) {
-        this.defaultConfig = this.configs.keys().next().value;
+        this.defaultConfig = this.configs.keys().next().value || null;
       }
 
       console.log(`✅ Loaded ${this.configs.size} LLM configurations`);
@@ -141,7 +141,7 @@ export class LLMConfigService {
         return this.createOllamaModel(config as OllamaConfig);
       
       default:
-        throw new Error(`Unsupported provider: ${config.provider}`);
+        throw new Error(`Unsupported provider: ${(config as any).provider}`);
     }
   }
 
@@ -181,7 +181,7 @@ export class LLMConfigService {
     }
 
     return new ChatGoogleGenerativeAI({
-      modelName: config.model,
+      model: config.model,
       apiKey: apiKey,
       temperature: config.temperature,
       maxOutputTokens: config.maxOutputTokens

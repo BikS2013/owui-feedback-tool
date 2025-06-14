@@ -188,14 +188,15 @@ export function AnalyticsDashboard({
   // Export handlers
   const handleExport = (format: 'json' | 'markdown') => {
     try {
-      const exportData = prepareAnalyticsExportData(
-        filteredConversations,
-        qaPairs,
+      const exportData = prepareAnalyticsExportData({
         conversationMetrics,
         qaMetrics,
-        selectedAnalyticsModel,
-        filters.searchTerm
-      );
+        conversations: filteredConversations,
+        qaPairs,
+        hasRatingData,
+        selectedModel: selectedAnalyticsModel,
+        searchQuery: filters.searchTerm
+      });
 
       if (format === 'json') {
         exportAnalyticsAsJSON(exportData, selectedAnalyticsModel);

@@ -32,14 +32,16 @@ interface AnalyticsExportData {
   };
 }
 
-export function prepareAnalyticsExportData(
-  conversations: Conversation[],
-  qaPairs: QAPair[],
-  conversationMetrics: AnalyticsMetrics,
-  qaMetrics: AnalyticsMetrics,
-  selectedModel: string | null,
-  searchQuery: string | null
-): AnalyticsExportData {
+export function prepareAnalyticsExportData(data: {
+  conversationMetrics: AnalyticsMetrics;
+  qaMetrics: AnalyticsMetrics;
+  conversations: Conversation[];
+  qaPairs: QAPair[];
+  hasRatingData: boolean;
+  selectedModel?: string | null;
+  searchQuery?: string | null;
+}): AnalyticsExportData {
+  const { conversationMetrics, qaMetrics, conversations, qaPairs, selectedModel = null, searchQuery = null } = data;
   const timestamp = format(new Date(), 'yyyy-MM-dd HH:mm:ss');
 
   // Build detailed breakdown for conversations

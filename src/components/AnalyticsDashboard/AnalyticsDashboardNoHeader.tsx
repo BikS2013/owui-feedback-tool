@@ -1,12 +1,6 @@
-import { useMemo, useState, useRef, useEffect } from 'react';
-import { Download, FileJson, FileText } from 'lucide-react';
+import { useMemo } from 'react';
 import { Conversation, QAPair } from '../../types/conversation';
 import { useFeedbackStore } from '../../store/feedbackStore';
-import { 
-  prepareAnalyticsExportData, 
-  exportAnalyticsAsJSON, 
-  exportAnalyticsAsMarkdown 
-} from '../../utils/analyticsExportUtils';
 import { CircularProgress } from '../CircularProgress/CircularProgress';
 import './AnalyticsDashboard.css';
 
@@ -28,58 +22,18 @@ export function AnalyticsDashboardNoHeader({
   qaPairs,
   selectedConversationId 
 }: AnalyticsDashboardProps) {
-  const { selectedAnalyticsModel, setSelectedAnalyticsModel, filters, dataFormat } = useFeedbackStore();
-  const [showExportMenu, setShowExportMenu] = useState(false);
-  const exportRef = useRef<HTMLDivElement>(null);
+  const { dataFormat } = useFeedbackStore();
   
   // Check if we have rating data
   const hasRatingData = dataFormat !== 'chat' && dataFormat !== 'agent';
 
-  // Close menu when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Node;
-      
-      if (exportRef.current && !exportRef.current.contains(target)) {
-        setShowExportMenu(false);
-      }
-    };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
 
-  // Get unique models from conversations
-  const availableModels = useMemo(() => {
-    const models = new Set<string>();
-    conversations.forEach(conversation => {
-      conversation.messages.forEach(message => {
-        if (message.role === 'assistant' && message.model) {
-          models.add(message.model);
-        }
-      });
-    });
-    return Array.from(models).sort();
-  }, [conversations]);
+  // Use conversations directly without model filtering
+  const filteredConversations = conversations;
 
-  // Filter conversations by model if selected
-  const filteredConversations = useMemo(() => {
-    if (!selectedAnalyticsModel) return conversations;
-    
-    return conversations.filter(conversation => 
-      conversation.messages.some(msg => 
-        msg.role === 'assistant' && msg.model === selectedAnalyticsModel
-      )
-    );
-  }, [conversations, selectedAnalyticsModel]);
-
-  // Filter QA pairs by model if selected
-  const filteredQAPairs = useMemo(() => {
-    if (!qaPairs) return [];
-    if (!selectedAnalyticsModel) return qaPairs;
-    
-    return qaPairs.filter(qa => qa.answer.model === selectedAnalyticsModel);
-  }, [qaPairs, selectedAnalyticsModel]);
+  // Use QA pairs directly without model filtering
+  const filteredQAPairs = qaPairs || [];
 
   // Calculate conversation-based metrics
   const conversationMetrics = useMemo(() => {
@@ -158,26 +112,6 @@ export function AnalyticsDashboardNoHeader({
     };
   }, [filteredQAPairs, hasRatingData]);
 
-  const handleExport = async (format: 'json' | 'markdown') => {
-    try {
-      const exportData = prepareAnalyticsExportData({
-        conversationMetrics,
-        qaMetrics,
-        conversations: filteredConversations,
-        qaPairs: filteredQAPairs,
-        hasRatingData
-      });
-      
-      if (format === 'json') {
-        exportAnalyticsAsJSON(exportData, selectedAnalyticsModel);
-      } else {
-        exportAnalyticsAsMarkdown(exportData, selectedAnalyticsModel);
-      }
-      setShowExportMenu(false);
-    } catch (error) {
-      console.error('Export error:', error);
-    }
-  };
 
   return (
     <div className="analytics-dashboard">

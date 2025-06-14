@@ -341,7 +341,7 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
         // Extract messages from thread values
         const messages: Message[] = [];
         if (thread.values && thread.values.messages) {
-          thread.values.messages.forEach((msg: any, index: number) => {
+          thread.values.messages.forEach((msg: any) => {
             // Extract model name from response_metadata if available
             const modelName = msg.response_metadata?.model_name || msg.model || 'unknown';
             

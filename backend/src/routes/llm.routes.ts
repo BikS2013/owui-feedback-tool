@@ -89,24 +89,26 @@ const router = Router();
  *       500:
  *         description: Server error
  */
-router.post('/execute-prompt', async (req: Request, res: Response) => {
+router.post('/execute-prompt', async (req: Request, res: Response): Promise<void> => {
   try {
     const { llmConfiguration, promptFilePath, conversation } = req.body as LLMPromptExecutionRequest;
     
     // Validate required fields
     if (!llmConfiguration || !promptFilePath || !conversation) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Missing required fields: llmConfiguration, promptFilePath, and conversation are required'
       });
+      return;
     }
     
     // Validate conversation structure
     if (!conversation.id || !conversation.title || !conversation.messages || !Array.isArray(conversation.messages)) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Invalid conversation structure'
       });
+      return;
     }
     
     // Generate a request ID for tracking
@@ -185,7 +187,7 @@ router.post('/execute-prompt', async (req: Request, res: Response) => {
  *       404:
  *         description: Request not found
  */
-router.get('/status/:requestId', async (req: Request, res: Response) => {
+router.get('/status/:requestId', async (req: Request, res: Response): Promise<void> => {
   try {
     const { requestId } = req.params;
     
@@ -241,7 +243,7 @@ router.get('/status/:requestId', async (req: Request, res: Response) => {
  *                   type: string
  *                   description: Name of the default configuration
  */
-router.get('/configurations', async (req: Request, res: Response) => {
+router.get('/configurations', async (req: Request, res: Response): Promise<void> => {
   try {
     const configurations = llmConfigService.getConfigurations();
     const defaultConfiguration = llmConfigService.getDefaultConfigurationName();
@@ -314,24 +316,26 @@ router.get('/configurations', async (req: Request, res: Response) => {
  *       404:
  *         description: Configuration not found
  */
-router.post('/test', async (req: Request, res: Response) => {
+router.post('/test', async (req: Request, res: Response): Promise<void> => {
   try {
     const { configurationName, prompt } = req.body as LLMTestRequest;
     
     if (!configurationName) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Missing required field: configurationName'
       });
+      return;
     }
     
     // Check if configuration exists
     const config = llmConfigService.getConfiguration(configurationName);
     if (!config) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: `Configuration '${configurationName}' not found`
       });
+      return;
     }
     
     console.log(`🧪 Testing LLM configuration: ${configurationName}`);
@@ -375,7 +379,7 @@ router.post('/test', async (req: Request, res: Response) => {
  *                 configurationsLoaded:
  *                   type: number
  */
-router.post('/reload', async (req: Request, res: Response) => {
+router.post('/reload', async (req: Request, res: Response): Promise<void> => {
   try {
     llmConfigService.reloadConfigurations();
     const configurations = llmConfigService.getConfigurations();
@@ -448,32 +452,35 @@ router.post('/reload', async (req: Request, res: Response) => {
  *       500:
  *         description: Server error
  */
-router.post('/execute-prompt-direct', async (req: Request, res: Response) => {
+router.post('/execute-prompt-direct', async (req: Request, res: Response): Promise<void> => {
   try {
     const { llmConfiguration, promptText, parameterValues } = req.body;
     
     // Validate required fields
     if (!llmConfiguration || !promptText || !parameterValues) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: 'Missing required fields: llmConfiguration, promptText, and parameterValues are required'
       });
+      return;
     }
     
     // Check if configuration exists and is enabled
     const config = llmConfigService.getConfiguration(llmConfiguration);
     if (!config) {
-      return res.status(404).json({
+      res.status(404).json({
         success: false,
         error: `Configuration '${llmConfiguration}' not found`
       });
+      return;
     }
     
     if (config.enabled === false) {
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         error: `Configuration '${llmConfiguration}' is disabled`
       });
+      return;
     }
     
     console.log('🚀 Direct Prompt Execution Request:');

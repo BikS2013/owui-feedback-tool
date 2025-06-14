@@ -33,8 +33,7 @@ function AppContent() {
     loadingSource, 
     error,
     filters,
-    setFilters,
-    dataSource
+    setFilters
   } = feedbackStore;
   
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(null);

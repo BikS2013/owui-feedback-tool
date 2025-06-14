@@ -25,8 +25,8 @@ export class GitHubService {
   }
   
   // Build headers with optional authentication
-  private getHeaders(): HeadersInit {
-    const headers: HeadersInit = {
+  private getHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {
       'Accept': 'application/vnd.github.v3+json',
       'Content-Type': 'application/json',
     };
@@ -43,7 +43,7 @@ export class GitHubService {
     if (!response.ok) {
       let error: GitHubError;
       try {
-        error = await response.json();
+        error = await response.json() as GitHubError;
       } catch {
         error = {
           message: `HTTP error! status: ${response.status}`,
@@ -53,7 +53,7 @@ export class GitHubService {
       throw new Error(error.message || `GitHub API error: ${response.status}`);
     }
     
-    return response.json();
+    return response.json() as Promise<T>;
   }
   
   /**
