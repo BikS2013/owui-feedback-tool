@@ -1,7 +1,7 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { X, CheckCircle, AlertCircle, Clock, Copy, Download } from 'lucide-react';
 import { format } from 'date-fns';
-import { useResizable } from '../../hooks/useResizable';
+import { ResizableModal } from '../ResizableModal/ResizableModal';
 import './PromptResultsModal.css';
 
 interface PromptResultsModalProps {
@@ -24,35 +24,6 @@ export const PromptResultsModal: React.FC<PromptResultsModalProps> = ({
   onClose, 
   result 
 }) => {
-  const {
-    modalRef,
-    modalSize,
-    isResizing,
-    handleResizeStart,
-    handleOverlayClick
-  } = useResizable({
-    defaultWidth: 700,
-    defaultHeight: 500,
-    minWidth: 400,
-    minHeight: 300,
-    storageKey: 'promptResultsModalSize'
-  });
-
-  // Handle ESC key to close modal
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-      return () => {
-        document.removeEventListener('keydown', handleKeyDown);
-      };
-    }
-  }, [isOpen, onClose]);
 
   const handleCopyToClipboard = () => {
     if (result?.response) {
@@ -75,47 +46,34 @@ export const PromptResultsModal: React.FC<PromptResultsModalProps> = ({
     }
   };
 
-  if (!isOpen || !result) return null;
+  if (!result) return null;
+
+  const headerContent = (
+    <div className={`results-header-content ${result.success ? 'success' : 'error'}`}>
+      <div className="status-icon">
+        {result.success ? (
+          <CheckCircle size={20} />
+        ) : (
+          <AlertCircle size={20} />
+        )}
+      </div>
+      <h2>{result.message}</h2>
+    </div>
+  );
 
   return (
-    <div className="modal-overlay" onClick={(e) => handleOverlayClick(e, onClose)}>
-      <div 
-        ref={modalRef}
-        className={`prompt-results-modal resizable ${isResizing ? 'resizing' : ''}`}
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          width: `${modalSize.width}px`,
-          height: `${modalSize.height}px`,
-          maxWidth: '90vw',
-          maxHeight: '90vh'
-        }}
-      >
-        {/* Resize handles */}
-        <div className="resize-handle resize-handle-n" onMouseDown={(e) => handleResizeStart(e, 'top')} />
-        <div className="resize-handle resize-handle-s" onMouseDown={(e) => handleResizeStart(e, 'bottom')} />
-        <div className="resize-handle resize-handle-e" onMouseDown={(e) => handleResizeStart(e, 'right')} />
-        <div className="resize-handle resize-handle-w" onMouseDown={(e) => handleResizeStart(e, 'left')} />
-        <div className="resize-handle resize-handle-ne" onMouseDown={(e) => handleResizeStart(e, 'top-right')} />
-        <div className="resize-handle resize-handle-nw" onMouseDown={(e) => handleResizeStart(e, 'top-left')} />
-        <div className="resize-handle resize-handle-se" onMouseDown={(e) => handleResizeStart(e, 'bottom-right')} />
-        <div className="resize-handle resize-handle-sw" onMouseDown={(e) => handleResizeStart(e, 'bottom-left')} />
-
-        <div className={`modal-header ${result.success ? 'success' : 'error'}`}>
-          <div className="header-content">
-            <div className="status-icon">
-              {result.success ? (
-                <CheckCircle size={20} />
-              ) : (
-                <AlertCircle size={20} />
-              )}
-            </div>
-            <h2>{result.message}</h2>
-          </div>
-          <button className="close-button" onClick={onClose}>
-            <X size={20} />
-          </button>
-        </div>
-
+    <ResizableModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title=""
+      className={`prompt-results-modal ${result.success ? 'success' : 'error'}`}
+      defaultWidth={700}
+      defaultHeight={500}
+      minWidth={400}
+      minHeight={300}
+      storageKey="promptResultsModalSize"
+      headerContent={headerContent}
+    >
         <div className="modal-content">
 
           {/* Metadata section */}
@@ -187,7 +145,6 @@ export const PromptResultsModal: React.FC<PromptResultsModalProps> = ({
             </div>
           )}
         </div>
-      </div>
-    </div>
+    </ResizableModal>
   );
 };

@@ -1,147 +1,43 @@
-/* Modal overlay */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 1000;
-  backdrop-filter: blur(3px);
-}
-
-.prompt-results-modal {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: var(--bg-card);
-  border-radius: 12px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  border: 1px solid var(--border-color);
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  z-index: 1001;
-}
-
-.prompt-results-modal .modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 1.5rem;
-  border-bottom: 1px solid var(--border-color);
-  background: var(--bg-tertiary);
-  transition: all 0.3s ease;
-}
-
-/* Blue theme header styling */
-[data-color-scheme="blue"] .prompt-results-modal .modal-header {
-  /* Fallback */
-  background: var(--bg-tertiary);
-  /* Modern browsers */
-  background: linear-gradient(135deg, 
-    color-mix(in srgb, var(--accent-blue) 15%, var(--bg-tertiary)),
-    color-mix(in srgb, var(--accent-primary) 10%, var(--bg-tertiary))
-  );
-  border-bottom-color: var(--accent-primary);
-}
-
-/* Green theme header styling */
-[data-color-scheme="green"] .prompt-results-modal .modal-header {
-  /* Fallback */
-  background: var(--bg-tertiary);
-  /* Modern browsers */
-  background: linear-gradient(135deg,
-    color-mix(in srgb, var(--accent-primary) 15%, var(--bg-tertiary)),
-    color-mix(in srgb, var(--accent-blue) 10%, var(--bg-tertiary))
-  );
-  border-bottom-color: var(--accent-primary);
-}
-
-/* Success state with theme tones */
-[data-color-scheme="blue"] .prompt-results-modal .modal-header.success {
-  background: linear-gradient(135deg, 
-    color-mix(in srgb, var(--accent-green) 20%, color-mix(in srgb, var(--accent-blue) 15%, var(--bg-tertiary))),
-    color-mix(in srgb, var(--accent-green) 15%, color-mix(in srgb, var(--accent-primary) 10%, var(--bg-tertiary)))
-  );
-  border-bottom-color: var(--accent-green);
-}
-
-[data-color-scheme="green"] .prompt-results-modal .modal-header.success {
-  background: linear-gradient(135deg, 
-    color-mix(in srgb, var(--accent-green) 20%, var(--bg-tertiary)),
-    color-mix(in srgb, var(--accent-green) 15%, var(--bg-tertiary))
-  );
-  border-bottom-color: var(--accent-green);
-}
-
-/* Error state with theme tones */
-[data-color-scheme="blue"] .prompt-results-modal .modal-header.error {
-  background: linear-gradient(135deg,
-    color-mix(in srgb, var(--accent-red) 20%, color-mix(in srgb, var(--accent-blue) 15%, var(--bg-tertiary))),
-    color-mix(in srgb, var(--accent-red) 15%, color-mix(in srgb, var(--accent-primary) 10%, var(--bg-tertiary)))
-  );
-  border-bottom-color: var(--accent-red);
-}
-
-[data-color-scheme="green"] .prompt-results-modal .modal-header.error {
-  background: linear-gradient(135deg,
-    color-mix(in srgb, var(--accent-red) 20%, var(--bg-tertiary)),
-    color-mix(in srgb, var(--accent-red) 15%, var(--bg-tertiary))
-  );
-  border-bottom-color: var(--accent-red);
-}
-
-.prompt-results-modal .header-content {
+/* Prompt Results Modal specific styles */
+.results-header-content {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  width: 100%;
 }
 
-.prompt-results-modal .header-content .status-icon {
+.results-header-content .status-icon {
   flex-shrink: 0;
   display: flex;
   align-items: center;
 }
 
-.prompt-results-modal .modal-header.success .status-icon {
+.results-header-content.success .status-icon {
   color: var(--accent-green);
 }
 
-.prompt-results-modal .modal-header.error .status-icon {
+.results-header-content.error .status-icon {
   color: var(--accent-red);
 }
 
-.prompt-results-modal .modal-header h2 {
+.results-header-content h2 {
   margin: 0;
   font-size: 1.125rem;
   font-weight: 600;
   color: var(--text-primary);
 }
 
-.prompt-results-modal .close-button {
-  background: none;
-  border: none;
-  cursor: pointer;
-  color: var(--text-secondary);
-  padding: 0.25rem;
-  border-radius: 6px;
-  transition: all 0.2s;
+/* Header styling based on success/error state */
+.prompt-results-modal.success .modal-header {
+  background: var(--bg-tertiary);
+  border-bottom-color: var(--accent-green);
 }
 
-.prompt-results-modal .close-button:hover {
-  background: var(--hover-bg);
-  color: var(--accent-primary);
+.prompt-results-modal.error .modal-header {
+  background: var(--bg-tertiary);
+  border-bottom-color: var(--accent-red);
 }
 
-/* Blue theme specific close button */
-[data-color-scheme="blue"] .prompt-results-modal .close-button:hover {
-  color: var(--accent-blue);
-}
 
 .prompt-results-modal .modal-content {
   flex: 1;
@@ -318,27 +214,8 @@
   color: var(--accent-red);
 }
 
-/* Theme-specific adjustments */
-[data-theme="dark"] .modal-overlay {
-  background-color: rgba(0, 0, 0, 0.7);
-}
-
-[data-theme="light"] .modal-overlay {
-  background-color: rgba(0, 0, 0, 0.4);
-}
-
-/* Shadow adjustments for themes */
-[data-theme="dark"] .prompt-results-modal {
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-}
-
-[data-theme="light"] .prompt-results-modal {
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-}
-
 /* Enhanced focus styles */
-.prompt-results-modal .action-button:focus,
-.prompt-results-modal .close-button:focus {
+.prompt-results-modal .action-button:focus {
   outline: 2px solid var(--accent-primary);
   outline-offset: 2px;
 }
@@ -353,143 +230,6 @@
   transition: background-color 0.3s ease, border-color 0.3s ease, color 0.3s ease;
 }
 
-/* Resize handles */
-.prompt-results-modal .resize-handle {
-  position: absolute;
-  background: transparent;
-  z-index: 10;
-  transition: background-color 0.2s ease;
-}
-
-/* Visual feedback on hover */
-.prompt-results-modal .resize-handle:hover {
-  background: var(--accent-primary);
-  opacity: 0.3;
-}
-
-.prompt-results-modal .resize-handle-n,
-.prompt-results-modal .resize-handle-s {
-  left: 20px;
-  right: 20px;
-  height: 12px;
-  cursor: ns-resize;
-}
-
-.prompt-results-modal .resize-handle-n {
-  top: -6px;
-}
-
-.prompt-results-modal .resize-handle-s {
-  bottom: -6px;
-}
-
-/* Visual indicator for top/bottom resize */
-.prompt-results-modal .resize-handle-n::after,
-.prompt-results-modal .resize-handle-s::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 40px;
-  height: 4px;
-  background: var(--border-color);
-  border-radius: 2px;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-}
-
-.prompt-results-modal .resize-handle-n::after {
-  bottom: 2px;
-}
-
-.prompt-results-modal .resize-handle-s::after {
-  top: 2px;
-}
-
-.prompt-results-modal .resize-handle-n:hover::after,
-.prompt-results-modal .resize-handle-s:hover::after {
-  opacity: 0.6;
-  background: var(--accent-primary);
-}
-
-.prompt-results-modal .resize-handle-e,
-.prompt-results-modal .resize-handle-w {
-  top: 0;
-  bottom: 0;
-  width: 8px;
-  cursor: ew-resize;
-}
-
-.prompt-results-modal .resize-handle-e {
-  right: -4px;
-}
-
-.prompt-results-modal .resize-handle-w {
-  left: -4px;
-}
-
-.prompt-results-modal .resize-handle-ne,
-.prompt-results-modal .resize-handle-nw,
-.prompt-results-modal .resize-handle-se,
-.prompt-results-modal .resize-handle-sw {
-  width: 16px;
-  height: 16px;
-}
-
-.prompt-results-modal .resize-handle-ne {
-  top: -4px;
-  right: -4px;
-  cursor: nesw-resize;
-}
-
-.prompt-results-modal .resize-handle-nw {
-  top: -4px;
-  left: -4px;
-  cursor: nwse-resize;
-}
-
-.prompt-results-modal .resize-handle-se {
-  bottom: -4px;
-  right: -4px;
-  cursor: nwse-resize;
-}
-
-.prompt-results-modal .resize-handle-sw {
-  bottom: -4px;
-  left: -4px;
-  cursor: nesw-resize;
-}
-
-.prompt-results-modal.resizing {
-  user-select: none;
-}
-
-/* Global cursor during resize */
-body:has(.prompt-results-modal.resizing) {
-  cursor: ns-resize !important;
-}
-
-body:has(.prompt-results-modal.resizing) * {
-  cursor: inherit !important;
-}
-
-/* Resize grip indicator */
-.prompt-results-modal .resize-handle-se::after {
-  content: '';
-  position: absolute;
-  bottom: 3px;
-  right: 3px;
-  width: 12px;
-  height: 12px;
-  background: linear-gradient(135deg, transparent 50%, var(--text-tertiary) 50%);
-  opacity: 0.3;
-  pointer-events: none;
-}
-
-.prompt-results-modal .resize-handle-se:hover::after {
-  opacity: 0.6;
-  background: linear-gradient(135deg, transparent 50%, var(--accent-primary) 50%);
-}
 
 /* Responsive */
 @media (max-width: 768px) {

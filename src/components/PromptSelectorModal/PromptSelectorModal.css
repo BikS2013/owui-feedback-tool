@@ -1,55 +1,172 @@
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.5);
+/* Prompt Selector Modal specific styles */
+.prompt-selector-modal.resizable-modal {
+  box-shadow: none !important;
+  border: 0 !important;
+  border-width: 0 !important;
+  border-style: none !important;
+  border-radius: 8px !important;
+  filter: none !important;
+  animation: none !important;
+  background-color: white !important;
+  color: #1a1a1a !important;
+  outline: none !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+/* Ensure white background in dark theme too */
+[data-theme="dark"] .prompt-selector-modal.resizable-modal {
+  background-color: white !important;
+  color: #1a1a1a !important;
+}
+
+[data-theme="dark"] .prompt-selector-modal .resizable-modal-body {
+  background-color: white !important;
+  color: #1a1a1a !important;
+}
+
+[data-theme="dark"] .prompt-selector-modal .modal-content {
+  background-color: white !important;
+  color: #1a1a1a !important;
+}
+
+
+/* Remove backdrop effects that might create shadow appearance */
+.resizable-modal-overlay:has(.prompt-selector-modal) {
+  backdrop-filter: none !important;
+  background-color: rgba(0, 0, 0, 0.5) !important;
+}
+
+
+/* Alternative selector for browsers without :has support */
+.prompt-selector-modal-wrapper {
+  box-shadow: none !important;
+}
+
+
+
+.prompt-selector-modal .modal-header {
+  padding: 0;
+  border: none;
+}
+
+.prompt-selector-modal .resizable-modal-title {
+  display: none;
+}
+
+.prompt-selector-modal .resizable-modal-header-content {
+  flex: 1;
   display: flex;
   align-items: center;
-  justify-content: center;
-  z-index: 1000;
+  gap: 12px;
+  margin-right: 0;
+  padding-left: 0;
 }
 
-.prompt-selector-modal {
-  background-color: var(--bg-secondary);
-  border-radius: 8px;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-  width: 90%;
-  max-width: 600px;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-  position: relative;
-}
-
-.prompt-selector-modal.resizable {
-  resize: none;
-  overflow: hidden;
-  min-width: 400px;
-  min-height: 400px;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 20px;
-  border-bottom: 1px solid var(--border-color);
-}
-
-.modal-header h2 {
+.prompt-selector-modal h2 {
   margin: 0;
   color: var(--text-primary);
   font-size: 1.5rem;
-  flex: 0 0 165px;
+  flex: 0 0 auto;
   margin-right: 20px;
-  font-weight: 600;
+  font-weight: 700;
+  min-width: 150px;
 }
 
 /* Ensure header text is visible in light theme */
-[data-theme="light"] .modal-header h2 {
+[data-theme="light"] .prompt-selector-modal h2 {
   color: var(--text-primary);
+}
+
+/* Fix text colors in dark mode */
+[data-theme="dark"] .prompt-selector-modal h2,
+[data-theme="dark"] .prompt-selector-modal .prompt-select-label,
+[data-theme="dark"] .prompt-selector-modal .parameters-grid label,
+[data-theme="dark"] .prompt-selector-modal .info-text {
+  color: #1a1a1a !important;
+}
+
+[data-theme="dark"] .prompt-selector-modal .resizable-modal-header {
+  background-color: white !important;
+  border-bottom-color: #e0e0e0 !important;
+}
+
+[data-theme="dark"] .prompt-selector-modal .prompt-area {
+  background-color: white !important;
+}
+
+/* Fix input fields and dropdowns in dark mode */
+[data-theme="dark"] .prompt-selector-modal .llm-select,
+[data-theme="dark"] .prompt-selector-modal .test-prompt-input,
+[data-theme="dark"] .prompt-selector-modal .prompt-file-dropdown {
+  background-color: #f5f5f5 !important;
+  color: #1a1a1a !important;
+  border-color: #ccc !important;
+}
+
+[data-theme="dark"] .prompt-selector-modal select option {
+  background-color: white !important;
+  color: #1a1a1a !important;
+}
+
+/* Fix parameters section in dark mode */
+[data-theme="dark"] .prompt-selector-modal .parameters-section {
+  background-color: #f9fafb !important;
+  border-top-color: #e5e5e5 !important;
+}
+
+[data-theme="dark"] .prompt-selector-modal .parameters-section h3 {
+  color: #1a1a1a !important;
+}
+
+/* Dark mode styling for prompt textarea */
+[data-theme="dark"] .prompt-selector-modal .prompt-textarea {
+  background-color: rgba(0, 0, 0, 0.03) !important;
+  border-color: rgba(0, 0, 0, 0.1) !important;
+  color: #1a1a1a !important;
+}
+
+[data-theme="dark"] .prompt-selector-modal .prompt-textarea:focus {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  border-color: rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Dark mode styling for test button */
+[data-theme="dark"] .prompt-selector-modal .llm-test-button.icon-only {
+  background-color: transparent !important;
+  border: none !important;
+  color: #666 !important;
+}
+
+[data-theme="dark"] .prompt-selector-modal .llm-test-button.icon-only:hover:not(:disabled) {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  border: none !important;
+  color: #333 !important;
+}
+
+/* Fix close button styling */
+.prompt-selector-modal .resizable-modal-close {
+  color: #666 !important;
+  background-color: transparent;
+  border: none;
+  opacity: 0.8;
+}
+
+.prompt-selector-modal .resizable-modal-close:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  color: #333 !important;
+  opacity: 1;
+}
+
+[data-theme="dark"] .prompt-selector-modal .resizable-modal-close {
+  color: #666 !important;
+  background-color: transparent;
+  border: none;
+}
+
+[data-theme="dark"] .prompt-selector-modal .resizable-modal-close:hover {
+  background-color: rgba(0, 0, 0, 0.05) !important;
+  color: #333 !important;
 }
 
 .model-controls {
@@ -58,12 +175,13 @@
   gap: 10px;
   flex: 1;
   justify-content: flex-start;
+  width: 100%;
 }
 
 .llm-select {
   flex: 1;
   max-width: 300px;
-  padding: 8px 12px;
+  padding: 8px 36px 8px 12px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   background-color: var(--bg-primary);
@@ -78,14 +196,15 @@
 }
 
 .test-prompt-input {
-  flex: 1;
-  max-width: 300px;
-  padding: 6px 10px;
+  flex: 2;
+  max-width: 500px;
+  padding: 10px 14px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   background-color: var(--bg-primary);
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: 14px;
+  min-height: 40px;
 }
 
 .test-prompt-input::placeholder {
@@ -96,10 +215,15 @@
 .llm-test-button {
   display: flex;
   align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  height: 40px;
   gap: 6px;
   padding: 6px 12px;
-  border: 1px solid var(--border-color);
+  border: 1px solid #ccc;
   border-radius: 4px;
+  background-color: #f5f5f5;
+  color: #333;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-size: 13px;
@@ -110,14 +234,16 @@
 }
 
 .llm-test-button.icon-only {
-  padding: 6px;
-  width: 32px;
-  height: 32px;
+  padding: 8px;
+  width: 40px;
+  height: 40px;
   justify-content: center;
-  background: none;
+  background-color: transparent;
   border: none;
   display: flex;
   align-items: center;
+  color: #666;
+  cursor: pointer;
 }
 
 .llm-test-button:hover:not(:disabled) {
@@ -126,8 +252,9 @@
 }
 
 .llm-test-button.icon-only:hover:not(:disabled) {
-  background-color: var(--hover-bg);
+  background-color: rgba(0, 0, 0, 0.05);
   border: none;
+  color: #333;
 }
 
 .llm-test-button:disabled {
@@ -175,7 +302,8 @@
 }
 
 .llm-test-result-container {
-  margin: 0 20px 12px;
+  margin: 20px;
+  margin-bottom: 12px;
 }
 
 .llm-test-status {
@@ -249,32 +377,34 @@
 }
 
 
-.close-button {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  color: var(--text-secondary);
-  cursor: pointer;
+.prompt-selector-modal .modal-content {
   padding: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.close-button:hover {
-  background-color: var(--hover-bg);
-}
-
-.modal-content {
-  padding: 20px;
-  overflow-y: auto;
+  overflow: hidden;
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-height: 0;
+}
+
+.prompt-selector-modal .resizable-modal-body {
+  padding: 0 !important;
+  overflow: hidden !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+
+.modal-content-layout {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.prompt-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
   min-height: 0;
 }
 
@@ -283,7 +413,7 @@
   color: var(--error-text);
   padding: 10px;
   border-radius: 4px;
-  margin-bottom: 15px;
+  margin: 20px 20px 15px 20px;
 }
 
 .info-message {
@@ -294,6 +424,7 @@
   border: 1px solid rgba(59, 130, 246, 0.3);
   font-size: 14px;
   line-height: 1.5;
+  margin: 20px;
 }
 
 .info-message code {
@@ -311,12 +442,18 @@
   flex-direction: column;
   flex: 1;
   min-height: 0;
+  box-shadow: none !important;
+  margin: 0 0.5rem;
+  padding: 0 20px;
+  padding-bottom: 10px;
+  background-color: transparent !important;
 }
 
 .prompt-header-row {
   display: flex;
   align-items: center;
   margin-bottom: 12px;
+  padding-top: 20px;
 }
 
 .prompt-select-label {
@@ -330,13 +467,36 @@
 .prompt-file-dropdown {
   flex: 1;
   max-width: 300px;
-  padding: 8px 12px;
+  padding: 8px 36px 8px 12px;
   border: 1px solid var(--border-color);
   border-radius: 4px;
   background-color: var(--bg-primary);
   color: var(--text-primary);
   font-size: 14px;
   cursor: pointer;
+  box-shadow: none !important;
+  outline: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 16px;
+}
+
+.prompt-file-dropdown:focus {
+  box-shadow: none !important;
+  border-color: var(--accent-primary);
+}
+
+.prompt-file-dropdown:hover {
+  box-shadow: none !important;
+}
+
+/* Remove shadow from option elements */
+.prompt-file-dropdown option {
+  box-shadow: none !important;
 }
 
 .prompt-file-dropdown:disabled {
@@ -349,16 +509,25 @@
 .prompt-textarea {
   width: 100%;
   flex: 1;
-  min-height: 200px;
-  padding: 12px;
-  border: 1px solid var(--border-color);
-  border-radius: 4px;
-  background-color: var(--bg-primary);
-  color: var(--text-primary);
+  min-height: 0;
+  padding: 16px;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.02);
+  color: #1a1a1a;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 14px;
   line-height: 1.5;
   resize: none;
+  box-shadow: none !important;
+  outline: none;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.prompt-textarea:focus {
+  box-shadow: none !important;
+  border-color: rgba(0, 0, 0, 0.15);
+  background-color: rgba(0, 0, 0, 0.03);
 }
 
 .prompt-textarea:disabled {
@@ -372,16 +541,17 @@
 
 /* Parameters section */
 .parameters-section {
-  margin-top: 20px;
-  padding: 16px;
-  background-color: var(--bg-secondary);
-  border-radius: 8px;
-  border: 1px solid var(--border-color);
+  margin: 0;
+  padding: 20px;
+  background-color: #f9fafb;
+  border-top: 1px solid #e5e5e5;
+  border-radius: 0;
+  flex-shrink: 0;
 }
 
 .parameters-section h3 {
   margin: 0 0 12px 0;
-  color: var(--text-primary);
+  color: #1a1a1a;
   font-size: 1.1rem;
   font-weight: 600;
 }
@@ -413,14 +583,14 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 12px;
-  background-color: var(--bg-primary);
-  border: 1px solid var(--border-color);
-  border-radius: 6px;
+  padding: 12px 0;
+  background-color: transparent;
+  border: none;
+  border-radius: 0;
 }
 
 .parameter-name {
-  color: var(--accent-primary);
+  color: #4f46e5;
   font-weight: 500;
   font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
   font-size: 14px;
@@ -430,10 +600,10 @@
 .parameter-source-select {
   flex: 1;
   padding: 6px 10px;
-  border: 1px solid var(--border-color);
+  border: 1px solid #e5e5e5;
   border-radius: 4px;
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
+  background-color: white;
+  color: #1a1a1a;
   font-size: 14px;
   cursor: pointer;
 }
@@ -446,10 +616,10 @@
 .parameter-custom-input {
   flex: 1;
   padding: 6px 10px;
-  border: 1px solid var(--border-color);
+  border: 1px solid #e5e5e5;
   border-radius: 4px;
-  background-color: var(--bg-secondary);
-  color: var(--text-primary);
+  background-color: white;
+  color: #1a1a1a;
   font-size: 14px;
 }
 
@@ -466,110 +636,10 @@
 .parameters-info {
   margin: 0;
   font-size: 13px;
-  color: var(--text-secondary);
+  color: #6b7280;
   font-style: italic;
 }
 
-/* Resize handles */
-.resize-handle {
-  position: absolute;
-  background: transparent;
-  user-select: none;
-}
-
-.resize-handle:hover {
-  background: var(--accent-color);
-  opacity: 0.3;
-}
-
-/* Edge handles */
-.resize-handle-n {
-  top: 0;
-  left: 8px;
-  right: 8px;
-  height: 8px;
-  cursor: ns-resize;
-}
-
-.resize-handle-s {
-  bottom: 0;
-  left: 8px;
-  right: 8px;
-  height: 8px;
-  cursor: ns-resize;
-}
-
-.resize-handle-e {
-  top: 8px;
-  right: 0;
-  bottom: 8px;
-  width: 8px;
-  cursor: ew-resize;
-}
-
-.resize-handle-w {
-  top: 8px;
-  left: 0;
-  bottom: 8px;
-  width: 8px;
-  cursor: ew-resize;
-}
-
-/* Corner handles */
-.resize-handle-ne {
-  top: 0;
-  right: 0;
-  width: 16px;
-  height: 16px;
-  cursor: nesw-resize;
-}
-
-.resize-handle-nw {
-  top: 0;
-  left: 0;
-  width: 16px;
-  height: 16px;
-  cursor: nwse-resize;
-}
-
-.resize-handle-se {
-  bottom: 0;
-  right: 0;
-  width: 16px;
-  height: 16px;
-  cursor: nwse-resize;
-}
-
-.resize-handle-sw {
-  bottom: 0;
-  left: 0;
-  width: 16px;
-  height: 16px;
-  cursor: nesw-resize;
-}
-
-/* Visual indicator on corners */
-.resize-handle-se::after {
-  content: '';
-  position: absolute;
-  bottom: 3px;
-  right: 3px;
-  width: 10px;
-  height: 10px;
-  border-right: 2px solid var(--border-color);
-  border-bottom: 2px solid var(--border-color);
-  opacity: 0.5;
-}
-
-/* Prevent text selection during resize */
-.prompt-selector-modal.resizing {
-  user-select: none;
-}
-
-.prompt-selector-modal.resizing * {
-  user-select: none;
-  cursor: inherit !important;
-}
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
@@ -618,12 +688,6 @@
   }
   
   
-  .close-button {
-    position: absolute;
-    top: 12px;
-    right: 12px;
-  }
-  
   .parameter-config-item {
     flex-direction: column;
     align-items: stretch;
@@ -671,16 +735,15 @@
   background-color: var(--hover-bg);
 }
 
-[data-theme="light"] .close-button:hover {
-  color: var(--text-primary);
-  background-color: var(--hover-bg);
-}
 
-/* Execute section */
-.execute-section {
-  margin-top: 20px;
-  padding-top: 20px;
-  border-top: 1px solid var(--border-color);
+/* Modal footer styles */
+.prompt-selector-modal .resizable-modal-footer {
+  background-color: white !important;
+  border-top: 1px solid #e5e5e5 !important;
+  padding: 16px 20px !important;
+  display: flex;
+  justify-content: flex-end;
+  flex-shrink: 0;
 }
 
 .execute-prompt-button {
@@ -688,44 +751,44 @@
   align-items: center;
   justify-content: center;
   gap: 8px;
-  width: 100%;
-  padding: 12px 24px;
+  padding: 10px 16px;
   border: none;
   border-radius: 6px;
-  background-color: var(--accent-primary);
+  background: linear-gradient(135deg, var(--accent-primary), var(--accent-blue));
   color: white;
-  font-size: 16px;
-  font-weight: 600;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(94, 195, 208, 0.3);
+  white-space: nowrap;
 }
 
 .execute-prompt-button:hover:not(:disabled) {
-  background-color: var(--accent-primary-hover);
   transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* Light theme execute button hover */
-[data-theme="light"] .execute-prompt-button:hover:not(:disabled) {
-  background-color: var(--bg-tertiary);
-  color: var(--text-primary);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(94, 195, 208, 0.4);
 }
 
 .execute-prompt-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .execute-prompt-button .spinner {
-  width: 16px;
-  height: 16px;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
 }
 
 /* Execution Results */
 .execution-result-container {
-  margin-top: 16px;
+  margin: 20px;
+  margin-bottom: 0;
 }
 
 .execution-result {

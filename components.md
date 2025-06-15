@@ -949,6 +949,11 @@ To replace existing modals with ResizableModal:
 - No fullscreen mode
 - No multiple modal stacking support
 
+### Usage in Other Components
+ResizableModal has been adopted as the standard modal implementation for:
+- **PromptSelectorModal**: Uses ResizableModal with custom header content for model selection
+- **PromptResultsModal**: Uses ResizableModal with dynamic styling based on success/error state
+
 ### Enhancement Opportunities
 1. Add prop validation with PropTypes or stricter TypeScript
 2. Implement component composition patterns for complex UIs

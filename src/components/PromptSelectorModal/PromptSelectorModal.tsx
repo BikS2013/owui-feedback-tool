@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { TestTube } from 'lucide-react';
+import { Zap, Sparkles } from 'lucide-react';
 import { githubService } from '../../services/github.service';
 import { storageUtils } from '../../utils/storageUtils';
-import { useResizable } from '../../hooks/useResizable';
 import { parsePromptParameters } from '../../utils/promptParser';
 import { llmService } from '../../services/llm.service';
 import { LLMConfiguration } from '../../types/llm';
 import { Conversation } from '../../types/conversation';
+import { ResizableModal } from '../ResizableModal/ResizableModal';
 import './PromptSelectorModal.css';
 
 interface PromptSelectorModalProps {
@@ -58,21 +58,6 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
   
   // Parse parameters from prompt content
   const parameters = useMemo(() => parsePromptParameters(promptContent), [promptContent]);
-  
-  // Use resizable hook
-  const {
-    modalRef,
-    modalSize,
-    isResizing,
-    handleResizeStart,
-    handleOverlayClick
-  } = useResizable({
-    defaultWidth: 600,
-    defaultHeight: 600,
-    minWidth: 400,
-    minHeight: 400,
-    storageKey: 'promptSelectorModalSize'
-  });
 
   useEffect(() => {
     if (isOpen) {
@@ -81,22 +66,6 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
       loadLLMConfigurations();
     }
   }, [isOpen]);
-
-  // Handle ESC key to close modal
-  useEffect(() => {
-    const handleKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape' && isOpen) {
-        onClose();
-      }
-    };
-
-    if (isOpen) {
-      document.addEventListener('keydown', handleKeyDown);
-      return () => {
-        document.removeEventListener('keydown', handleKeyDown);
-      };
-    }
-  }, [isOpen, onClose]);
   
   // Update parameter configs when parameters change
   useEffect(() => {
@@ -405,219 +374,215 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
     }
   };
 
-  if (!isOpen) return null;
+  const headerContent = (
+    <>
+      <h2>Select Model</h2>
+      <div className="model-controls">
+        <select 
+          className="llm-select"
+          value={selectedLLM || ''}
+          onChange={(e) => handleLLMSelection(e.target.value)}
+          disabled={llmConfigurations.length === 0 || isLoadingLLM}
+          title={llmConfigurations.length === 0 && !isLoadingLLM ? 'Backend server not running. Start the backend on port 3001.' : ''}
+        >
+          {isLoadingLLM ? (
+            <option value="">Loading configurations...</option>
+          ) : llmConfigurations.length === 0 ? (
+            <option value="">No LLM configurations (check backend)</option>
+          ) : (
+            <>
+              <option value="">-- Select a model --</option>
+              {llmConfigurations.map((config) => (
+                <option key={config.name} value={config.name}>
+                  {config.name} - {config.provider}
+                  {config.name === defaultLLM && ' (default)'}
+                  {!config.enabled && ' (disabled)'}
+                </option>
+              ))}
+            </>
+          )}
+        </select>
+        <input
+          type="text"
+          className="test-prompt-input"
+          placeholder="Test prompt"
+          value={testPrompt}
+          onChange={(e) => setTestPrompt(e.target.value)}
+        />
+        <button
+          type="button"
+          className="llm-test-button icon-only"
+          onClick={handleTestLLM}
+          disabled={!selectedLLM || isTestingLLM}
+          title={isTestingLLM ? 'Testing...' : 'Test LLM'}
+        >
+          {isTestingLLM ? (
+            <div className="spinner" />
+          ) : (
+            <Zap size={16} />
+          )}
+        </button>
+      </div>
+    </>
+  );
+
+  const footerContent = (
+    <button
+      type="button"
+      className="execute-prompt-button"
+      onClick={handleExecutePrompt}
+      disabled={!selectedLLM || !promptContent || isExecuting}
+    >
+      {isExecuting ? (
+        <>
+          <div className="spinner" />
+          <span>Executing...</span>
+        </>
+      ) : (
+        <>
+          <Sparkles size={16} />
+          <span>Execute Prompt</span>
+        </>
+      )}
+    </button>
+  );
 
   return (
-    <div className="modal-overlay" onClick={(e) => handleOverlayClick(e, onClose)}>
-      <div 
-        ref={modalRef}
-        className={`prompt-selector-modal resizable ${isResizing ? 'resizing' : ''}`}
-        onClick={(e) => e.stopPropagation()}
-        style={{
-          width: `${modalSize.width}px`,
-          height: `${modalSize.height}px`,
-          maxWidth: '90vw',
-          maxHeight: '90vh'
-        }}
-      >
-        {/* Resize handles */}
-        <div className="resize-handle resize-handle-n" onMouseDown={(e) => handleResizeStart(e, 'top')} />
-        <div className="resize-handle resize-handle-s" onMouseDown={(e) => handleResizeStart(e, 'bottom')} />
-        <div className="resize-handle resize-handle-e" onMouseDown={(e) => handleResizeStart(e, 'right')} />
-        <div className="resize-handle resize-handle-w" onMouseDown={(e) => handleResizeStart(e, 'left')} />
-        <div className="resize-handle resize-handle-ne" onMouseDown={(e) => handleResizeStart(e, 'top-right')} />
-        <div className="resize-handle resize-handle-nw" onMouseDown={(e) => handleResizeStart(e, 'top-left')} />
-        <div className="resize-handle resize-handle-se" onMouseDown={(e) => handleResizeStart(e, 'bottom-right')} />
-        <div className="resize-handle resize-handle-sw" onMouseDown={(e) => handleResizeStart(e, 'bottom-left')} />
-        <div className="modal-header">
-          <h2>Select Model</h2>
-          <div className="model-controls">
-            <select 
-              className="llm-select"
-              value={selectedLLM || ''}
-              onChange={(e) => handleLLMSelection(e.target.value)}
-              disabled={llmConfigurations.length === 0 || isLoadingLLM}
-              title={llmConfigurations.length === 0 && !isLoadingLLM ? 'Backend server not running. Start the backend on port 3001.' : ''}
-            >
-              {isLoadingLLM ? (
-                <option value="">Loading configurations...</option>
-              ) : llmConfigurations.length === 0 ? (
-                <option value="">No LLM configurations (check backend)</option>
-              ) : (
-                <>
-                  <option value="">-- Select a model --</option>
-                  {llmConfigurations.map((config) => (
-                    <option key={config.name} value={config.name}>
-                      {config.name} - {config.provider}
-                      {config.name === defaultLLM && ' (default)'}
-                      {!config.enabled && ' (disabled)'}
-                    </option>
-                  ))}
-                </>
-              )}
-            </select>
-            <input
-              type="text"
-              className="test-prompt-input"
-              placeholder="Test prompt"
-              value={testPrompt}
-              onChange={(e) => setTestPrompt(e.target.value)}
-            />
-            <button
-              type="button"
-              className="llm-test-button icon-only"
-              onClick={handleTestLLM}
-              disabled={!selectedLLM || isTestingLLM}
-              title={isTestingLLM ? 'Testing...' : 'Test LLM'}
-            >
-              {isTestingLLM ? (
-                <div className="spinner" />
-              ) : (
-                <TestTube size={16} />
-              )}
-            </button>
-          </div>
-          <button className="close-button" onClick={onClose}>×</button>
-        </div>
+    <ResizableModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title=""
+      className="prompt-selector-modal"
+      defaultWidth={600}
+      defaultHeight={600}
+      minWidth={400}
+      minHeight={400}
+      storageKey="promptSelectorModalSize"
+      headerContent={headerContent}
+      footerContent={footerContent}
+    >
         
         <div className="modal-content">
-          {error && <div className="error-message">{error}</div>}
-          {llmConfigurations.length === 0 && !isLoadingLLM && (
-            <div className="info-message" style={{ marginBottom: '16px' }}>
-              <strong>Backend not connected:</strong> Please ensure the backend server is running on port 3001. 
-              Run <code>npm run backend:dev</code> in the backend folder to start it.
-            </div>
-          )}
-          
-          {llmTestResult && (
-            <div className="llm-test-result-container">
-              <div className={`llm-test-status ${llmTestResult.success ? 'success' : 'error'}`}>
-                <div className="llm-test-header">
-                  <span>{llmTestResult.success ? '✓' : '✗'} {llmTestResult.message}</span>
-                  <button 
-                    className="llm-test-close"
-                    onClick={() => setLlmTestResult(null)}
-                    title="Close"
-                  >
-                    ×
-                  </button>
+          <div className="modal-content-layout">
+            <div className="prompt-area">
+              {error && <div className="error-message">{error}</div>}
+              {llmConfigurations.length === 0 && !isLoadingLLM && (
+                <div className="info-message" style={{ marginBottom: '16px' }}>
+                  <strong>Backend not connected:</strong> Please ensure the backend server is running on port 3001. 
+                  Run <code>npm run backend:dev</code> in the backend folder to start it.
                 </div>
-                {llmTestResult.response && (
-                  <div className="llm-test-response">
-                    {llmTestResult.response}
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-          
-          <div className="prompt-content-section">
-            <div className="prompt-header-row">
-              <label className="prompt-select-label">Select Prompt</label>
-              <select 
-                value={selectedFile} 
-                onChange={(e) => handleFileSelect(e.target.value)}
-                disabled={isLoading}
-                className="prompt-file-dropdown"
-              >
-                <option value="">-- Select a prompt file --</option>
-                {promptFiles.map(file => (
-                  <option key={file.path} value={file.path}>
-                    {file.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <textarea
-              id="prompt-content"
-              className="prompt-textarea"
-              value={promptContent}
-              onChange={(e) => setPromptContent(e.target.value)}
-              placeholder={isLoading ? "Loading..." : "Select a file to view its content"}
-              disabled={isLoading}
-            />
-          </div>
-          
-          {parameters.length > 0 && (
-            <div className="parameters-section">
-              <h3>Parameters Configuration:</h3>
-              <div className="parameters-config-list">
-                {parameterConfigs.map((config) => (
-                  <div key={config.name} className="parameter-config-item">
-                    <span className="parameter-name">{config.name}:</span>
-                    <select
-                      className="parameter-source-select"
-                      value={config.source}
-                      onChange={(e) => updateParameterConfig(config.name, 'source', e.target.value)}
-                    >
-                      <option value="conversation">From Conversation</option>
-                      <option value="qa">From Q&A</option>
-                      <option value="current-date">Current Date (YYYY/MM/DD)</option>
-                      <option value="current-datetime">Current DateTime (YYYY/MM/DD HH:mm:ss)</option>
-                      <option value="custom-text">Custom Text</option>
-                    </select>
-                    {config.source === 'custom-text' && (
-                      <input
-                        type="text"
-                        className="parameter-custom-input"
-                        placeholder="Enter custom value"
-                        value={config.customValue || ''}
-                        onChange={(e) => updateParameterConfig(config.name, 'customValue', e.target.value)}
-                      />
+              )}
+              
+              {llmTestResult && (
+                <div className="llm-test-result-container">
+                  <div className={`llm-test-status ${llmTestResult.success ? 'success' : 'error'}`}>
+                    <div className="llm-test-header">
+                      <span>{llmTestResult.success ? '✓' : '✗'} {llmTestResult.message}</span>
+                      <button 
+                        className="llm-test-close"
+                        onClick={() => setLlmTestResult(null)}
+                        title="Close"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    {llmTestResult.response && (
+                      <div className="llm-test-response">
+                        {llmTestResult.response}
+                      </div>
                     )}
                   </div>
-                ))}
-              </div>
-              <p className="parameters-info">
-                Configure how each parameter should be filled. Settings are saved automatically.
-              </p>
-            </div>
-          )}
-          
-          {/* Execute Button and Results */}
-          <div className="execute-section">
-            <button
-              type="button"
-              className="execute-prompt-button"
-              onClick={handleExecutePrompt}
-              disabled={!selectedLLM || !promptContent || isExecuting}
-            >
-              {isExecuting ? (
-                <>
-                  <div className="spinner" />
-                  <span>Executing...</span>
-                </>
-              ) : (
-                <>
-                  <span>Execute Prompt</span>
-                </>
-              )}
-            </button>
-            
-            {executionResult && (
-              <div className="execution-result-container">
-                <div className={`execution-result ${executionResult.success ? 'success' : 'error'}`}>
-                  <div className="execution-result-header">
-                    <span>{executionResult.success ? '✓' : '✗'} {executionResult.message}</span>
-                    <button 
-                      className="execution-result-close"
-                      onClick={() => setExecutionResult(null)}
-                      title="Close"
-                    >
-                      ×
-                    </button>
-                  </div>
-                  {executionResult.response && (
-                    <div className="execution-result-response">
-                      <pre>{executionResult.response}</pre>
-                    </div>
-                  )}
                 </div>
+              )}
+              
+              <div className="prompt-content-section">
+                <div className="prompt-header-row">
+                  <label className="prompt-select-label">Select Prompt</label>
+                  <select 
+                    value={selectedFile} 
+                    onChange={(e) => handleFileSelect(e.target.value)}
+                    disabled={isLoading}
+                    className="prompt-file-dropdown"
+                  >
+                    <option value="">-- Select a prompt file --</option>
+                    {promptFiles.map(file => (
+                      <option key={file.path} value={file.path}>
+                        {file.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <textarea
+                  id="prompt-content"
+                  className="prompt-textarea"
+                  value={promptContent}
+                  onChange={(e) => setPromptContent(e.target.value)}
+                  placeholder={isLoading ? "Loading..." : "Select a file to view its content"}
+                  disabled={isLoading}
+                />
+              </div>
+              
+              {/* Execution Results */}
+              {executionResult && (
+                <div className="execution-result-container">
+                  <div className={`execution-result ${executionResult.success ? 'success' : 'error'}`}>
+                    <div className="execution-result-header">
+                      <span>{executionResult.success ? '✓' : '✗'} {executionResult.message}</span>
+                      <button 
+                        className="execution-result-close"
+                        onClick={() => setExecutionResult(null)}
+                        title="Close"
+                      >
+                        ×
+                      </button>
+                    </div>
+                    {executionResult.response && (
+                      <div className="execution-result-response">
+                        <pre>{executionResult.response}</pre>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            {parameters.length > 0 && (
+              <div className="parameters-section">
+                <h3>Parameters Configuration:</h3>
+                <div className="parameters-config-list">
+                  {parameterConfigs.map((config) => (
+                    <div key={config.name} className="parameter-config-item">
+                      <span className="parameter-name">{config.name}:</span>
+                      <select
+                        className="parameter-source-select"
+                        value={config.source}
+                        onChange={(e) => updateParameterConfig(config.name, 'source', e.target.value)}
+                      >
+                        <option value="conversation">From Conversation</option>
+                        <option value="qa">From Q&A</option>
+                        <option value="current-date">Current Date (YYYY/MM/DD)</option>
+                        <option value="current-datetime">Current DateTime (YYYY/MM/DD HH:mm:ss)</option>
+                        <option value="custom-text">Custom Text</option>
+                      </select>
+                      {config.source === 'custom-text' && (
+                        <input
+                          type="text"
+                          className="parameter-custom-input"
+                          placeholder="Enter custom value"
+                          value={config.customValue || ''}
+                          onChange={(e) => updateParameterConfig(config.name, 'customValue', e.target.value)}
+                        />
+                      )}
+                    </div>
+                  ))}
+                </div>
+                <p className="parameters-info">
+                  Configure how each parameter should be filled. Settings are saved automatically.
+                </p>
               </div>
             )}
           </div>
         </div>
-      </div>
-    </div>
+    </ResizableModal>
   );
 };
