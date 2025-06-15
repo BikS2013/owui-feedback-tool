@@ -31,7 +31,22 @@ function filterThreads(threads) {
 If visualization is needed, create:
 function renderContent(threads) {
   // For markdown rendering:
-  return `# Report Title\n\nContent here...`;
+  return `# Report Title
+
+## Summary
+Total conversations: ${threads.length}
+
+### Details
+- **Active threads**: ${threads.filter(t => t.status === 'active').length}
+- **Completed**: ${threads.filter(t => t.status === 'completed').length}
+
+### Conversation List
+${threads.slice(0, 5).map((thread, i) => `
+${i + 1}. **Thread ${thread.thread_id}**
+   - Created: ${new Date(thread.created_at).toLocaleString()}
+   - Messages: ${thread.values.messages.length}
+`).join('')}
+`;
   
   // OR for graph rendering:
   return {
@@ -55,5 +70,13 @@ IMPORTANT RULES:
 - Use only safe JavaScript features (no eval, fetch, or DOM manipulation)
 - Include helpful comments explaining the logic
 - For graphs, use Chart.js compatible format
-- For markdown, use GitHub-flavored markdown
+- For markdown rendering:
+  * Use GitHub-flavored markdown syntax
+  * Use proper line breaks (not \n) in template literals
+  * Headers: # H1, ## H2, ### H3, etc.
+  * Bold: **text**, Italic: *text*
+  * Lists: - item or 1. item
+  * Tables: | Header | Header | with |---|---| separator
+  * Code blocks: ``` language ... ```
+  * Links: [text](url)
 - Return a valid JSON object with the appropriate scripts
