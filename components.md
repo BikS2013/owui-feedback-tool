@@ -812,6 +812,143 @@ The project has undergone significant refactoring to improve reusability:
    - Slot-based content in ListItem and LogoHeader
    - Theme-aware styling across all components
 
+---
+
+## ResizableModal
+
+**Location**: `src/components/ResizableModal/ResizableModal.tsx`
+
+### Purpose
+A generic, reusable modal component that provides consistent modal behavior with resizable capabilities, theme support, and flexible content areas. Built to replace custom modal implementations with a standardized, accessible solution.
+
+### Use Cases
+- Settings dialogs with adjustable size
+- Data upload interfaces that may need more space
+- Form modals where content length varies
+- Preview windows with resizable viewing areas
+- Any modal dialog requiring consistent behavior and styling
+
+### Props
+```typescript
+interface ResizableModalProps {
+  isOpen: boolean;                // Controls modal visibility
+  onClose: () => void;            // Callback when modal should close
+  title: string;                  // Modal title text
+  children: ReactNode;            // Modal body content
+  className?: string;             // Additional CSS classes for customization
+  defaultWidth?: number;          // Initial width in pixels (default: 600)
+  defaultHeight?: number;         // Initial height in pixels (default: 500)
+  minWidth?: number;              // Minimum width constraint (default: 400)
+  minHeight?: number;             // Minimum height constraint (default: 400)
+  storageKey?: string;            // LocalStorage key for persisting size
+  showCloseButton?: boolean;      // Show/hide close button (default: true)
+  closeOnEscape?: boolean;        // Close on ESC key (default: true)
+  closeOnOverlayClick?: boolean;  // Close on overlay click (default: true)
+  headerContent?: ReactNode;      // Additional header content (after title)
+  footerContent?: ReactNode;      // Optional footer content
+}
+```
+
+### Example Usage
+```tsx
+// Basic usage
+<ResizableModal
+  isOpen={isSettingsOpen}
+  onClose={() => setIsSettingsOpen(false)}
+  title="Settings"
+>
+  <SettingsForm onSave={handleSave} />
+</ResizableModal>
+
+// Advanced usage with all features
+<ResizableModal
+  isOpen={isUploadOpen}
+  onClose={handleClose}
+  title="Upload Data"
+  className="upload-modal"
+  defaultWidth={700}
+  defaultHeight={600}
+  minWidth={500}
+  minHeight={450}
+  storageKey="uploadModalSize"
+  showCloseButton={true}
+  closeOnEscape={true}
+  closeOnOverlayClick={false}
+  headerContent={
+    <div className="upload-status">
+      3 files selected
+    </div>
+  }
+  footerContent={
+    <div className="modal-actions">
+      <button onClick={handleCancel}>Cancel</button>
+      <button onClick={handleUpload} className="primary">Upload</button>
+    </div>
+  }
+>
+  <FileUploadArea onFilesSelected={setFiles} />
+</ResizableModal>
+```
+
+### Features
+- **Resizable**: Drag handles on all edges and corners
+- **Size Persistence**: Optional localStorage support for remembering size
+- **Responsive**: Constrains to 90% of viewport, adapts to window resize
+- **Accessible**: ESC key support, proper ARIA attributes, focus management
+- **Theme Support**: Automatic light/dark theme adaptation
+- **Smooth Animations**: Fade-in overlay and slide-in modal effects
+- **Custom Scrollbar**: Styled scrollbar for body content
+- **Flexible Layout**: Header, body, and optional footer sections
+- **Portal Rendering**: Renders to document.body to avoid z-index issues
+
+### Styling Behaviors
+- **Overlay**: Semi-transparent backdrop with blur effect
+- **Modal**: Rounded corners, shadow, theme-aware borders
+- **Header**: Distinct background, title + optional content + close button
+- **Body**: Scrollable content area with custom scrollbar
+- **Footer**: Optional area for action buttons
+- **Resize Handles**: Invisible by default, visible on hover
+- **Animations**: Respects prefers-reduced-motion setting
+
+### Integration with useResizable Hook
+The component leverages the existing `useResizable` hook for resize functionality:
+- Manages resize state and mouse interactions
+- Persists size to localStorage (if storageKey provided)
+- Ensures modal stays within viewport bounds
+- Provides smooth resize experience
+
+### Combination with Other Components
+- Can contain any content components (forms, lists, analytics)
+- Works with existing form components and controls
+- Integrates with theme system automatically
+- Can be triggered by buttons in LogoHeader or other components
+- Suitable for replacing UploadModal, SettingsModal, etc.
+
+### Accessibility Features
+- Proper ARIA attributes for modal dialog
+- ESC key support (configurable)
+- Focus trap (when implemented)
+- Semantic HTML structure
+- High contrast mode support
+- Reduced motion support
+
+### Migration Guide
+To replace existing modals with ResizableModal:
+1. Import ResizableModal component
+2. Replace modal structure with ResizableModal props
+3. Move header content to `title` and `headerContent` props
+4. Move footer buttons to `footerContent` prop
+5. Keep modal-specific logic in the parent component
+6. Use `storageKey` prop for size persistence if needed
+
+### Limitations
+- No built-in form validation
+- Footer is optional (no default button layout)
+- No built-in loading states
+- Maximum size limited to 90% of viewport
+- No fullscreen mode
+- No multiple modal stacking support
+
 ### Enhancement Opportunities
 1. Add prop validation with PropTypes or stricter TypeScript
 2. Implement component composition patterns for complex UIs

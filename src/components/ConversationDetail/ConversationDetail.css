@@ -494,7 +494,7 @@
   border: 1px solid var(--border-color);
   border-radius: 8px;
   padding: 20px;
-  font-family: 'Monaco', 'Courier New', monospace;
+  font-family: 'CF Asty Std', 'Monaco', 'Courier New', monospace;
   font-size: 13px;
   line-height: 1.6;
   color: var(--text-primary);
