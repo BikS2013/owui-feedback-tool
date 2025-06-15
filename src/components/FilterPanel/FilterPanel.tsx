@@ -4,6 +4,7 @@ import { FilterOptions, Conversation } from '../../types/conversation';
 import { useFeedbackStore } from '../../store/feedbackStore';
 import { format } from 'date-fns';
 import { storageUtils } from '../../utils/storageUtils';
+import { useResizable } from '../../hooks/useResizable';
 import './FilterPanel.css';
 
 interface LLMConfiguration {
@@ -25,12 +26,7 @@ interface FilterPanelProps {
   sampleData?: any; // Generic sample data (can be thread or conversation)
 }
 
-const STORAGE_KEY = 'filterPanelSize';
 const LLM_STORAGE_KEY = 'filterPanelSelectedLLM';
-const MIN_WIDTH = 400;
-const MIN_HEIGHT = 500;
-const DEFAULT_WIDTH = 480;
-const DEFAULT_HEIGHT = 600;
 
 type FilterTab = 'static' | 'natural';
 
@@ -38,6 +34,21 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
   const { dataSource } = useFeedbackStore();
   const [activeTab, setActiveTab] = useState<FilterTab>('static');
   const [displayMode, setDisplayMode] = useState(storageUtils.getDisplayMode());
+  
+  // Use resizable hook for engineering mode
+  const {
+    modalRef,
+    modalSize,
+    isResizing,
+    handleResizeStart,
+    handleOverlayClick
+  } = useResizable({
+    defaultWidth: 480,
+    defaultHeight: 600,
+    minWidth: 400,
+    minHeight: 500,
+    storageKey: 'filterPanelSize'
+  });
   
   // Natural Language filter state
   const [naturalQuery, setNaturalQuery] = useState(filters.naturalLanguageQuery || '');
@@ -75,26 +86,6 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
   const availableModels = Array.from(new Set(
     conversations.flatMap(conv => conv.modelsUsed || [])
   )).sort();
-  
-  const panelRef = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState(() => {
-    const saved = localStorage.getItem(STORAGE_KEY);
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved);
-        return {
-          width: Math.max(parsed.width || DEFAULT_WIDTH, MIN_WIDTH),
-          height: Math.max(parsed.height || DEFAULT_HEIGHT, MIN_HEIGHT)
-        };
-      } catch {
-        // Invalid data, use defaults
-      }
-    }
-    return { width: DEFAULT_WIDTH, height: DEFAULT_HEIGHT };
-  });
-  const [isResizing, setIsResizing] = useState<'se' | 'e' | 's' | null>(null);
-  const startSizeRef = useRef(size);
-  const startPosRef = useRef({ x: 0, y: 0 });
 
   useEffect(() => {
     // Load LLM configurations from backend when panel opens
@@ -126,10 +117,6 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
     }
   }, [isOpen, filters.customJavaScriptFilter, filters.customRenderScript]);
 
-  // Save size to localStorage when it changes
-  useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(size));
-  }, [size]);
 
   // Save selected LLM to localStorage when it changes
   useEffect(() => {
@@ -162,57 +149,6 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
     }
   }, [isOpen, onClose]);
 
-  // Handle mouse move for resizing
-  useEffect(() => {
-    if (!isResizing) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
-      const deltaX = e.clientX - startPosRef.current.x;
-      const deltaY = e.clientY - startPosRef.current.y;
-      
-      let newWidth = startSizeRef.current.width;
-      let newHeight = startSizeRef.current.height;
-      
-      if (isResizing === 'e' || isResizing === 'se') {
-        newWidth = Math.max(MIN_WIDTH, startSizeRef.current.width + deltaX);
-      }
-      
-      if (isResizing === 's' || isResizing === 'se') {
-        newHeight = Math.max(MIN_HEIGHT, startSizeRef.current.height + deltaY);
-      }
-      
-      setSize({ width: newWidth, height: newHeight });
-    };
-
-    const handleMouseUp = () => {
-      setIsResizing(null);
-      document.body.style.cursor = '';
-    };
-
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [isResizing]);
-
-  const handleResizeStart = (e: React.MouseEvent, direction: 'se' | 'e' | 's') => {
-    e.preventDefault();
-    setIsResizing(direction);
-    startSizeRef.current = size;
-    startPosRef.current = { x: e.clientX, y: e.clientY };
-    
-    // Set cursor style
-    if (direction === 'se') {
-      document.body.style.cursor = 'nwse-resize';
-    } else if (direction === 'e') {
-      document.body.style.cursor = 'ew-resize';
-    } else if (direction === 's') {
-      document.body.style.cursor = 'ns-resize';
-    }
-  };
 
   const fetchLLMConfigurations = async () => {
     try {
@@ -576,30 +512,32 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
     <div 
       className={`filter-panel-overlay ${displayMode === 'magic' ? 'magic-mode-overlay' : ''}`}
       style={getMagicModeOverlayStyle()}
+      onClick={(e) => displayMode === 'engineering' ? handleOverlayClick(e, onClose) : undefined}
     >
       <div 
-        ref={panelRef}
-        className={`filter-panel ${isResizing ? 'resizing' : ''} ${displayMode === 'magic' ? 'magic-mode-panel' : ''}`}
+        ref={displayMode === 'engineering' ? modalRef : undefined}
+        className={`filter-panel ${displayMode === 'engineering' && isResizing ? 'resizing' : ''} ${displayMode === 'magic' ? 'magic-mode-panel' : ''}`}
         style={{
-          width: displayMode === 'magic' ? 'auto' : `${size.width}px`,
-          height: displayMode === 'magic' ? 'auto' : `${size.height}px`,
+          width: displayMode === 'magic' ? 'auto' : `${modalSize.width}px`,
+          height: displayMode === 'magic' ? 'auto' : `${modalSize.height}px`,
           maxWidth: displayMode === 'magic' ? 'none' : '90vw',
           maxHeight: displayMode === 'magic' ? 'none' : '90vh'
         }}
+        onClick={(e) => e.stopPropagation()}
       >
-        {/* Resize handles */}
-        <div 
-          className="resize-handle resize-handle-e" 
-          onMouseDown={(e) => handleResizeStart(e, 'e')}
-        />
-        <div 
-          className="resize-handle resize-handle-s" 
-          onMouseDown={(e) => handleResizeStart(e, 's')}
-        />
-        <div 
-          className="resize-handle resize-handle-se" 
-          onMouseDown={(e) => handleResizeStart(e, 'se')}
-        />
+        {/* Resize handles - only show in engineering mode */}
+        {displayMode === 'engineering' && (
+          <>
+            <div className="resize-handle resize-handle-n" onMouseDown={(e) => handleResizeStart(e, 'top')} />
+            <div className="resize-handle resize-handle-s" onMouseDown={(e) => handleResizeStart(e, 'bottom')} />
+            <div className="resize-handle resize-handle-e" onMouseDown={(e) => handleResizeStart(e, 'right')} />
+            <div className="resize-handle resize-handle-w" onMouseDown={(e) => handleResizeStart(e, 'left')} />
+            <div className="resize-handle resize-handle-ne" onMouseDown={(e) => handleResizeStart(e, 'top-right')} />
+            <div className="resize-handle resize-handle-nw" onMouseDown={(e) => handleResizeStart(e, 'top-left')} />
+            <div className="resize-handle resize-handle-se" onMouseDown={(e) => handleResizeStart(e, 'bottom-right')} />
+            <div className="resize-handle resize-handle-sw" onMouseDown={(e) => handleResizeStart(e, 'bottom-left')} />
+          </>
+        )}
         
         <div className="filter-panel-header">
           <h3>Filters</h3>

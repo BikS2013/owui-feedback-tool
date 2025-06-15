@@ -82,6 +82,46 @@
   border-color: transparent transparent var(--text-tertiary) transparent;
 }
 
+.resize-handle-n {
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 4px;
+  cursor: ns-resize;
+}
+
+.resize-handle-w {
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  cursor: ew-resize;
+}
+
+.resize-handle-ne {
+  right: 0;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  cursor: nesw-resize;
+}
+
+.resize-handle-nw {
+  left: 0;
+  top: 0;
+  width: 10px;
+  height: 10px;
+  cursor: nwse-resize;
+}
+
+.resize-handle-sw {
+  left: 0;
+  bottom: 0;
+  width: 10px;
+  height: 10px;
+  cursor: nesw-resize;
+}
+
 .filter-panel-content {
   flex: 1;
   overflow-y: auto;
