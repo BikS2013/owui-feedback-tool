@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, CheckCircle, AlertCircle, Clock, Copy, Download } from 'lucide-react';
+import { CheckCircle, AlertCircle, Clock, Copy, Download } from 'lucide-react';
 import { format } from 'date-fns';
 import { ResizableModal } from '../ResizableModal/ResizableModal';
 import './PromptResultsModal.css';

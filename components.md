@@ -252,10 +252,12 @@ The component is now composed of:
 
 ### Integration Points
 - Uses LogoHeader for the application header section
-- Leverages List component's search functionality
+- Leverages List component's search and filter button functionality
 - Delegates item rendering to ListItem component
-- Maintains FilterPanel as a separate overlay
+- Maintains FilterPanel as a separate overlay triggered by List's filter button
 - Integrates DataControls and ThemeToggle within LogoHeader
+- Passes filter state and handlers to List component
+- Uses additionalActions prop for rendering output button
 
 ### Limitations
 - No virtualization for large lists (inherited from List component)
@@ -623,13 +625,25 @@ interface ListProps<T> {
   searchValue?: string;                                // Controlled search input value
   onSearchChange?: (value: string) => void;            // Search change handler
   searchPlaceholder?: string;                          // Search input placeholder
+  searchAction?: ReactNode | ((sampleData: T | null) => ReactNode); // DEPRECATED: Use additionalActions instead
   emptyState?: ReactNode;                              // Custom empty state content
   className?: string;                                  // Additional CSS classes
+  selectedId?: string | null;                          // Currently selected item ID
+  getItemId?: (item: T) => string;                     // Function to extract item ID
+  // Filter-related props
+  filterable?: boolean;                                // Enable filter button
+  hasActiveFilters?: boolean;                          // Whether filters are active
+  onFilterClick?: (sampleData: T | null) => void;      // Filter button click handler
+  onClearFilters?: () => void;                         // Clear filters handler
+  filterTooltip?: string;                              // Filter button tooltip
+  // Additional action buttons
+  additionalActions?: ReactNode | ((sampleData: T | null) => ReactNode); // Extra action buttons
 }
 ```
 
 ### Example Usage
 ```tsx
+// Basic usage with search
 <List
   items={users}
   renderItem={(user) => (
@@ -648,11 +662,38 @@ interface ListProps<T> {
   emptyState={<EmptyTeamMessage />}
   className="team-list"
 />
+
+// Advanced usage with filters and actions
+<List
+  items={conversations}
+  renderItem={renderConversationItem}
+  keyExtractor={(conv) => conv.id}
+  header={conversationHeader}
+  searchable={true}
+  searchValue={searchTerm}
+  onSearchChange={onSearchChange}
+  searchPlaceholder="Search conversations..."
+  selectedId={selectedId}
+  getItemId={(conv) => conv.id}
+  filterable={true}
+  hasActiveFilters={hasActiveFilters}
+  onFilterClick={handleFilterClick}
+  onClearFilters={handleClearFilters}
+  filterTooltip="Open filters (3 active)"
+  additionalActions={
+    <button className="show-output-btn" onClick={showOutput}>
+      <Eye size={16} />
+    </button>
+  }
+/>
 ```
 
 ### Features
 - **Container Management**: Handles scrolling, overflow, and layout
 - **Search Integration**: Optional search bar with consistent styling
+- **Filter Button**: Built-in filter button with active state indicator
+- **Action Buttons**: Support for additional action buttons in search bar
+- **Sample Data**: Intelligent sample data selection for filter/action handlers
 - **Empty States**: Customizable empty state messages
 - **Smooth Animations**: Staggered fade-in for list items
 - **Custom Scrollbars**: Styled scrollbars matching the theme
@@ -662,6 +703,8 @@ interface ListProps<T> {
 ### Styling Behaviors
 - **Header**: Fixed header with customizable content
 - **Search**: Integrated search bar below header (when enabled)
+- **Action Area**: Right-aligned buttons next to search (filters, actions)
+- **Filter Button**: Changes color when active, shows indicator dot
 - **Scrolling**: Smooth scrolling with custom scrollbar styling
 - **Item Animation**: Staggered fade-in animation for visual polish
 - **Empty State**: Centered message when no items exist
@@ -678,6 +721,8 @@ interface ListProps<T> {
 - Fixed layout structure (header → search → content)
 - No infinite scroll support
 - No built-in sorting capabilities
+- Filter logic must be implemented by parent component
+- Action button order is fixed (additional actions → filter → clear)
 
 ---
 
@@ -811,6 +856,12 @@ The project has undergone significant refactoring to improve reusability:
    - Render props for flexible item rendering in List
    - Slot-based content in ListItem and LogoHeader
    - Theme-aware styling across all components
+
+4. **Enhanced List Component**:
+   - Filter button functionality moved into List component
+   - Support for additional action buttons via `additionalActions` prop
+   - Intelligent sample data selection for filter/action handlers
+   - Built-in filter state visualization with active indicators
 
 ---
 

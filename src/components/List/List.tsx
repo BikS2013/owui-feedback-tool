@@ -1,5 +1,5 @@
 import { ReactNode } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Filter, X } from 'lucide-react';
 import './List.css';
 
 interface ListProps<T> {
@@ -16,6 +16,14 @@ interface ListProps<T> {
   className?: string;
   selectedId?: string | null;
   getItemId?: (item: T) => string;
+  // Filter-related props
+  filterable?: boolean;
+  hasActiveFilters?: boolean;
+  onFilterClick?: (sampleData: T | null) => void;
+  onClearFilters?: () => void;
+  filterTooltip?: string;
+  // Additional action buttons
+  additionalActions?: ReactNode | ((sampleData: T | null) => ReactNode);
 }
 
 export function List<T>({
@@ -31,7 +39,13 @@ export function List<T>({
   emptyState,
   className = '',
   selectedId = null,
-  getItemId
+  getItemId,
+  filterable = false,
+  hasActiveFilters = false,
+  onFilterClick,
+  onClearFilters,
+  filterTooltip = 'Open filters',
+  additionalActions
 }: ListProps<T>) {
   const defaultEmptyState = (
     <div className="list-empty-state">
@@ -59,6 +73,11 @@ export function List<T>({
   const resolvedSearchAction = typeof searchAction === 'function' 
     ? searchAction(sampleData) 
     : searchAction;
+    
+  // Resolve additionalActions - if it's a function, call it with sampleData
+  const resolvedAdditionalActions = typeof additionalActions === 'function'
+    ? additionalActions(sampleData)
+    : additionalActions;
 
   return (
     <div className={`list-container ${className}`}>
@@ -76,7 +95,31 @@ export function List<T>({
               className="list-search-input"
             />
           </div>
-          {resolvedSearchAction && <div className="list-search-action">{resolvedSearchAction}</div>}
+          <div className="list-search-action">
+            {resolvedAdditionalActions}
+            {filterable && (
+              <>
+                <button 
+                  className={`filter-btn ${hasActiveFilters ? 'filter-active' : ''}`} 
+                  onClick={() => onFilterClick?.(sampleData)}
+                  title={filterTooltip}
+                >
+                  <Filter size={16} />
+                  {hasActiveFilters && <span className="filter-indicator" />}
+                </button>
+                {hasActiveFilters && onClearFilters && (
+                  <button
+                    className="filter-clear-btn"
+                    onClick={onClearFilters}
+                    title="Clear all filters"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
+              </>
+            )}
+            {resolvedSearchAction}
+          </div>
         </div>
       )}
 

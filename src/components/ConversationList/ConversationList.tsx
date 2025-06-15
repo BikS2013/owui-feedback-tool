@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Filter, Settings, Eye, X } from 'lucide-react';
+import { Settings, Eye } from 'lucide-react';
 import { Conversation, FilterOptions } from '../../types/conversation';
 import { format } from 'date-fns';
 import { FilterPanel } from '../FilterPanel/FilterPanel';
@@ -87,14 +87,30 @@ export function ConversationList({
     </>
   );
 
-  const hasActiveFilters = filters.naturalLanguageQuery || filters.dateRange || filters.modelFilter || filters.ratingFilter;
+  const hasActiveFilters = !!(filters.naturalLanguageQuery || filters.dateRange || filters.modelFilter || filters.ratingFilter);
 
-  const filterButtons = (sampleData: Conversation | null) => {
-    // Get the appropriate sample data for the filter panel
+  const handleFilterClick = (sampleData: Conversation | null) => {
     const effectiveSampleData = dataSource === 'agent' && currentThread
       ? currentThread 
       : sampleData;
-    
+    setFilterPanelSampleData(effectiveSampleData);
+    setIsFilterPanelOpen(true);
+  };
+
+  const handleClearFilters = () => {
+    onFiltersChange({
+      searchTerm: filters.searchTerm,
+      dateRange: undefined,
+      modelFilter: undefined,
+      ratingFilter: undefined,
+      naturalLanguageQuery: '',
+      customJavaScriptFilter: undefined,
+      customRenderScript: undefined,
+      renderScriptTimestamp: undefined
+    });
+  };
+
+  const additionalActions = () => {
     return (
       <>
         {hasRenderingOutput && (
@@ -104,35 +120,6 @@ export function ConversationList({
             title="Show rendering output"
           >
             <Eye size={16} />
-          </button>
-        )}
-        <button 
-          className={`filter-btn ${hasActiveFilters ? 'filter-active' : ''}`} 
-          onClick={() => {
-            setFilterPanelSampleData(effectiveSampleData);
-            setIsFilterPanelOpen(true);
-          }}
-          title={getFilterTooltip()}
-        >
-          <Filter size={16} />
-          {hasActiveFilters && <span className="filter-indicator" />}
-        </button>
-        {hasActiveFilters && (
-          <button
-            className="filter-clear-btn"
-            onClick={() => onFiltersChange({
-              searchTerm: filters.searchTerm,
-              dateRange: undefined,
-              modelFilter: undefined,
-              ratingFilter: undefined,
-              naturalLanguageQuery: '',
-              customJavaScriptFilter: undefined,
-              customRenderScript: undefined,
-              renderScriptTimestamp: undefined
-            })}
-            title="Clear all filters"
-          >
-            <X size={16} />
           </button>
         )}
       </>
@@ -239,11 +226,16 @@ export function ConversationList({
           searchValue={searchTerm}
           onSearchChange={onSearchChange}
           searchPlaceholder="Search conversations..."
-          searchAction={filterButtons}
           emptyState={emptyState}
           className="conversation-list"
           selectedId={selectedId}
           getItemId={(conv) => conv.id}
+          filterable={true}
+          hasActiveFilters={hasActiveFilters}
+          onFilterClick={handleFilterClick}
+          onClearFilters={handleClearFilters}
+          filterTooltip={getFilterTooltip()}
+          additionalActions={additionalActions}
         />
         {dataSource === 'agent' && agentPagination && agentPagination.totalPages > 1 && (
           <Pagination
