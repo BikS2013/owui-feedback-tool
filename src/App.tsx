@@ -46,6 +46,9 @@ function AppContent() {
     isVisible: false,
     result: null
   });
+  
+  // Track the last executed render script timestamp
+  const [lastExecutedTimestamp, setLastExecutedTimestamp] = useState<number | undefined>(undefined);
 
   // Apply filters to conversations
   const filteredConversations = useMemo(() => {
@@ -116,12 +119,59 @@ function AppContent() {
     }
   }, [filters.renderScriptTimestamp]);
 
-  // Execute render script when it changes
+  // Execute render script only when timestamp changes (not when data loads)
   useEffect(() => {
+    if (filters.customRenderScript && filters.renderScriptTimestamp) {
+      // Only execute if this is a new timestamp
+      if (filters.renderScriptTimestamp !== lastExecutedTimestamp) {
+        console.log('🎨 [App] Executing render script due to new timestamp');
+        
+        // Wait a bit to ensure data is loaded
+        const timer = setTimeout(() => {
+          if (langGraphThreads.length > 0) {
+            // Execute render script with appropriate data
+            const threadsToRender = dataSource === 'agent' && langGraphThreads.length > 0
+              ? (filters.customJavaScriptFilter 
+                  ? applyJavaScriptFilter(langGraphThreads, filters.customJavaScriptFilter)
+                  : langGraphThreads)
+              : langGraphThreads;
+            
+            const result = executeRenderScript(threadsToRender, filters.customRenderScript);
+            
+            setRenderingOverlay({
+              isVisible: true,
+              result
+            });
+            
+            setLastExecutedTimestamp(filters.renderScriptTimestamp);
+          }
+        }, 100);
+        
+        return () => clearTimeout(timer);
+      }
+    } else if (!filters.customRenderScript) {
+      // Clear overlay if no render script
+      setRenderingOverlay({
+        isVisible: false,
+        result: null
+      });
+      setLastExecutedTimestamp(undefined);
+    }
+  }, [filters.customRenderScript, filters.renderScriptTimestamp]);
+
+  const handleSearchChange = (term: string) => {
+    setFilters({
+      ...filters,
+      searchTerm: term
+    });
+  };
+  
+  // Function to manually trigger render script execution
+  const executeRenderScriptManually = () => {
     if (filters.customRenderScript) {
-      console.log('🎨 [App] Executing render script');
+      console.log('🎨 [App] Manually executing render script');
       
-      // Execute render script with appropriate data
+      // Execute render script with current data
       const threadsToRender = dataSource === 'agent' && langGraphThreads.length > 0
         ? (filters.customJavaScriptFilter 
             ? applyJavaScriptFilter(langGraphThreads, filters.customJavaScriptFilter)
@@ -134,20 +184,7 @@ function AppContent() {
         isVisible: true,
         result
       });
-    } else {
-      // Hide overlay if no render script
-      setRenderingOverlay({
-        isVisible: false,
-        result: null
-      });
     }
-  }, [filters.customRenderScript, filters.customJavaScriptFilter, dataSource, langGraphThreads, filters.renderScriptTimestamp]);
-
-  const handleSearchChange = (term: string) => {
-    setFilters({
-      ...filters,
-      searchTerm: term
-    });
   };
 
   if (error) {
@@ -170,8 +207,8 @@ function AppContent() {
           onSearchChange={handleSearchChange}
           filters={filters}
           onFiltersChange={setFilters}
-          hasRenderingOutput={!!renderingOverlay.result && !renderingOverlay.isVisible}
-          onShowOutput={() => setRenderingOverlay(prev => ({ ...prev, isVisible: true }))}
+          hasRenderingOutput={!!filters.customRenderScript}
+          onShowOutput={executeRenderScriptManually}
         />
       </ResizablePanel>
       <main className="main-content">
