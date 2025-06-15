@@ -3,6 +3,7 @@ import { LLMPromptExecutionRequest, LLMPromptExecutionResponse, LLMTestRequest }
 import { v4 as uuidv4 } from 'uuid';
 import { llmConfigService } from '../services/llm-config.service.js';
 import { GitHubService } from '../services/github.service.js';
+import { PromptLoader } from '../utils/prompt-loader.js';
 
 const router = Router();
 
@@ -488,12 +489,8 @@ router.post('/execute-prompt-direct', async (req: Request, res: Response): Promi
     console.log(`   • Prompt length: ${promptText.length} characters`);
     console.log(`   • Parameters provided: ${Object.keys(parameterValues).join(', ')}`);
     
-    // Replace parameters in the prompt
-    let processedPrompt = promptText;
-    for (const [key, value] of Object.entries(parameterValues)) {
-      const placeholder = `{${key}}`;
-      processedPrompt = processedPrompt.replace(new RegExp(placeholder, 'g'), value);
-    }
+    // Process the prompt with parameter replacement
+    const processedPrompt = PromptLoader.replacePlaceholders(promptText, parameterValues as Record<string, string>);
     
     // Create the chat model
     const model = llmConfigService.createChatModel(llmConfiguration);
@@ -720,154 +717,15 @@ router.post('/get-prompt', async (req: Request, res: Response): Promise<void> =>
     
     if (sampleData) {
       // Use actual sample data to guide the LLM
-      prompt = `You are a JavaScript code generator for processing LangGraph conversation data. Based on the user's query, generate one or both types of scripts:
-
-1. FILTER SCRIPT: For narrowing down the conversation list
-2. RENDER SCRIPT: For creating visualizations (markdown or graphs)
-
-IMPORTANT: The complete dataset is an array of objects similar to the sample provided below.
-
-SAMPLE DATA (one object from the array):
-${JSON.stringify(sampleData, null, 2)}
-
-DATASET STRUCTURE:
-The complete dataset is an array of similar objects. Each object represents a conversation thread with:
-- thread_id: unique identifier
-- created_at/updated_at: timestamps
-- values.messages: array of conversation messages
-- values.retrieved_docs: array of retrieved documents (if any)
-- Other fields as shown in the sample
-
-NATURAL LANGUAGE QUERY: "${query}"
-
-ANALYZE THE QUERY AND GENERATE APPROPRIATE SCRIPTS:
-
-If filtering is needed, create:
-function filterThreads(threads) {
-  // Your filtering logic here
-  return threads.filter(thread => {
-    // Conditions based on user query
-  });
-}
-
-If visualization is needed, create:
-function renderContent(threads) {
-  // For markdown rendering:
-  return \`# Report Title\\n\\nContent here...\`;
-  
-  // OR for graph rendering:
-  return {
-    type: 'bar', // or 'line', 'pie', etc.
-    data: {
-      labels: [...],
-      datasets: [...]
-    },
-    options: {...}
-  };
-}
-
-RESPONSE FORMAT:
-{
-  "filterScript": "...", // Include if filtering needed
-  "renderScript": "..."  // Include if visualization needed
-}
-
-IMPORTANT RULES:
-- Generate ONLY the needed scripts based on query intent
-- Use only safe JavaScript features (no eval, fetch, or DOM manipulation)
-- Include helpful comments explaining the logic
-- For graphs, use Chart.js compatible format
-- For markdown, use GitHub-flavored markdown
-- Return a valid JSON object with the appropriate scripts`;
+      prompt = PromptLoader.preparePrompt('filter-with-sample.prompt.txt', {
+        sampleData: JSON.stringify(sampleData, null, 2),
+        query: query
+      });
     } else {
       // Fall back to schema-based approach with dual-script support
-      prompt = `You are a JavaScript code generator for processing conversation data. Based on the user's query, generate one or both types of scripts:
-
-1. FILTER SCRIPT: For narrowing down the conversation list
-2. RENDER SCRIPT: For creating visualizations (markdown or graphs)
-
-DATA SCHEMA:
-The dataset is an array of conversation objects with this structure:
-{
-  "thread_id": "string - unique identifier",
-  "created_at": "ISO timestamp",
-  "updated_at": "ISO timestamp (optional)",
-  "metadata": {
-    "user_id": "string (optional)",
-    // other metadata fields
-  },
-  "values": {
-    "messages": [
-      {
-        "type": "human | ai | string",
-        "content": "string or object with text field",
-        "text": "string (alternative to content)",
-        "timestamp": "string or number",
-        "response_metadata": {
-          "model_name": "string (optional)"
-        },
-        "model": "string (optional)"
-      }
-    ],
-    "retrieved_docs": [ // optional array
-      {
-        "page_content": "string",
-        "metadata": {
-          "source": "string",
-          "title": "string",
-          "url": "string"
-        }
-      }
-    ]
-  }
-}
-
-NATURAL LANGUAGE QUERY: "${query}"
-
-ANALYZE THE QUERY AND GENERATE APPROPRIATE SCRIPTS:
-
-If filtering is needed, create:
-function filterThreads(threads) {
-  // Your filtering logic here
-  return threads.filter(thread => {
-    // Conditions based on user query
-  });
-}
-
-If visualization is needed, create:
-function renderContent(threads) {
-  // For markdown rendering:
-  return \`# Report Title\\n\\nContent here...\`;
-  
-  // OR for graph rendering:
-  return {
-    type: 'bar', // or 'line', 'pie', etc.
-    data: {
-      labels: [...],
-      datasets: [...]
-    },
-    options: {...}
-  };
-}
-
-RESPONSE FORMAT:
-{
-  "filterScript": "...", // Include if filtering needed
-  "renderScript": "..."  // Include if visualization needed
-}
-
-IMPORTANT RULES:
-- Generate ONLY the needed scripts based on query intent
-- Use only safe JavaScript features (no eval, fetch, or DOM manipulation)
-- Include helpful comments explaining the logic
-- For graphs, use Chart.js compatible format
-- For markdown, use GitHub-flavored markdown
-- Return a valid JSON object with the appropriate scripts
-
-QUERY INTENT DETECTION:
-- FILTERING: "show", "find", "filter", "get", "search", "from", "with", "where"
-- VISUALIZATION: "render", "graph", "chart", "plot", "visualize", "create", "display", "summary", "report"
-- If unsure, prefer generating a render script for visualization queries`;
+      prompt = PromptLoader.preparePrompt('filter-without-sample.prompt.txt', {
+        query: query
+      });
     }
     
     console.log('✅ Prompt generated successfully');
@@ -927,154 +785,15 @@ router.post('/convert-to-filter', async (req: Request, res: Response): Promise<v
     
     if (sampleData) {
       // Use actual sample data to guide the LLM
-      prompt = `You are a JavaScript code generator for processing LangGraph conversation data. Based on the user's query, generate one or both types of scripts:
-
-1. FILTER SCRIPT: For narrowing down the conversation list
-2. RENDER SCRIPT: For creating visualizations (markdown or graphs)
-
-IMPORTANT: The complete dataset is an array of objects similar to the sample provided below.
-
-SAMPLE DATA (one object from the array):
-${JSON.stringify(sampleData, null, 2)}
-
-DATASET STRUCTURE:
-The complete dataset is an array of similar objects. Each object represents a conversation thread with:
-- thread_id: unique identifier
-- created_at/updated_at: timestamps
-- values.messages: array of conversation messages
-- values.retrieved_docs: array of retrieved documents (if any)
-- Other fields as shown in the sample
-
-NATURAL LANGUAGE QUERY: "${query}"
-
-ANALYZE THE QUERY AND GENERATE APPROPRIATE SCRIPTS:
-
-If filtering is needed, create:
-function filterThreads(threads) {
-  // Your filtering logic here
-  return threads.filter(thread => {
-    // Conditions based on user query
-  });
-}
-
-If visualization is needed, create:
-function renderContent(threads) {
-  // For markdown rendering:
-  return \`# Report Title\\n\\nContent here...\`;
-  
-  // OR for graph rendering:
-  return {
-    type: 'bar', // or 'line', 'pie', etc.
-    data: {
-      labels: [...],
-      datasets: [...]
-    },
-    options: {...}
-  };
-}
-
-RESPONSE FORMAT:
-{
-  "filterScript": "...", // Include if filtering needed
-  "renderScript": "..."  // Include if visualization needed
-}
-
-IMPORTANT RULES:
-- Generate ONLY the needed scripts based on query intent
-- Use only safe JavaScript features (no eval, fetch, or DOM manipulation)
-- Include helpful comments explaining the logic
-- For graphs, use Chart.js compatible format
-- For markdown, use GitHub-flavored markdown
-- Return a valid JSON object with the appropriate scripts`;
+      prompt = PromptLoader.preparePrompt('filter-with-sample.prompt.txt', {
+        sampleData: JSON.stringify(sampleData, null, 2),
+        query: query
+      });
     } else {
       // Fall back to schema-based approach with dual-script support
-      prompt = `You are a JavaScript code generator for processing conversation data. Based on the user's query, generate one or both types of scripts:
-
-1. FILTER SCRIPT: For narrowing down the conversation list
-2. RENDER SCRIPT: For creating visualizations (markdown or graphs)
-
-DATA SCHEMA:
-The dataset is an array of conversation objects with this structure:
-{
-  "thread_id": "string - unique identifier",
-  "created_at": "ISO timestamp",
-  "updated_at": "ISO timestamp (optional)",
-  "metadata": {
-    "user_id": "string (optional)",
-    // other metadata fields
-  },
-  "values": {
-    "messages": [
-      {
-        "type": "human | ai | string",
-        "content": "string or object with text field",
-        "text": "string (alternative to content)",
-        "timestamp": "string or number",
-        "response_metadata": {
-          "model_name": "string (optional)"
-        },
-        "model": "string (optional)"
-      }
-    ],
-    "retrieved_docs": [ // optional array
-      {
-        "page_content": "string",
-        "metadata": {
-          "source": "string",
-          "title": "string",
-          "url": "string"
-        }
-      }
-    ]
-  }
-}
-
-NATURAL LANGUAGE QUERY: "${query}"
-
-ANALYZE THE QUERY AND GENERATE APPROPRIATE SCRIPTS:
-
-If filtering is needed, create:
-function filterThreads(threads) {
-  // Your filtering logic here
-  return threads.filter(thread => {
-    // Conditions based on user query
-  });
-}
-
-If visualization is needed, create:
-function renderContent(threads) {
-  // For markdown rendering:
-  return \`# Report Title\\n\\nContent here...\`;
-  
-  // OR for graph rendering:
-  return {
-    type: 'bar', // or 'line', 'pie', etc.
-    data: {
-      labels: [...],
-      datasets: [...]
-    },
-    options: {...}
-  };
-}
-
-RESPONSE FORMAT:
-{
-  "filterScript": "...", // Include if filtering needed
-  "renderScript": "..."  // Include if visualization needed
-}
-
-IMPORTANT RULES:
-- Generate ONLY the needed scripts based on query intent
-- Use only safe JavaScript features (no eval, fetch, or DOM manipulation)
-- Include helpful comments explaining the logic
-- For graphs, use Chart.js compatible format
-- For markdown, use GitHub-flavored markdown
-- Return a valid JSON object with the appropriate scripts
-
-QUERY INTENT DETECTION:
-- FILTERING: "show", "find", "filter", "get", "search", "from", "with", "where"
-- VISUALIZATION: "render", "graph", "chart", "plot", "visualize", "create", "display", "summary", "report"
-- If unsure, prefer generating a render script for visualization queries`;
+      prompt = PromptLoader.preparePrompt('filter-without-sample.prompt.txt', {
+        query: query
+      });
     }
     
     // Create the chat model

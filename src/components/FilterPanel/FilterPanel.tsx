@@ -322,156 +322,12 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
       }
     } catch (error) {
       console.error('❌ [FilterPanel] Error fetching prompt:', error);
-      // Fall back to local generation if server fails
-      setFetchedPrompt(generatePrompt(naturalQuery));
-      setShowPrompt(true);
+      setExecutionError('Failed to fetch prompt from server');
     } finally {
       setIsFetchingPrompt(false);
     }
   };
 
-  const generatePrompt = (query: string) => {
-    const effectiveSampleData = sampleData || currentThread;
-    // If we have sample data, use it in the prompt
-    if (effectiveSampleData) {
-      const dataType = effectiveSampleData.thread_id ? 'LangGraph conversation' : 'conversation';
-      return `You are a JavaScript code generator for processing ${dataType} data. Based on the user's query, generate one or both types of scripts:
-
-1. FILTER SCRIPT: For narrowing down the conversation list
-2. RENDER SCRIPT: For creating visualizations (markdown or graphs)
-
-IMPORTANT: The complete dataset is an array of objects similar to the sample provided below.
-
-SAMPLE DATA (one object from the array):
-${JSON.stringify(effectiveSampleData, null, 2)}
-
-DATASET STRUCTURE:
-The complete dataset is an array of similar objects. Each object represents a conversation thread with:
-- thread_id: unique identifier
-- created_at/updated_at: timestamps
-- values.messages: array of conversation messages
-- values.retrieved_docs: array of retrieved documents (if any)
-- Other fields as shown in the sample
-
-NATURAL LANGUAGE QUERY: "${query}"
-
-ANALYZE THE QUERY AND GENERATE APPROPRIATE SCRIPTS:
-
-If filtering is needed, create:
-function filterThreads(threads) {
-  // Your filtering logic here
-  return threads.filter(thread => {
-    // Conditions based on user query
-  });
-}
-
-If visualization is needed, create:
-function renderContent(threads) {
-  // For markdown rendering:
-  return \`# Report Title\\n\\nContent here...\`;
-  
-  // OR for graph rendering:
-  return {
-    type: 'bar', // or 'line', 'pie', etc.
-    data: {
-      labels: [...],
-      datasets: [...]
-    },
-    options: {...}
-  };
-}
-
-RESPONSE FORMAT:
-{
-  "filterScript": "...", // Include if filtering needed
-  "renderScript": "..."  // Include if visualization needed
-}
-
-IMPORTANT RULES:
-- Generate ONLY the needed scripts based on query intent
-- Use only safe JavaScript features (no eval, fetch, or DOM manipulation)
-- Include helpful comments explaining the logic
-- For graphs, use Chart.js compatible format
-- For markdown, use GitHub-flavored markdown
-- Return a valid JSON object with the appropriate scripts`;
-    }
-    
-    // Fallback to schema-based prompt
-    const dataSchema = {
-      description: "Conversation and feedback data structure",
-      conversation: {
-        id: "string",
-        title: "string",
-        createdAt: "timestamp (milliseconds)",
-        updatedAt: "timestamp (milliseconds)",
-        userId: "string",
-        messages: [{
-          role: "user | assistant",
-          content: "string",
-          timestamp: "timestamp",
-          model: "string (optional)",
-          modelName: "string (optional)"
-        }],
-        averageRating: "number (1-10) | null",
-        totalRatings: "number",
-        qaPairCount: "number",
-        modelsUsed: "string[]"
-      },
-      qaPair: {
-        id: "string",
-        conversationId: "string",
-        question: "message object",
-        answer: "message object",
-        rating: "number (1-10) | null",
-        sentiment: "1 | -1 | null",
-        comment: "string"
-      }
-    };
-
-    return `You are a filter expression generator. Convert the following natural language query into a JSON filter expression that can be used to filter conversations and Q&A pairs.
-
-Data Schema:
-${JSON.stringify(dataSchema, null, 2)}
-
-Natural Language Query: "${query}"
-
-Generate a JSON filter expression that can be applied to filter the data. The expression should follow this structure:
-{
-  "dateRange": {
-    "start": null or ISO date string,
-    "end": null or ISO date string
-  },
-  "ratingFilter": {
-    "min": number (1-10),
-    "max": number (1-10),
-    "includeUnrated": boolean
-  },
-  "filterLevel": "conversation" or "qa",
-  "modelFilter": array of model names to include (empty array means all),
-  "customConditions": {
-    // Optional: Additional conditions that can't be expressed in standard filters
-    "description": "Human readable description of custom conditions",
-    "conditions": []
-  }
-}
-
-Important:
-- Return ONLY valid JSON, no explanations
-- Use null for unspecified date ranges
-- Default to includeUnrated: true unless explicitly mentioned
-- Default to filterLevel: "conversation" unless Q&A or answer-specific filtering is mentioned
-- For model filtering, match against modelsUsed array in conversations
-- If the query mentions specific time periods (like "last week", "yesterday"), calculate the appropriate dates
-- Today's date is: ${new Date().toISOString().split('T')[0]}
-
-Example queries and their filters:
-- "Show me conversations from last week": dateRange with calculated start/end
-- "Only highly rated conversations": ratingFilter with min: 7, max: 10
-- "Claude 3 conversations": modelFilter: ["claude-3", "claude-3-opus", "claude-3-sonnet"]
-- "Unrated Q&A pairs": filterLevel: "qa", includeUnrated: true, ratingFilter max: 0
-
-Generate the filter expression:`;
-  };
 
   const executeNaturalLanguageQuery = async () => {
     if (!naturalQuery.trim() || !selectedLLM) return null;
@@ -943,14 +799,14 @@ Generate the filter expression:`;
                         <h5>Prompt Preview</h5>
                         <button
                           className="copy-btn"
-                          onClick={() => handleCopy(fetchedPrompt || generatePrompt(naturalQuery), 'prompt')}
+                          onClick={() => handleCopy(fetchedPrompt, 'prompt')}
                           title="Copy prompt"
                         >
                           <Copy size={14} />
                           {copiedItem === 'prompt' && <span className="copied-text">Copied!</span>}
                         </button>
                       </div>
-                      <pre>{fetchedPrompt || generatePrompt(naturalQuery)}</pre>
+                      <pre>{fetchedPrompt}</pre>
                     </div>
                   ) : (
                     <>
