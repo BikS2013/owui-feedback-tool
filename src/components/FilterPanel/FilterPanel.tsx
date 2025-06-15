@@ -910,7 +910,7 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
                   ) : (
                     // Magic mode: Only show Execute button
                     <button
-                      className="apply-filter-btn"
+                      className="generate-btn"
                       onClick={async () => {
                         // Always generate new scripts in magic mode
                         const generatedScripts = await executeNaturalLanguageQuery();
@@ -945,7 +945,10 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
                           <span>Generating...</span>
                         </>
                       ) : (
-                        'Execute'
+                        <>
+                          <Sparkles size={16} />
+                          <span>Execute</span>
+                        </>
                       )}
                     </button>
                   )}
