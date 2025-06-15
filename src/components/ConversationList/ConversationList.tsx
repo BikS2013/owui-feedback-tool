@@ -41,6 +41,7 @@ export function ConversationList({
 }: ConversationListProps) {
   const [isFilterPanelOpen, setIsFilterPanelOpen] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
+  const [filterPanelSampleData, setFilterPanelSampleData] = useState<any>(null);
   const { colorScheme } = useTheme();
   const { dataSource, agentPagination, currentAgent, agentDateRange, loadFromAgentThreads, isLoading, langGraphThreads } = useFeedbackStore();
   const [displayMode, setDisplayMode] = useState(storageUtils.getDisplayMode());
@@ -83,52 +84,60 @@ export function ConversationList({
   const topRightControls = (
     <>
       <DataControls />
-      {displayMode === 'magic' && hasRenderingOutput && onShowOutput && (
-        <button
-          type="button"
-          className="show-output-button"
-          onClick={onShowOutput}
-          title="Show rendering output"
-        >
-          <Eye size={16} />
-          <span>Show Output</span>
-        </button>
-      )}
     </>
   );
 
   const hasActiveFilters = filters.naturalLanguageQuery || filters.dateRange || filters.modelFilter || filters.ratingFilter;
 
-  const filterButtons = (
-    <>
-      <button 
-        className={`filter-btn ${hasActiveFilters ? 'filter-active' : ''}`} 
-        onClick={() => setIsFilterPanelOpen(true)}
-        title={getFilterTooltip()}
-      >
-        <Filter size={16} />
-        {hasActiveFilters && <span className="filter-indicator" />}
-      </button>
-      {hasActiveFilters && (
-        <button
-          className="filter-clear-btn"
-          onClick={() => onFiltersChange({
-            searchTerm: filters.searchTerm,
-            dateRange: undefined,
-            modelFilter: undefined,
-            ratingFilter: undefined,
-            naturalLanguageQuery: '',
-            customJavaScriptFilter: undefined,
-            customRenderScript: undefined,
-            renderScriptTimestamp: undefined
-          })}
-          title="Clear all filters"
+  const filterButtons = (sampleData: Conversation | null) => {
+    // Get the appropriate sample data for the filter panel
+    const effectiveSampleData = dataSource === 'agent' && currentThread
+      ? currentThread 
+      : sampleData;
+    
+    return (
+      <>
+        {hasRenderingOutput && (
+          <button 
+            className="show-output-btn" 
+            onClick={onShowOutput}
+            title="Show rendering output"
+          >
+            <Eye size={16} />
+          </button>
+        )}
+        <button 
+          className={`filter-btn ${hasActiveFilters ? 'filter-active' : ''}`} 
+          onClick={() => {
+            setFilterPanelSampleData(effectiveSampleData);
+            setIsFilterPanelOpen(true);
+          }}
+          title={getFilterTooltip()}
         >
-          <X size={16} />
+          <Filter size={16} />
+          {hasActiveFilters && <span className="filter-indicator" />}
         </button>
-      )}
-    </>
-  );
+        {hasActiveFilters && (
+          <button
+            className="filter-clear-btn"
+            onClick={() => onFiltersChange({
+              searchTerm: filters.searchTerm,
+              dateRange: undefined,
+              modelFilter: undefined,
+              ratingFilter: undefined,
+              naturalLanguageQuery: '',
+              customJavaScriptFilter: undefined,
+              customRenderScript: undefined,
+              renderScriptTimestamp: undefined
+            })}
+            title="Clear all filters"
+          >
+            <X size={16} />
+          </button>
+        )}
+      </>
+    );
+  };
 
   const conversationHeader = (
     <LogoHeader
@@ -233,6 +242,8 @@ export function ConversationList({
           searchAction={filterButtons}
           emptyState={emptyState}
           className="conversation-list"
+          selectedId={selectedId}
+          getItemId={(conv) => conv.id}
         />
         {dataSource === 'agent' && agentPagination && agentPagination.totalPages > 1 && (
           <Pagination
@@ -254,6 +265,7 @@ export function ConversationList({
         currentThread={currentThread}
         conversations={conversations}
         containerRef={displayMode === 'magic' ? document.querySelector('.conversation-list-wrapper') as HTMLElement : undefined}
+        sampleData={filterPanelSampleData}
       />
       <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </>

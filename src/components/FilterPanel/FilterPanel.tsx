@@ -22,6 +22,7 @@ interface FilterPanelProps {
   currentThread?: any; // Current selected thread for sample data
   conversations: Conversation[]; // For extracting available models
   containerRef?: HTMLElement; // Reference to container for positioning in magic mode
+  sampleData?: any; // Generic sample data (can be thread or conversation)
 }
 
 const STORAGE_KEY = 'filterPanelSize';
@@ -33,7 +34,7 @@ const DEFAULT_HEIGHT = 600;
 
 type FilterTab = 'static' | 'natural';
 
-export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, currentThread, conversations, containerRef }: FilterPanelProps) {
+export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, currentThread, conversations, containerRef, sampleData }: FilterPanelProps) {
   const { dataSource } = useFeedbackStore();
   const [activeTab, setActiveTab] = useState<FilterTab>('static');
   const [displayMode, setDisplayMode] = useState(storageUtils.getDisplayMode());
@@ -276,17 +277,22 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
 
     try {
       console.log('🔍 [FilterPanel] Fetching prompt from server:', naturalQuery);
-      console.log('   Sample data available:', !!currentThread);
+      const effectiveSampleData = sampleData || currentThread;
+      console.log('   Sample data available:', !!effectiveSampleData);
       
       const requestBody: any = {
         llmConfiguration: selectedLLM,
         query: naturalQuery
       };
       
-      if (currentThread) {
-        requestBody.sampleData = currentThread;
-        console.log('   Including sample data from current thread');
-        console.log('   Sample thread ID:', currentThread.thread_id);
+      if (effectiveSampleData) {
+        requestBody.sampleData = effectiveSampleData;
+        console.log('   Including sample data');
+        if (effectiveSampleData.thread_id) {
+          console.log('   Sample thread ID:', effectiveSampleData.thread_id);
+        } else if (effectiveSampleData.id) {
+          console.log('   Sample conversation ID:', effectiveSampleData.id);
+        }
       } else {
         console.log('   No sample data available - using schema-based approach');
       }
@@ -325,9 +331,11 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
   };
 
   const generatePrompt = (query: string) => {
-    // If we have sample data (current thread), use it in the prompt
-    if (currentThread) {
-      return `You are a JavaScript code generator for processing LangGraph conversation data. Based on the user's query, generate one or both types of scripts:
+    const effectiveSampleData = sampleData || currentThread;
+    // If we have sample data, use it in the prompt
+    if (effectiveSampleData) {
+      const dataType = effectiveSampleData.thread_id ? 'LangGraph conversation' : 'conversation';
+      return `You are a JavaScript code generator for processing ${dataType} data. Based on the user's query, generate one or both types of scripts:
 
 1. FILTER SCRIPT: For narrowing down the conversation list
 2. RENDER SCRIPT: For creating visualizations (markdown or graphs)
@@ -335,7 +343,7 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
 IMPORTANT: The complete dataset is an array of objects similar to the sample provided below.
 
 SAMPLE DATA (one object from the array):
-${JSON.stringify(currentThread, null, 2)}
+${JSON.stringify(effectiveSampleData, null, 2)}
 
 DATASET STRUCTURE:
 The complete dataset is an array of similar objects. Each object represents a conversation thread with:
@@ -476,7 +484,8 @@ Generate the filter expression:`;
     try {
       console.log('🔍 [FilterPanel] Executing natural language query:', naturalQuery);
       console.log('   Using LLM configuration:', selectedLLM);
-      console.log('   Sample data available:', !!currentThread);
+      const effectiveSampleData = sampleData || currentThread;
+      console.log('   Sample data available:', !!effectiveSampleData);
       
       // Prepare request body with optional sample data
       const requestBody: any = {
@@ -484,11 +493,15 @@ Generate the filter expression:`;
         query: naturalQuery
       };
       
-      // Include current thread as sample data if available
-      if (currentThread) {
-        requestBody.sampleData = currentThread;
-        console.log('   Including sample data from current thread');
-        console.log('   Sample thread ID:', currentThread.thread_id);
+      // Include sample data if available
+      if (effectiveSampleData) {
+        requestBody.sampleData = effectiveSampleData;
+        console.log('   Including sample data');
+        if (effectiveSampleData.thread_id) {
+          console.log('   Sample thread ID:', effectiveSampleData.thread_id);
+        } else if (effectiveSampleData.id) {
+          console.log('   Sample conversation ID:', effectiveSampleData.id);
+        }
       } else {
         console.log('   No sample data available - using schema-based approach');
       }
@@ -729,6 +742,9 @@ Generate the filter expression:`;
         
         <div className="filter-panel-header">
           <h3>Filters</h3>
+          {displayMode === 'magic' && filters.naturalLanguageQuery && (
+            <span className="active-filter-badge-header">Active Natural Language Filter</span>
+          )}
           <button className="close-btn" onClick={onClose}>
             <X size={20} />
           </button>
@@ -875,7 +891,7 @@ Generate the filter expression:`;
                 <div className="filter-section-header">
                   <MessageSquare size={16} />
                   <h4>Natural Language Query</h4>
-                  {filters.naturalLanguageQuery && (
+                  {filters.naturalLanguageQuery && displayMode !== 'magic' && (
                     <span className="active-filter-badge">Active Natural Language Filter</span>
                   )}
                   <div className="llm-selector-header">
@@ -1077,12 +1093,15 @@ Generate the filter expression:`;
                       setExecutionError('');
                       setShowPrompt(false);
                       setFetchedPrompt('');
-                      // Clear active natural language filter
-                      if (filters.naturalLanguageQuery) {
+                      setLastGeneratedScripts(null);
+                      // Clear active natural language filter, filter script, and render script
+                      if (filters.naturalLanguageQuery || filters.customJavaScriptFilter || filters.customRenderScript) {
                         onFiltersChange({
                           ...filters,
                           customJavaScriptFilter: undefined,
-                          naturalLanguageQuery: undefined
+                          customRenderScript: undefined,
+                          naturalLanguageQuery: undefined,
+                          renderScriptTimestamp: undefined
                         });
                       }
                     }}

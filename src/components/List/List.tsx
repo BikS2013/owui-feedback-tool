@@ -11,9 +11,11 @@ interface ListProps<T> {
   searchValue?: string;
   onSearchChange?: (value: string) => void;
   searchPlaceholder?: string;
-  searchAction?: ReactNode;
+  searchAction?: ReactNode | ((sampleData: T | null) => ReactNode);
   emptyState?: ReactNode;
   className?: string;
+  selectedId?: string | null;
+  getItemId?: (item: T) => string;
 }
 
 export function List<T>({
@@ -27,13 +29,36 @@ export function List<T>({
   searchPlaceholder = 'Search...',
   searchAction,
   emptyState,
-  className = ''
+  className = '',
+  selectedId = null,
+  getItemId
 }: ListProps<T>) {
   const defaultEmptyState = (
     <div className="list-empty-state">
       <p>No items available</p>
     </div>
   );
+
+  // Calculate sample data based on selection state
+  const getSampleData = (): T | null => {
+    if (items.length === 0) return null;
+    
+    if (selectedId && getItemId) {
+      // If there's a selected item, find and return it
+      const selectedItem = items.find(item => getItemId(item) === selectedId);
+      if (selectedItem) return selectedItem;
+    }
+    
+    // Otherwise, return the first item
+    return items[0];
+  };
+
+  const sampleData = getSampleData();
+  
+  // Resolve searchAction - if it's a function, call it with sampleData
+  const resolvedSearchAction = typeof searchAction === 'function' 
+    ? searchAction(sampleData) 
+    : searchAction;
 
   return (
     <div className={`list-container ${className}`}>
@@ -51,7 +76,7 @@ export function List<T>({
               className="list-search-input"
             />
           </div>
-          {searchAction && <div className="list-search-action">{searchAction}</div>}
+          {resolvedSearchAction && <div className="list-search-action">{resolvedSearchAction}</div>}
         </div>
       )}
 

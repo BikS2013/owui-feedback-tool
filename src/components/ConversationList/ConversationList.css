@@ -257,6 +257,27 @@
   color: var(--accent-red);
 }
 
+/* Show output button in search bar */
+.show-output-btn {
+  background: none;
+  color: var(--accent-primary);
+  border: none;
+  padding: 10px 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 42px;
+  margin-right: 8px;
+}
+
+.show-output-btn:hover {
+  background-color: var(--bg-secondary);
+  color: var(--accent-blue);
+}
+
 /* Responsive behavior for narrow panels */
 @media (max-width: 400px) {
   .counts-text {
@@ -296,24 +317,3 @@
   border-color: var(--border-secondary);
 }
 
-/* Show Output button for magic mode */
-.show-output-button {
-  background: linear-gradient(135deg, var(--accent-primary), var(--accent-blue));
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 6px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 13px;
-  font-weight: 500;
-  transition: all 0.2s;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.show-output-button:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
