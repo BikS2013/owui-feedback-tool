@@ -136,7 +136,7 @@ function AppContent() {
                   : langGraphThreads)
               : langGraphThreads;
             
-            const result = executeRenderScript(threadsToRender, filters.customRenderScript);
+            const result = executeRenderScript(threadsToRender, filters.customRenderScript || '');
             
             setRenderingOverlay({
               isVisible: true,
@@ -178,7 +178,7 @@ function AppContent() {
             : langGraphThreads)
         : langGraphThreads;
       
-      const result = executeRenderScript(threadsToRender, filters.customRenderScript);
+      const result = executeRenderScript(threadsToRender, filters.customRenderScript || '');
       
       setRenderingOverlay({
         isVisible: true,

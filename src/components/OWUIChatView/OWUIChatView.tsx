@@ -4,6 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { User, Bot, ThumbsUp, ThumbsDown, Download, FileJson, FileText, File } from 'lucide-react';
 import { Conversation, QAPair } from '../../types/conversation';
 import { Message } from '../../types/feedback';
+import { CollapsibleJSON } from '../CollapsibleJSON';
 import './OWUIChatView.css';
 
 interface OWUIChatViewProps {
@@ -25,9 +26,11 @@ export function OWUIChatView({ conversation, qaPairs, showSourceView = false, on
   if (showSourceView) {
     return (
       <div className="raw-json-container">
-        <pre className="raw-json-content">
-          {JSON.stringify(conversation, null, 2)}
-        </pre>
+        <CollapsibleJSON 
+          data={conversation}
+          defaultExpanded={false}
+          maxInitialDepth={2}
+        />
       </div>
     );
   }

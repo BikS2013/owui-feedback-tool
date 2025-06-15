@@ -22,6 +22,7 @@ import { PromptSelectorModal } from '../PromptSelectorModal/PromptSelectorModal'
 import { PromptResultsModal } from '../PromptResultsModal/PromptResultsModal';
 import { LangGraphChatView } from '../LangGraphChatView/LangGraphChatView';
 import { OWUIChatView } from '../OWUIChatView/OWUIChatView';
+import { CollapsibleJSON } from '../CollapsibleJSON';
 import { 
   downloadAsJSON, 
   downloadAsMarkdown,
@@ -675,13 +676,15 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
       ) : activeTab === 'analytics' ? (
         showSourceView.analytics ? (
           <div className="raw-json-container">
-            <pre className="raw-json-content">
-              {JSON.stringify({
+            <CollapsibleJSON 
+              data={{
                 conversations: conversations,
                 qaPairs: allQaPairs,
                 selectedConversation: conversation
-              }, null, 2)}
-            </pre>
+              }}
+              defaultExpanded={false}
+              maxInitialDepth={1}
+            />
           </div>
         ) : (
           <div className="analytics-container">
@@ -695,9 +698,11 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
       ) : activeTab === 'documents' ? (
         showSourceView.documents ? (
           <div className="raw-json-container">
-            <pre className="raw-json-content">
-              {JSON.stringify(documents || [], null, 2)}
-            </pre>
+            <CollapsibleJSON 
+              data={documents || []}
+              defaultExpanded={false}
+              maxInitialDepth={1}
+            />
           </div>
         ) : (
           <div className="documents-container">

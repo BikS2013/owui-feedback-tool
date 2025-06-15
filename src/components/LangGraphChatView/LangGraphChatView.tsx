@@ -2,6 +2,7 @@ import { format } from 'date-fns';
 import ReactMarkdown from 'react-markdown';
 import { User, Bot } from 'lucide-react';
 import { LangGraphThread, LangGraphMessage } from '../../types/langgraph';
+import { CollapsibleJSON } from '../CollapsibleJSON';
 import './LangGraphChatView.css';
 
 interface LangGraphChatViewProps {
@@ -18,9 +19,11 @@ export function LangGraphChatView({ thread, showSourceView = false }: LangGraphC
   if (showSourceView) {
     return (
       <div className="raw-json-container">
-        <pre className="raw-json-content">
-          {JSON.stringify(thread, null, 2)}
-        </pre>
+        <CollapsibleJSON 
+          data={thread}
+          defaultExpanded={false}
+          maxInitialDepth={2}
+        />
       </div>
     );
   }

@@ -1,0 +1,216 @@
+.collapsible-json {
+  font-family: 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-primary);
+}
+
+.collapsible-json.empty {
+  padding: 12px;
+}
+
+/* Controls */
+.json-controls {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.json-control-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.json-control-btn:hover {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+/* JSON Tree */
+.json-tree {
+  overflow-x: auto;
+}
+
+/* JSON Node */
+.json-node {
+  position: relative;
+  margin: 2px 0;
+}
+
+.json-node[data-depth="0"] { padding-left: 0; }
+.json-node[data-depth="1"] { padding-left: 20px; }
+.json-node[data-depth="2"] { padding-left: 40px; }
+.json-node[data-depth="3"] { padding-left: 60px; }
+.json-node[data-depth="4"] { padding-left: 80px; }
+.json-node[data-depth="5"] { padding-left: 100px; }
+.json-node[data-depth="6"] { padding-left: 120px; }
+.json-node[data-depth="7"] { padding-left: 140px; }
+.json-node[data-depth="8"] { padding-left: 160px; }
+
+.json-node-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: default;
+  position: relative;
+  padding: 2px 0;
+}
+
+.json-node.expandable .json-node-header {
+  cursor: pointer;
+}
+
+.json-node.expandable .json-node-header:hover {
+  background: var(--bg-hover);
+  border-radius: 4px;
+  margin: 0 -4px;
+  padding: 2px 4px;
+}
+
+/* Toggle Icon */
+.json-toggle {
+  display: flex;
+  align-items: center;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+
+/* Copy Button */
+.json-copy-btn {
+  opacity: 0;
+  margin-left: 8px;
+  padding: 4px;
+  background: var(--bg-hover);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.json-node-header:hover .json-copy-btn {
+  opacity: 1;
+}
+
+.json-copy-btn:hover {
+  background: var(--color-primary);
+  color: white;
+  border-color: var(--color-primary);
+}
+
+/* JSON Values */
+.json-key {
+  color: var(--text-secondary);
+  margin-right: 4px;
+}
+
+.json-string {
+  color: #22863a; /* Green */
+}
+
+.json-string.highlighted {
+  background: rgba(255, 235, 59, 0.3);
+  padding: 0 2px;
+  border-radius: 2px;
+}
+
+.json-number {
+  color: #005cc5; /* Blue */
+}
+
+.json-boolean {
+  color: #d73a49; /* Red */
+}
+
+.json-null,
+.json-undefined {
+  color: #6f42c1; /* Purple */
+  font-style: italic;
+}
+
+.json-empty {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+.json-collapsed {
+  color: var(--text-secondary);
+  font-style: italic;
+  background: var(--bg-hover);
+  padding: 0 6px;
+  border-radius: 4px;
+  font-size: 11px;
+}
+
+/* Children */
+.json-children {
+  position: relative;
+}
+
+.json-children::before {
+  content: '';
+  position: absolute;
+  left: -10px;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: var(--border-color);
+  opacity: 0.3;
+}
+
+/* Dark theme adjustments */
+[data-theme="dark"] .json-string {
+  color: #7ec699; /* Lighter green */
+}
+
+[data-theme="dark"] .json-number {
+  color: #79b8ff; /* Lighter blue */
+}
+
+[data-theme="dark"] .json-boolean {
+  color: #f97583; /* Lighter red */
+}
+
+[data-theme="dark"] .json-null,
+[data-theme="dark"] .json-undefined {
+  color: #b392f0; /* Lighter purple */
+}
+
+/* Light theme adjustments */
+[data-theme="light"] .json-control-btn {
+  background: #f6f8fa;
+  border-color: #d1d5da;
+}
+
+[data-theme="light"] .json-control-btn:hover {
+  background: #0366d6;
+  border-color: #0366d6;
+}
+
+[data-theme="light"] .json-node.expandable .json-node-header:hover {
+  background: #f6f8fa;
+}
+
+[data-theme="light"] .json-copy-btn {
+  background: #f6f8fa;
+  border-color: #d1d5da;
+}
+
+[data-theme="light"] .json-collapsed {
+  background: #f6f8fa;
+}

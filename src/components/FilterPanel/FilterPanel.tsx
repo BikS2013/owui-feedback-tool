@@ -34,7 +34,7 @@ const DEFAULT_HEIGHT = 600;
 
 type FilterTab = 'static' | 'natural';
 
-export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, currentThread, conversations, containerRef, sampleData }: FilterPanelProps) {
+export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, currentThread, conversations, sampleData }: FilterPanelProps) {
   const { dataSource } = useFeedbackStore();
   const [activeTab, setActiveTab] = useState<FilterTab>('static');
   const [displayMode, setDisplayMode] = useState(storageUtils.getDisplayMode());
