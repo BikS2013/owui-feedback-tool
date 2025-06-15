@@ -138,31 +138,78 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
   };
 
   const handleDownload = async (format: 'json' | 'markdown' | 'docx' | 'pdf') => {
-    if (!conversation) return;
-    
-    const data = await formatConversationForDownload(conversation, qaPairs);
-    const filename = `${dataSource === 'agent' ? 'thread' : 'conversation'}-${conversation.id.slice(0, 8)}`;
-    
-    switch (format) {
-      case 'json':
-        downloadAsJSON(data.jsonData, filename);
-        break;
-      case 'markdown':
-        downloadAsMarkdown(data.markdownContent, filename);
-        break;
-      case 'docx':
-        if (data.docxBlob) {
-          await downloadAsDocx(data.docxBlob, filename);
-        }
-        break;
-      case 'pdf':
-        if (data.pdfBlob) {
-          await downloadAsPDF(data.pdfBlob, filename);
-        }
-        break;
+    console.log('handleDownload called with format:', format);
+    if (!conversation) {
+      console.log('No conversation available');
+      return;
     }
     
-    setShowDownloadMenu(false);
+    // Build conversation with messages for LangGraph data
+    let conversationToExport = conversation;
+    
+    if (dataSource === 'agent' && currentThread) {
+      // For LangGraph data, build the full conversation object with messages
+      conversationToExport = {
+        ...conversation,
+        messages: currentThread.values?.messages?.map((msg: any, index: number) => ({
+          id: msg.id || `${currentThread.thread_id}-${index}`,
+          parentId: null,
+          childrenIds: [],
+          role: msg.type === 'human' ? 'user' : 'assistant',
+          content: typeof msg.content === 'string' ? msg.content : 
+                   typeof msg.text === 'string' ? msg.text :
+                   typeof msg.content === 'object' && msg.content?.text ? msg.content.text :
+                   JSON.stringify(msg.content || msg.text || ''),
+          timestamp: msg.timestamp || (msg.type === 'human' 
+            ? new Date(currentThread.created_at).getTime() / 1000
+            : new Date(currentThread.updated_at || currentThread.created_at).getTime() / 1000),
+          model: msg.response_metadata?.model_name || msg.model || 'unknown',
+          modelName: msg.response_metadata?.model_name || msg.model || 'AI Assistant',
+          userId: msg.type === 'human' ? (currentThread.metadata?.user_id || 'user') : 'assistant'
+        })) || []
+      };
+    }
+    
+    console.log('Conversation data to export:', {
+      id: conversationToExport.id,
+      title: conversationToExport.title,
+      messagesCount: conversationToExport.messages?.length || 0,
+      dataSource
+    });
+    
+    try {
+      // Extract metadata and config including user-agent
+      const metadata = dataSource === 'agent' && currentThread 
+        ? { ...currentThread.metadata, config: currentThread.config }
+        : undefined;
+        
+      const data = await formatConversationForDownload(conversationToExport, qaPairs, metadata);
+      const filename = `${dataSource === 'agent' ? 'thread' : 'conversation'}-${conversation.id.slice(0, 8)}`;
+      
+      switch (format) {
+        case 'json':
+          downloadAsJSON(data.jsonData, filename);
+          break;
+        case 'markdown':
+          downloadAsMarkdown(data.markdownContent, filename);
+          break;
+        case 'docx':
+          if (data.docxBlob) {
+            await downloadAsDocx(data.docxBlob, filename);
+          }
+          break;
+        case 'pdf':
+          if (data.pdfBlob) {
+            await downloadAsPDF(data.pdfBlob, filename);
+          }
+          break;
+      }
+      
+      setShowDownloadMenu(false);
+    } catch (error) {
+      console.error('Download failed:', error);
+      alert('Failed to download. Please check the console for details.');
+    }
   };
 
   // Early setup for header elements when no conversation
@@ -297,10 +344,41 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     
     setIsExporting(true);
     
+    // Build conversation with messages for LangGraph data
+    let conversationToExport = conversation;
+    
+    if (dataSource === 'agent' && currentThread) {
+      // For LangGraph data, build the full conversation object with messages
+      conversationToExport = {
+        ...conversation,
+        messages: currentThread.values?.messages?.map((msg: any, index: number) => ({
+          id: msg.id || `${currentThread.thread_id}-${index}`,
+          parentId: null,
+          childrenIds: [],
+          role: msg.type === 'human' ? 'user' : 'assistant',
+          content: typeof msg.content === 'string' ? msg.content : 
+                   typeof msg.text === 'string' ? msg.text :
+                   typeof msg.content === 'object' && msg.content?.text ? msg.content.text :
+                   JSON.stringify(msg.content || msg.text || ''),
+          timestamp: msg.timestamp || (msg.type === 'human' 
+            ? new Date(currentThread.created_at).getTime() / 1000
+            : new Date(currentThread.updated_at || currentThread.created_at).getTime() / 1000),
+          model: msg.response_metadata?.model_name || msg.model || 'unknown',
+          modelName: msg.response_metadata?.model_name || msg.model || 'AI Assistant',
+          userId: msg.type === 'human' ? (currentThread.metadata?.user_id || 'user') : 'assistant'
+        })) || []
+      };
+    }
+    
     try {
+      // Extract metadata and config including user-agent
+      const metadata = dataSource === 'agent' && currentThread 
+        ? { ...currentThread.metadata, config: currentThread.config }
+        : undefined;
+        
       if (dataSource === 'agent') {
         // For agent data, export conversation and Q&A pairs using PDF endpoint
-        const blob = await ApiService.exportConversationPDF(conversation, qaPairs);
+        const blob = await ApiService.exportConversationPDF(conversationToExport, qaPairs, metadata);
         
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -314,7 +392,7 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
         console.log('Export successful');
       } else {
         // For file data, export as PDF
-        const blob = await ApiService.exportConversationPDF(conversation, qaPairs);
+        const blob = await ApiService.exportConversationPDF(conversationToExport, qaPairs, metadata);
         
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -344,8 +422,13 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
       comment: ratingInfo?.comment
     };
     
+    // Extract metadata including user-agent
+    const metadata = dataSource === 'agent' && currentThread 
+      ? currentThread.metadata 
+      : undefined;
+    
     const { jsonFilename, jsonData, markdownFilename, markdownContent, docxFilename, docxBlob, pdfFilename, pdfBlob } = 
-      await formatQAPairForDownload(qaPair, conversation.id);
+      await formatQAPairForDownload(qaPair, conversation.id, metadata);
     
     if (format === 'json') {
       downloadAsJSON(jsonData, jsonFilename);
@@ -620,19 +703,47 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
         
         {showDownloadMenu && (
           <div className="download-menu">
-            <button onClick={() => handleDownload('json')}>
+            <button 
+              type="button"
+              className="download-menu-item"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownload('json');
+              }}
+            >
               <FileJson size={14} />
               <span>JSON</span>
             </button>
-            <button onClick={() => handleDownload('markdown')}>
+            <button 
+              type="button"
+              className="download-menu-item"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownload('markdown');
+              }}
+            >
               <FileText size={14} />
               <span>Markdown</span>
             </button>
-            <button onClick={() => handleDownload('docx')}>
+            <button 
+              type="button"
+              className="download-menu-item"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownload('docx');
+              }}
+            >
               <File size={14} />
               <span>Word</span>
             </button>
-            <button onClick={() => handleDownload('pdf')}>
+            <button 
+              type="button"
+              className="download-menu-item"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleDownload('pdf');
+              }}
+            >
               <FileText size={14} />
               <span>PDF</span>
             </button>

@@ -4,7 +4,7 @@ export class ApiService {
   static getApiBaseUrl(): string {
     return storageUtils.getApiUrl();
   }
-  static async exportConversationPDF(conversation: any, qaPairs: any[]): Promise<Blob> {
+  static async exportConversationPDF(conversation: any, qaPairs: any[], metadata?: any): Promise<Blob> {
     const response = await fetch(`${this.getApiBaseUrl()}/export/conversation`, {
       method: 'POST',
       headers: {
@@ -13,7 +13,8 @@ export class ApiService {
       body: JSON.stringify({
         conversation,
         qaPairs,
-        format: 'pdf'
+        format: 'pdf',
+        metadata
       })
     });
 
@@ -26,7 +27,8 @@ export class ApiService {
 
   static async exportQAPairPDF(
     qaPair: { question: any; answer: any; rating?: number | null; comment?: string | null },
-    conversationId: string
+    conversationId: string,
+    metadata?: any
   ): Promise<Blob> {
     const response = await fetch(`${this.getApiBaseUrl()}/export/qa-pair`, {
       method: 'POST',
@@ -36,7 +38,8 @@ export class ApiService {
       body: JSON.stringify({
         qaPair,
         conversationId,
-        format: 'pdf'
+        format: 'pdf',
+        metadata
       })
     });
 

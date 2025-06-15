@@ -45,14 +45,44 @@ function downloadBlob(blob: Blob, filename: string) {
   }, 100);
 }
 
-export async function formatConversationForDownload(conversation: Conversation, qaPairs: QAPair[]) {
+export async function formatConversationForDownload(conversation: Conversation, qaPairs: QAPair[], metadata?: any) {
   console.log('formatConversationForDownload called with:', { 
     conversationId: conversation.id, 
     messagesCount: conversation.messages?.length || 0,
-    qaPairsCount: qaPairs?.length || 0
+    qaPairsCount: qaPairs?.length || 0,
+    hasMetadata: !!metadata
   });
   
   const timestamp = format(new Date(), 'yyyy-MM-dd_HHmmss');
+  
+  // Extract client details from metadata or config.configurable if available
+  let userAgent = 'Not available';
+  
+  // Try to find user-agent in various possible locations
+  if (metadata?.user_agent || metadata?.userAgent || metadata?.['user-agent']) {
+    userAgent = metadata?.user_agent || metadata?.userAgent || metadata?.['user-agent'];
+  } else if (metadata?.config?.configurable) {
+    const configurable = metadata.config.configurable;
+    
+    // Look for user-agent in headers
+    userAgent = configurable['user-agent'] || 
+                configurable['User-Agent'] || 
+                configurable['x-user-agent'] ||
+                configurable['HTTP_USER_AGENT'] ||
+                'Not available';
+    
+    // If no user-agent found, create a summary from available client info
+    if (userAgent === 'Not available') {
+      const clientInfo = [];
+      if (configurable['x-client-ip']) clientInfo.push(`IP: ${configurable['x-client-ip']}`);
+      if (configurable['x-forwarded-for']) clientInfo.push(`Forwarded: ${configurable['x-forwarded-for'].split(',')[0].trim()}`);
+      if (configurable['x-original-host']) clientInfo.push(`Host: ${configurable['x-original-host']}`);
+      
+      if (clientInfo.length > 0) {
+        userAgent = `Client Info: ${clientInfo.join(', ')}`;
+      }
+    }
+  }
   
   // JSON format
   const jsonData = {
@@ -65,7 +95,9 @@ export async function formatConversationForDownload(conversation: Conversation, 
       qaPairCount: conversation.qaPairCount,
       totalRatings: conversation.totalRatings,
       averageRating: conversation.averageRating,
-      modelsUsed: conversation.modelsUsed
+      modelsUsed: conversation.modelsUsed,
+      userAgent: userAgent,
+      metadata: metadata || {}
     },
     messages: conversation.messages.map(msg => ({
       id: msg.id,
@@ -88,6 +120,7 @@ export async function formatConversationForDownload(conversation: Conversation, 
 
 **Conversation ID:** ${conversation.id}  
 **Date:** ${format(new Date(conversation.createdAt), 'yyyy-MM-dd HH:mm:ss')}  
+**User Agent:** ${userAgent}  
 **Q&A Pairs:** ${conversation.qaPairCount}  
 **Rated Responses:** ${conversation.totalRatings}  
 ${conversation.averageRating ? `**Average Rating:** ${conversation.averageRating.toFixed(1)}/10` : ''}
@@ -143,6 +176,13 @@ ${conversation.messages.map(msg => {
       children: [
         new TextRun({ text: 'Date: ', bold: true, font: 'Aptos' }),
         new TextRun({ text: format(new Date(conversation.createdAt), 'yyyy-MM-dd HH:mm:ss'), font: 'Aptos' })
+      ],
+      spacing: { after: 120 }
+    }),
+    new Paragraph({
+      children: [
+        new TextRun({ text: 'User Agent: ', bold: true, font: 'Aptos' }),
+        new TextRun({ text: userAgent, font: 'Aptos' })
       ],
       spacing: { after: 120 }
     }),
@@ -309,7 +349,7 @@ ${conversation.messages.map(msg => {
   let pdfFilename = '';
   
   try {
-    pdfBlob = await ApiService.exportConversationPDF(conversation, qaPairs);
+    pdfBlob = await ApiService.exportConversationPDF(conversation, qaPairs, metadata);
     pdfFilename = `conversation_${conversation.id}_${timestamp}.pdf`;
   } catch (error) {
     console.error('PDF generation failed:', error);
@@ -330,13 +370,45 @@ ${conversation.messages.map(msg => {
 
 export async function formatQAPairForDownload(
   qaPair: { question: Message; answer: Message; rating?: number | null; comment?: string | null },
-  conversationId: string
+  conversationId: string,
+  metadata?: any
 ) {
   const timestamp = format(new Date(), 'yyyy-MM-dd_HHmmss');
+  
+  // Extract client details from metadata or config.configurable if available
+  let userAgent = 'Not available';
+  
+  // Try to find user-agent in various possible locations
+  if (metadata?.user_agent || metadata?.userAgent || metadata?.['user-agent']) {
+    userAgent = metadata?.user_agent || metadata?.userAgent || metadata?.['user-agent'];
+  } else if (metadata?.config?.configurable) {
+    const configurable = metadata.config.configurable;
+    
+    // Look for user-agent in headers
+    userAgent = configurable['user-agent'] || 
+                configurable['User-Agent'] || 
+                configurable['x-user-agent'] ||
+                configurable['HTTP_USER_AGENT'] ||
+                'Not available';
+    
+    // If no user-agent found, create a summary from available client info
+    if (userAgent === 'Not available') {
+      const clientInfo = [];
+      if (configurable['x-client-ip']) clientInfo.push(`IP: ${configurable['x-client-ip']}`);
+      if (configurable['x-forwarded-for']) clientInfo.push(`Forwarded: ${configurable['x-forwarded-for'].split(',')[0].trim()}`);
+      if (configurable['x-original-host']) clientInfo.push(`Host: ${configurable['x-original-host']}`);
+      
+      if (clientInfo.length > 0) {
+        userAgent = `Client Info: ${clientInfo.join(', ')}`;
+      }
+    }
+  }
   
   // JSON format
   const jsonData = {
     conversationId,
+    userAgent: userAgent,
+    metadata: metadata || {},
     qaPair: {
       question: {
         id: qaPair.question.id,
@@ -360,7 +432,8 @@ export async function formatQAPairForDownload(
   const markdownContent = `# Q&A Pair
 
 **Conversation ID:** ${conversationId}  
-**Date:** ${format(new Date(qaPair.question.timestamp * 1000), 'yyyy-MM-dd HH:mm:ss')}
+**Date:** ${format(new Date(qaPair.question.timestamp * 1000), 'yyyy-MM-dd HH:mm:ss')}  
+**User Agent:** ${userAgent}
 
 ## 👤 Question
 *${format(new Date(qaPair.question.timestamp * 1000), 'HH:mm:ss')}*
@@ -403,6 +476,13 @@ ${qaPair.comment ? `\n\n> **Feedback:** ${qaPair.comment}` : ''}
       children: [
         new TextRun({ text: 'Date: ', bold: true, font: 'Aptos' }),
         new TextRun({ text: format(new Date(qaPair.question.timestamp * 1000), 'yyyy-MM-dd HH:mm:ss'), font: 'Aptos' })
+      ],
+      spacing: { after: 120 }
+    }),
+    new Paragraph({
+      children: [
+        new TextRun({ text: 'User Agent: ', bold: true, font: 'Aptos' }),
+        new TextRun({ text: userAgent, font: 'Aptos' })
       ],
       spacing: { after: 400 }
     })
@@ -553,7 +633,7 @@ ${qaPair.comment ? `\n\n> **Feedback:** ${qaPair.comment}` : ''}
   let pdfFilename = '';
   
   try {
-    pdfBlob = await ApiService.exportQAPairPDF(qaPair, conversationId);
+    pdfBlob = await ApiService.exportQAPairPDF(qaPair, conversationId, metadata);
     pdfFilename = `qa_pair_${qaPair.answer.id}_${timestamp}.pdf`;
   } catch (error) {
     console.error('PDF generation failed:', error);

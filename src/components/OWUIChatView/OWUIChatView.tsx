@@ -100,6 +100,7 @@ export function OWUIChatView({ conversation, qaPairs, showSourceView = false, on
               {message.role === 'assistant' && index > 0 && conversation.messages[index - 1].role === 'user' && (
                 <div className="qa-download-container">
                   <button 
+                    type="button"
                     className="qa-download-button"
                     onClick={() => toggleQaDownloadMenu(message.id)}
                     title="Download Q&A"
@@ -109,6 +110,7 @@ export function OWUIChatView({ conversation, qaPairs, showSourceView = false, on
                   {qaDownloadMenus[message.id] && (
                     <div className="download-menu qa-download-menu">
                       <button 
+                        type="button"
                         className="download-menu-item"
                         onClick={() => handleDownloadQAPair(conversation.messages[index - 1], message, 'json')}
                       >
@@ -116,6 +118,7 @@ export function OWUIChatView({ conversation, qaPairs, showSourceView = false, on
                         <span>Q&A as JSON</span>
                       </button>
                       <button 
+                        type="button"
                         className="download-menu-item"
                         onClick={() => handleDownloadQAPair(conversation.messages[index - 1], message, 'markdown')}
                       >
@@ -123,6 +126,7 @@ export function OWUIChatView({ conversation, qaPairs, showSourceView = false, on
                         <span>Q&A as Markdown</span>
                       </button>
                       <button 
+                        type="button"
                         className="download-menu-item"
                         onClick={() => handleDownloadQAPair(conversation.messages[index - 1], message, 'docx')}
                       >
@@ -130,6 +134,7 @@ export function OWUIChatView({ conversation, qaPairs, showSourceView = false, on
                         <span>Q&A as Word</span>
                       </button>
                       <button 
+                        type="button"
                         className="download-menu-item"
                         onClick={() => handleDownloadQAPair(conversation.messages[index - 1], message, 'pdf')}
                       >
