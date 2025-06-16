@@ -35,6 +35,7 @@ import { ApiService } from '../../services/api.service';
 import { llmService } from '../../services/llm.service';
 import { AnalyticsDashboardNoHeader } from '../AnalyticsDashboard/AnalyticsDashboardNoHeader';
 import { useFeedbackStore } from '../../store/feedbackStore';
+import { storageUtils } from '../../utils/storageUtils';
 import './ConversationDetail.css';
 
 interface ConversationDetailProps {
@@ -117,7 +118,7 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     setDocumentsError(null);
     
     try {
-      const apiUrl = import.meta.env.VITE_API_URL;
+      const apiUrl = await storageUtils.getApiUrl();
       const response = await fetch(
         `${apiUrl}/agent/thread/${conversation.id}/documents?agentName=${encodeURIComponent(currentAgent)}`
       );

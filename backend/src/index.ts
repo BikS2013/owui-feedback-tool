@@ -2,13 +2,14 @@ import dotenv from 'dotenv';
 // Load environment variables before any other imports
 dotenv.config();
 
-import express, { Application } from 'express';
+import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import swaggerUi from 'swagger-ui-express';
 import { exportRoutes } from './routes/export.routes.js';
 import { githubRoutes } from './routes/github.routes.js';
 import { llmRoutes } from './routes/llm.routes.js';
 import { agentRoutes } from './routes/agent.routes.js';
+import { debugRoutes } from './routes/debug.routes.js';
 import { swaggerSpec } from './swagger.config.js';
 
 const app: Application = express();
@@ -68,8 +69,29 @@ app.use((req, res, next) => {
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Swagger documentation
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec));
+// Swagger documentation with dynamic host detection
+app.use('/api-docs', 
+  swaggerUi.serve, 
+  (req: any, res: any, next: any) => {
+    // Get the host from the request header to handle Docker port mappings
+    const host = req.get('host') || `localhost:${PORT}`;
+    const protocol = req.get('x-forwarded-proto') || req.protocol || 'http';
+    
+    // Create a dynamic swagger spec with the correct server URL
+    const dynamicSwaggerSpec: any = {
+      ...swaggerSpec,
+      servers: [
+        {
+          url: `${protocol}://${host}`,
+          description: 'Current server (auto-detected from request)'
+        }
+      ]
+    };
+    
+    // Serve the dynamic spec
+    return swaggerUi.setup(dynamicSwaggerSpec)(req, res, next);
+  }
+);
 
 /**
  * @swagger
@@ -101,6 +123,7 @@ app.use('/api/export', exportRoutes);
 app.use('/api/github', githubRoutes);
 app.use('/api/llm', llmRoutes);
 app.use('/api/agent', agentRoutes);
+app.use('/api/debug', debugRoutes);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

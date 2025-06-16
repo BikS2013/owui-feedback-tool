@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import { X, Upload, Database } from 'lucide-react';
 import { useFeedbackStore } from '../../store/feedbackStore';
 import { useResizable } from '../../hooks/useResizable';
+import { storageUtils } from '../../utils/storageUtils';
 import './UploadModal.css';
 
 interface UploadModalProps {
@@ -119,7 +120,7 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
     setIsLoadingAgents(true);
     setError(null);
     try {
-      const apiUrl = import.meta.env.VITE_API_URL;
+      const apiUrl = await storageUtils.getApiUrl();
       const url = `${apiUrl}/agent`;
       console.log('📡 Fetching from:', url);
       const response = await fetch(url);

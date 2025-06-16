@@ -1,11 +1,18 @@
 import { storageUtils } from '../utils/storageUtils';
 
 export class ApiService {
-  static getApiBaseUrl(): string {
-    return storageUtils.getApiUrl();
+  private static apiUrlPromise: Promise<string> | null = null;
+
+  static async getApiBaseUrl(): Promise<string> {
+    if (!this.apiUrlPromise) {
+      this.apiUrlPromise = storageUtils.getApiUrl();
+    }
+    return this.apiUrlPromise;
   }
+
   static async exportConversationPDF(conversation: any, qaPairs: any[], metadata?: any): Promise<Blob> {
-    const response = await fetch(`${this.getApiBaseUrl()}/export/conversation`, {
+    const apiUrl = await this.getApiBaseUrl();
+    const response = await fetch(`${apiUrl}/export/conversation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -30,7 +37,8 @@ export class ApiService {
     conversationId: string,
     metadata?: any
   ): Promise<Blob> {
-    const response = await fetch(`${this.getApiBaseUrl()}/export/qa-pair`, {
+    const apiUrl = await this.getApiBaseUrl();
+    const response = await fetch(`${apiUrl}/export/qa-pair`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -52,7 +60,7 @@ export class ApiService {
 
   static async checkHealth(): Promise<{ status: string; timestamp: string }> {
     // For health check, we need to determine if the URL already includes the path
-    const baseUrl = this.getApiBaseUrl();
+    const baseUrl = await this.getApiBaseUrl();
     let healthUrl: string;
     
     // If the URL ends with /api, go up one level for health check

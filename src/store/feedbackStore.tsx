@@ -3,6 +3,7 @@ import { FeedbackEntry } from '../types/feedback';
 import { Conversation, QAPair, FilterOptions } from '../types/conversation';
 import { processRawData } from '../utils/dataProcessor';
 import { LangGraphThread } from '../types/langgraph';
+import { storageUtils } from '../utils/storageUtils';
 
 type ViewMode = 'details' | 'analytics';
 
@@ -311,7 +312,7 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
       setLoadingSource('agent');
       setError(null);
       
-      const apiUrl = import.meta.env.VITE_API_URL;
+      const apiUrl = await storageUtils.getApiUrl();
       const limit = 50; // Show 50 threads per page
       let url = `${apiUrl}/agent/threads?agentName=${encodeURIComponent(agentName)}&page=${page}&limit=${limit}`;
       

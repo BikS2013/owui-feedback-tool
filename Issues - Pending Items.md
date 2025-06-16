@@ -170,6 +170,45 @@
 
 ## Pending Items
 
+### Docker Runtime Configuration Not Working
+**Date Added:** 2025-01-16
+**Status:** Debugging Added - Testing Required
+**Description:** Runtime configuration via `-e API_URL=...` in Docker isn't working, app falls back to build-time value.
+
+**Investigation and Debug Steps Added:**
+1. **Enhanced configLoader.ts with extensive logging:**
+   - Logs current location, build-time config, fetch URL
+   - Logs response status, headers, and raw response
+   - Logs parse attempts and fallback behavior
+   - Uses absolute URL with `window.location.origin` for fetch
+
+2. **Updated SettingsModal to show runtime config status:**
+   - Added runtime config status indicator (loading/runtime/buildtime)
+   - Shows which configuration source is active
+   - Updated documentation to reflect runtime configuration support
+   - Fixed incorrect documentation about Docker runtime config
+
+3. **Created debugging tools:**
+   - `test_scripts/test-docker-config.sh` - Shell script to test Docker configuration
+   - `test_scripts/debug-config.html` - HTML page to test config endpoint directly
+   - Both tools help identify where the configuration flow is breaking
+
+**Next Steps:**
+1. Build and run Docker container with runtime config:
+   ```bash
+   docker build -t owui-feedback-ui .
+   docker run -e API_URL=http://localhost:3120/api -p 8080:80 owui-feedback-ui
+   ```
+2. Check browser console for `[ConfigLoader]` debug messages
+3. Run `./test_scripts/test-docker-config.sh` to verify nginx configuration
+4. Access `http://localhost:8080/test_scripts/debug-config.html` to test endpoint directly
+
+**Potential Issues to Check:**
+- CORS or security policies blocking the fetch
+- Base URL or public path configuration issues
+- Nginx not properly substituting the environment variable
+- Cache issues preventing config reload
+
 ### Display Mode Differences in Natural Language Filter Generation
 **Date Added:** 2025-01-14
 **Status:** Investigation Complete

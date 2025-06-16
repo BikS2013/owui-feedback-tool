@@ -13,8 +13,8 @@ const options: swaggerJsdoc.Options = {
     },
     servers: [
       {
-        url: `http://${process.env.HOST || 'localhost'}:${process.env.PORT || 3001}`,
-        description: 'Development server'
+        url: process.env.SWAGGER_SERVER_URL || `http://${process.env.SWAGGER_HOST || process.env.HOST || 'localhost'}:${process.env.SWAGGER_PORT || process.env.PORT || 3001}`,
+        description: process.env.SWAGGER_SERVER_DESCRIPTION || 'Development server'
       }
     ],
     tags: [

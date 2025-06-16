@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, Activity, Github, ChevronRight, ChevronDown, FileText, Folder, Monitor } from 'lucide-react';
+import { X, Activity, Github, ChevronRight, ChevronDown, FileText, Folder, Monitor, Info } from 'lucide-react';
 import { storageUtils, DisplayMode } from '../../utils/storageUtils';
 import { ApiService } from '../../services/api.service';
 import { GitHubService } from '../../services/github.service';
@@ -61,6 +61,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [githubTree, setGitHubTree] = useState<FileTreeNode | null>(null);
   const [githubError, setGitHubError] = useState<string | null>(null);
   const [displayMode, setDisplayMode] = useState<DisplayMode>(storageUtils.getDisplayMode());
+  const [runtimeConfigStatus, setRuntimeConfigStatus] = useState<'loading' | 'runtime' | 'buildtime'>('loading');
   
   // Use resizable hook
   const {
@@ -79,11 +80,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   
   
   // Get configuration from environment variables
-  const apiUrl = storageUtils.getApiUrl();
+  const [apiUrl, setApiUrl] = useState<string>(storageUtils.getApiUrlSync());
   const githubRepo = import.meta.env.VITE_GITHUB_REPO || 'Not configured';
   const hasGitHubToken = !!import.meta.env.VITE_GITHUB_TOKEN;
   const dataFolder = storageUtils.getDataFolder();
   const promptsFolder = storageUtils.getPromptsFolder();
+
+  // Load the actual API URL asynchronously and check if it's from runtime config
+  useEffect(() => {
+    storageUtils.getApiUrl().then(url => {
+      setApiUrl(url);
+      // Check if the URL matches the build-time value to determine the source
+      const buildTimeUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      if (url !== buildTimeUrl) {
+        setRuntimeConfigStatus('runtime');
+      } else {
+        setRuntimeConfigStatus('buildtime');
+      }
+    });
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -252,8 +267,69 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   {apiUrl}
                 </div>
                 <p className="settings-help">
-                  Configured in .env file (VITE_API_URL)
+                  Currently using the API URL shown above
                 </p>
+              </div>
+
+              <div className="settings-info-box">
+                <div className="settings-info-header">
+                  <Info size={16} />
+                  <h4>API URL Configuration Sources</h4>
+                </div>
+                <div className="settings-info-content">
+                  <p>The API URL is determined by the following priority order:</p>
+                  <ol>
+                    <li>
+                      <strong>Runtime Configuration (Docker)</strong>
+                      <code>/config.json endpoint</code>
+                      {runtimeConfigStatus === 'runtime' && <span className="source-badge active">✓ ACTIVE</span>}
+                      {runtimeConfigStatus === 'buildtime' && <span className="source-badge">✗ NOT USED</span>}
+                      {runtimeConfigStatus === 'loading' && <span className="source-badge">⏳ CHECKING...</span>}
+                    </li>
+                    <li>
+                      <strong>Environment Variable (Build-time)</strong>
+                      <code>VITE_API_URL={import.meta.env.VITE_API_URL || '<not set>'}</code>
+                      {runtimeConfigStatus === 'buildtime' && import.meta.env.VITE_API_URL && <span className="source-badge active">✓ ACTIVE</span>}
+                    </li>
+                    <li>
+                      <strong>Default Value (Fallback)</strong>
+                      <code>http://localhost:3001</code>
+                      {runtimeConfigStatus === 'buildtime' && !import.meta.env.VITE_API_URL && <span className="source-badge active">✓ ACTIVE</span>}
+                    </li>
+                  </ol>
+                  
+                  <div className="settings-note">
+                    <strong>Important Notes:</strong>
+                    <ul>
+                      <li>The API URL can be set at <strong>runtime</strong> when using Docker</li>
+                      <li>When building locally, create a <code>.env</code> file with <code>VITE_API_URL=http://your-api-url</code></li>
+                      <li>When using Docker with runtime configuration:
+                        <pre>docker run -e API_URL=http://your-api-url -p 8080:80 owui-feedback-ui</pre>
+                      </li>
+                      <li>For build-time configuration, use:
+                        <pre>docker build --build-arg VITE_API_URL=http://your-api-url .</pre>
+                      </li>
+                    </ul>
+                  </div>
+                  
+                  <div className="settings-info-box" style={{ marginTop: '16px' }}>
+                    <div className="settings-info-header">
+                      <Info size={14} />
+                      <h5>Docker Runtime Configuration</h5>
+                    </div>
+                    <div className="settings-info-content">
+                      <p><strong>Runtime configuration (recommended):</strong></p>
+                      <pre>docker run -e API_URL=http://localhost:3120/api -p 3121:80 owui-feedback-ui</pre>
+                      <p>This uses the nginx <code>/config.json</code> endpoint to provide runtime configuration.</p>
+                      
+                      <p><strong>Build-time configuration (alternative):</strong></p>
+                      <pre>docker build --build-arg VITE_API_URL=http://localhost:3120/api -t owui-feedback-ui .
+docker run -p 3121:80 owui-feedback-ui</pre>
+                      
+                      <p><strong>Note:</strong> Port 80 is the nginx port inside the container. Map it to your desired host port (e.g., 3121:80).</p>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               {connectionStatus === 'success' && (

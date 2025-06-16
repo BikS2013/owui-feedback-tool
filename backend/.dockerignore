@@ -1,7 +1,7 @@
 node_modules
 npm-debug.log
 dist
-.env
+#.env
 .env.local
 .env.*.local
 .DS_Store

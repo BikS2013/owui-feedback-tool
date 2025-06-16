@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import { agentService } from '../services/agent.service.js';
 import { databaseService } from '../services/database.service.js';
+import { maskAgentConnectionString, maskAgentsConnectionStrings } from '../utils/connectionStringMasker.js';
 
 const router = Router();
 
@@ -25,8 +26,8 @@ const router = Router();
  *           example: "http://localhost:3001/api/agent1"
  *         database_connection_string:
  *           type: string
- *           description: PostgreSQL connection string for direct database access
- *           example: "postgresql://user:password@localhost:5432/agent1_db"
+ *           description: PostgreSQL connection string for direct database access (username and password are masked for security)
+ *           example: "postgresql://u**r:********@localhost:5432/agent1_db"
  *     
  *     Thread:
  *       type: object
@@ -131,10 +132,12 @@ const router = Router();
 router.get('/', (req: Request, res: Response): void => {
   try {
     const agents = agentService.getAgents();
+    // Mask the database connection strings before sending response
+    const maskedAgents = maskAgentsConnectionStrings(agents);
     res.json({
       success: true,
-      agents,
-      count: agents.length
+      agents: maskedAgents,
+      count: maskedAgents.length
     });
   } catch (error) {
     console.error('Error retrieving agents:', error);
@@ -663,9 +666,11 @@ router.get('/:name', (req: Request, res: Response): void => {
       return;
     }
     
+    // Mask the database connection string before sending response
+    const maskedAgent = maskAgentConnectionString(agent);
     res.json({
       success: true,
-      agent
+      agent: maskedAgent
     });
   } catch (error) {
     console.error('Error retrieving agent:', error);

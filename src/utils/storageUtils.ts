@@ -1,3 +1,5 @@
+import { loadRuntimeConfig } from './configLoader';
+
 const DEFAULT_API_URL = 'http://localhost:3001';
 const DEFAULT_DATA_FOLDER = 'data';
 const DEFAULT_PROMPTS_FOLDER = 'prompts';
@@ -7,9 +9,21 @@ export type DisplayMode = 'magic' | 'engineering';
 // Custom event for display mode changes
 const DISPLAY_MODE_CHANGE_EVENT = 'displayModeChange';
 
+// Cache the runtime config promise to avoid multiple fetches
+let configPromise: Promise<string> | null = null;
+
 export const storageUtils = {
-  getApiUrl(): string {
-    // Always read from environment variable, never from localStorage
+  async getApiUrl(): Promise<string> {
+    // Use cached promise to avoid multiple config fetches
+    if (!configPromise) {
+      configPromise = loadRuntimeConfig().then(config => config.apiUrl);
+    }
+    return configPromise;
+  },
+  
+  // Synchronous fallback for components that can't handle async
+  getApiUrlSync(): string {
+    // This should only be used during initial render before config is loaded
     return import.meta.env.VITE_API_URL || DEFAULT_API_URL;
   },
   

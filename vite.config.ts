@@ -18,7 +18,17 @@ export default defineConfig(({ mode }) => {
     server: {
       port: port,
       strictPort: true, // Exit if port is already in use
-      host: true // Listen on all addresses
+      host: true, // Listen on all addresses
+      proxy: {
+        '/api': {
+          target: env.VITE_API_URL || 'http://localhost:3001',
+          changeOrigin: true
+        },
+        '/health': {
+          target: (env.VITE_API_URL || 'http://localhost:3001').replace('/api', ''),
+          changeOrigin: true
+        }
+      }
     }
   }
 })

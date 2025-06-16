@@ -1,0 +1,3817 @@
+Starting Agent API Test...
+
+================================================================================
+AGENT API TEST FLOW
+================================================================================
+API Base URL: http://localhost:3001/api
+Start Time: 2025-06-16T16:08:36.939Z
+
+
+STEP 1: RETRIEVE ALL CONFIGURED AGENTS
+--------------------------------------------------------------------------------
+
+================================================================================
+REQUEST: GET http://localhost:3001/api/agent
+
+RESPONSE STATUS: 200
+RESPONSE HEADERS: {
+  'content-type': 'application/json; charset=utf-8',
+  'content-length': '634'
+}
+
+RESPONSE BODY:
+{
+  "success": true,
+  "agents": [
+    {
+      "name": "Customer Facing",
+      "url": "http://localhost:3001/api/agent1",
+      "database_connection_string": "postgresql://o*******n:********@556openwebui-postgresql.postgres.database.azure.com:5432/threads_backup"
+    },
+    {
+      "name": "Ask Athena",
+      "url": "http://localhost:3002/api/agent2",
+      "database_connection_string": "postgresql://o*******n:********@556openwebui-postgresql.postgres.database.azure.com:5432/athena_lg_test"
+    },
+    {
+      "name": "Ask Legal",
+      "url": "http://localhost:3003/api/agent3",
+      "database_connection_string": "postgresql://o*******n:********@556openwebui-postgresql.postgres.database.azure.com:5432/legal_lg_test"
+    }
+  ],
+  "count": 3
+}
+
+Selected first agent: "Customer Facing"
+
+
+STEP 2: RETRIEVE LAST 20 THREADS FOR FIRST AGENT
+--------------------------------------------------------------------------------
+
+================================================================================
+REQUEST: GET http://localhost:3001/api/agent/threads
+QUERY PARAMS: { agentName: 'Customer Facing', page: 1, limit: 20 }
+
+RESPONSE STATUS: 200
+RESPONSE HEADERS: {
+  'content-type': 'application/json; charset=utf-8',
+  'content-length': '112590'
+}
+
+RESPONSE BODY:
+{
+  "success": true,
+  "data": {
+    "threads": [
+      {
+        "thread_id": "71efe489-c65f-434f-b5aa-9361fea60aca",
+        "created_at": "2025-06-16T07:45:41.834Z",
+        "updated_at": "2025-06-16T07:45:41.834Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "busy",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.133",
+            "x-dynatrace": "FW4;-1326496830;1;1987642491;287;0;43929345;624;dfe7;2h04;3hb24bdbd1;4h8b36;5h01;6hdcbfb19147ede8ca29e784d2cee25e6b;7h1b0c8a3d312db95f",
+            "x-arr-log-id": "088c618f-5caa-4ff3-b382-a1b0061dea65",
+            "x-request-id": "91de97b0-9f52-401e-b69e-07a4d42b25f0",
+            "x-client-port": "0",
+            "x-original-url": "/threads/71efe489-c65f-434f-b5aa-9361fea60aca/runs/wait",
+            "x-forwarded-for": "10.34.104.43:53105, 10.121.106.133",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "ab7b9b58f9552ba6a62d42705c2bde73",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "91de97b0-9f52-401e-b69e-07a4d42b25f0",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/71efe489-c65f-434f-b5aa-9361fea60aca/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059941830,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": null,
+        "interrupts": {}
+      },
+      {
+        "thread_id": "cc4cec72-17a1-48ce-9678-1eed759b1f13",
+        "created_at": "2025-06-16T07:45:22.281Z",
+        "updated_at": "2025-06-16T07:45:30.070Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.133",
+            "x-dynatrace": "FW4;-1326496830;2;1987642491;285;0;43929345;598;4458;2h04;3h9641d6f7;4h8977;5h01;6h2d0bec7f86290ecddf74d85605644e78;7hc5f7eda3007f2a17",
+            "x-arr-log-id": "4938a875-d5c1-43a0-b4d2-ebfe7d116634",
+            "x-request-id": "eefd0085-d091-4058-973e-4db4fec2888b",
+            "x-client-port": "0",
+            "x-original-url": "/threads/cc4cec72-17a1-48ce-9678-1eed759b1f13/runs/wait",
+            "x-forwarded-for": "10.34.104.43:53103, 10.121.106.133",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "cf4acf6e303a4d935f29729d3fd4dc1c",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "eefd0085-d091-4058-973e-4db4fec2888b",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/cc4cec72-17a1-48ce-9678-1eed759b1f13/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059922278,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "Δεν το δέχεται έτσι όπως μου ειπες"
+          ],
+          "messages": [
+            {
+              "id": "aabf1a17-0a81-4c7f-93ba-322a7c859eda",
+              "name": null,
+              "type": "human",
+              "content": "Δεν το δέχεται έτσι όπως μου ειπες",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--3334becd-8d62-433e-b371-0d3cdb49ca41-0",
+              "name": null,
+              "type": "ai",
+              "content": "Για να σας βοηθήσω αποτελεσματικά, θα χρειαστώ λίγες περισσότερες πληροφορίες σχετικά με το τι ακριβώς προσπαθείτε να κάνετε και σε ποιο προϊόν ή υπηρεσία αναφέρεστε. Μπορείτε να μου διευκρινίσετε:\n\n- Σε ποια διαδικασία ή προϊόν αντιμετωπίζετε το θέμα;\n- Ποιο μήνυμα σφάλματος εμφανίζεται ή ποιο ακριβώς βήμα δεν ολοκληρώνεται;\n\nΈτσι, θα μπορέσω να σας καθοδηγήσω εύκολα και γρήγορα στη σωστή λύση!",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 18282,
+                "total_tokens": 18415,
+                "output_tokens": 133,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-BiyotUNvmw47mOM5C0ITXy9jaCPGN",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 18415,
+                  "prompt_tokens": 18282,
+                  "completion_tokens": 133,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      },
+      {
+        "thread_id": "99e723df-26fa-4e6b-93c5-cd4d6d7a0dea",
+        "created_at": "2025-06-16T07:44:59.248Z",
+        "updated_at": "2025-06-16T07:45:23.643Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.136",
+            "x-dynatrace": "FW4;-1326496830;1;1987642491;284;0;43929345;717;94c7;2h04;3h9641d6f7;4h8944;5h01;6he62536f5b7efc36884d6589f0f5c1285;7h9f4dfe5892b75b27",
+            "x-arr-log-id": "a46b4db0-a8e7-496d-a0c5-e1cdde5bdcf3",
+            "x-request-id": "d38a71bc-d612-4997-9512-ea20dcafd6ec",
+            "x-client-port": "0",
+            "x-original-url": "/threads/99e723df-26fa-4e6b-93c5-cd4d6d7a0dea/runs/wait",
+            "x-forwarded-for": "10.34.104.43:52996, 10.121.106.136",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "e5b59123bb67d55d5920c5b14d4bdcf9",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "d38a71bc-d612-4997-9512-ea20dcafd6ec",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/99e723df-26fa-4e6b-93c5-cd4d6d7a0dea/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059899245,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "Προσπαθώ να κλείσω ραντεβού και δεν μπορώ "
+          ],
+          "messages": [
+            {
+              "id": "12709e55-7b35-42d8-bbbf-71140dd7b9e6",
+              "name": null,
+              "type": "human",
+              "content": "Προσπαθώ να κλείσω ραντεβού και δεν μπορώ ",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--78175ac9-caee-4e99-92cf-56690e366d1b-0",
+              "name": null,
+              "type": "ai",
+              "content": "Για την ευκολία σας, μπορείτε να κλείσετε ραντεβού με την Εθνική Τράπεζα εύκολα και γρήγορα μέσω Internet Banking ή μέσω της ιστοσελίδας της Τράπεζας. Ακολουθήστε τα παρακάτω βήματα:\n\n- Μέσω Internet Banking:  \n  • Συνδεθείτε στο Internet Banking  \n  • Επιλέξτε \"Υπηρεσίες\" και στη συνέχεια \"Ραντεβού και Εξυπηρέτηση\"  \n  • Ακολουθήστε τα βήματα για να επιλέξετε κατάστημα, ημερομηνία και τρόπο εξυπηρέτησης (επίσκεψη, τηλεφωνικά ή Video Banking για Premium/Business πελάτες)\n\n- Μέσω ιστοσελίδας:  \n  • Επισκεφθείτε το [Ηλεκτρονικό Ραντεβού | Εθνική Τράπεζα](https://www.nbg.gr/el/footer/book-an-appointment)  \n  • Επιλέξτε το κατάστημα και συμπληρώστε τα στοιχεία σας\n\nΕάν αντιμετωπίζετε δυσκολία στη διαδικασία, προτείνουμε να δοκιμάσετε από διαφορετική συσκευή ή πρόγραμμα περιήγησης. Εναλλακτικά, μπορείτε να επικοινωνήσετε με το Κέντρο Τηλεφωνικής Εξυπηρέτησης στο +30 2104848484, όπου οι συνάδελφοι θα σας βοηθήσουν άμεσα και φιλικά.\n\nΜπορώ να σας βοηθήσω με κάτι άλλο;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 23722,
+                "total_tokens": 24058,
+                "output_tokens": 336,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-BiyoXUwMnSdO5HBOMT00SHMnuRqTx",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 24058,
+                  "prompt_tokens": 23722,
+                  "completion_tokens": 336,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      },
+      {
+        "thread_id": "babcaba3-9753-40e7-b9c4-70f4a32bdc38",
+        "created_at": "2025-06-16T07:44:56.463Z",
+        "updated_at": "2025-06-16T07:45:22.435Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.136",
+            "x-dynatrace": "FW4;-1326496830;1;1034901582;304;0;43929345;935;fefa;2h04;3hb24bdbd1;4h8ae7;5h01;6h2f9c3e789a8ec0c45190fe6ae6b20d80;7h72641533da1f0b2b",
+            "x-arr-log-id": "dab7cbd3-0e4d-46cb-a99d-f9033a31bcc7",
+            "x-request-id": "cfe46ae6-9b1a-442d-a867-9cdfe0d804e1",
+            "x-client-port": "0",
+            "x-original-url": "/threads/babcaba3-9753-40e7-b9c4-70f4a32bdc38/runs/wait",
+            "x-forwarded-for": "10.34.104.42:53019, 10.121.106.136",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "d4164ac65b81e3feb9a1cbce2514986c",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "cfe46ae6-9b1a-442d-a867-9cdfe0d804e1",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/babcaba3-9753-40e7-b9c4-70f4a32bdc38/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059896455,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "Stis 15/06 eixa proswrini desmefsi 33 Euro apo klara gia aora poy telika den egine, den emfanizete pia isynnalagi alla to diathesimo  ypoloipo den exei epanelthi"
+          ],
+          "messages": [
+            {
+              "id": "c678bef9-04eb-4d48-a10d-0bb4f886c00d",
+              "name": null,
+              "type": "human",
+              "content": "Stis 15/06 eixa proswrini desmefsi 33 Euro apo klara gia aora poy telika den egine, den emfanizete pia isynnalagi alla to diathesimo  ypoloipo den exei epanelthi",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--cd0c8531-7752-4652-82a4-716b3b6a8137-0",
+              "name": null,
+              "type": "ai",
+              "content": "Για την περίπτωσή σας, όταν μια προσωρινή δέσμευση ποσού (π.χ. από την Klarna) για αγορά που τελικά δεν ολοκληρώθηκε, αφαιρεθεί από το ιστορικό συναλλαγών αλλά το διαθέσιμο υπόλοιπο δεν έχει επανέλθει, συνήθως το ποσό αποδεσμεύεται αυτόματα εντός λίγων εργάσιμων ημερών, ανάλογα με τη διαδικασία του εμπόρου και του συστήματος πληρωμών.\n\nΓια την ευκολία σας, προτείνουμε να ελέγξετε ξανά το διαθέσιμο υπόλοιπο τις επόμενες ημέρες. Εάν το ποσό δεν έχει επιστραφεί μετά από 5-7 εργάσιμες ημέρες, μπορείτε να επικοινωνήσετε με το τμήμα εξυπηρέτησης πελατών της Εθνικής Τράπεζας στο +30 2104848484, όπου και να βρίσκεστε, για άμεση και φιλική εξυπηρέτηση σχετικά με το συγκεκριμένο θέμα.\n\nΜπορώ να σας βοηθήσω με κάτι άλλο;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 34979,
+                "total_tokens": 35228,
+                "output_tokens": 249,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-BiyoULNf8X7g4iA3flZxBV1Xcu46J",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 35228,
+                  "prompt_tokens": 34979,
+                  "completion_tokens": 249,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      },
+      {
+        "thread_id": "53405336-2793-4441-a0a9-5fcf7a861d5d",
+        "created_at": "2025-06-16T07:44:43.496Z",
+        "updated_at": "2025-06-16T07:45:40.791Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.133",
+            "x-dynatrace": "FW4;-1326496830;1;1987642491;286;0;43929345;2217;7a6d;2h04;3h07ed7dc7;4h8d9d;5h01;6hb3f42778358fc37ca4da1773f755bfb5;7h1626ca1f712012f6",
+            "x-arr-log-id": "6f8b0077-76fe-46d6-9360-c08ed3ac043c",
+            "x-request-id": "5242b700-8383-494c-9203-33c26fd77250",
+            "x-client-port": "0",
+            "x-original-url": "/threads/53405336-2793-4441-a0a9-5fcf7a861d5d/runs/wait",
+            "x-forwarded-for": "10.34.104.43:53105, 10.121.106.133",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "6088e26a6969eb34fa62f5d843802195",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "5242b700-8383-494c-9203-33c26fd77250",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/53405336-2793-4441-a0a9-5fcf7a861d5d/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059923668,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "ΚΑΛΗΜΕΡΑ,",
+            "ηλεκτρονικό ραντεβού Εθνική Τράπεζα δεν εμφανίζεται επιλογή καταστήματος"
+          ],
+          "messages": [
+            {
+              "id": "87d18afb-7134-4edd-acef-e51046d1b1d0",
+              "name": null,
+              "type": "human",
+              "content": "ΚΑΛΗΜΕΡΑ,",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--985b4a04-6b53-4a9b-9b99-3c00b0a2186f-0",
+              "name": null,
+              "type": "ai",
+              "content": "Καλημέρα! Είμαι η Σοφία, ο ψηφιακός βοηθός της Εθνικής Τράπεζας Ελλάδος, στη διάθεσή σας για να σας εξυπηρετήσω εύκολα και γρήγορα όπου και να βρίσκεστε. Πώς μπορώ να σας βοηθήσω σήμερα;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 21356,
+                "total_tokens": 21432,
+                "output_tokens": 76,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-BiyoHtChSxVtqcKrL2VpNfLQVCjLq",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 21432,
+                  "prompt_tokens": 21356,
+                  "completion_tokens": 76,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            },
+            {
+              "id": "6d201a64-d1f0-4d77-a80d-6fde5b2c1e45",
+              "name": null,
+              "type": "human",
+              "content": "ΣΤΟ ΗΛΕΚΤΡΟΝΙΚΟ ΡΑΝΤΕΒΟΥ ΔΕΝ ΜΟΥ ΔΙΝΕΙ ΕΠΙΛΟΓΗ ΝΑ ΕΠΙΛΕΞΩ ΚΑΠΟΙΟ ΚΑΤΑΣΤΗΜΑ ΤΡΑΠΕΖΗΣ",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--e147e64c-5e46-4028-a082-5e7f324b52f4-0",
+              "name": null,
+              "type": "ai",
+              "content": "Για την ευκολία σας, όταν προγραμματίζετε ηλεκτρονικό ραντεβού μέσω Internet Banking ή Mobile Banking, μπορείτε να επιλέξετε το κατάστημα που σας εξυπηρετεί, είτε το πλησιέστερο είτε οποιοδήποτε επιθυμείτε, μέσα από τα διαθέσιμα φίλτρα αναζήτησης. Εάν δεν εμφανίζεται η επιλογή καταστήματος, προτείνουμε να ελέγξετε τα παρακάτω:\n\n- Βεβαιωθείτε ότι έχετε επιλέξει σωστά την κατηγορία υπηρεσίας και το θέμα εξυπηρέτησης, καθώς ανάλογα με την επιλογή σας μπορεί να εμφανίζονται διαφορετικά καταστήματα.\n- Ελέγξτε αν έχετε ενεργή σύνδεση στο Internet Banking ή Mobile Banking και αν η εφαρμογή είναι ενημερωμένη.\n- Αν χρησιμοποιείτε την ιστοσελίδα, βεβαιωθείτε ότι έχετε επιλέξει το σωστό σημείο εξυπηρέτησης από τη σχετική λίστα.\n\nΓια να προγραμματίσετε ραντεβού online, μπορείτε να χρησιμοποιήσετε τους παρακάτω συνδέσμους:\n• [Κλείνω ραντεβού μέσω nbg.gr](https://www.nbg.gr/el/footer/book-an-appointment)\n• [Σύνδεση στο Internet Banking](https://ibank.nbg.gr/web/?loginType=retail)\n\nΕάν το ζήτημα παραμένει, προτείνουμε να δοκιμάσετε από διαφορετική συσκευή ή πρόγραμμα περιήγησης ή να επικοινωνήσετε με το Κέντρο Τηλεφωνικής Εξυπηρέτησης στο +30 2104848484 για άμεση υποστήριξη.\n\nΜπορώ να σας βοηθήσω με κάτι άλλο;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 28216,
+                "total_tokens": 28605,
+                "output_tokens": 389,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-Biyoyg2mheVfFz2ZOKA46bVlFTzIl",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 28605,
+                  "prompt_tokens": 28216,
+                  "completion_tokens": 389,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      },
+      {
+        "thread_id": "1e23cac6-8af8-449c-adb7-624bd2ca9df3",
+        "created_at": "2025-06-16T07:43:45.445Z",
+        "updated_at": "2025-06-16T07:44:00.015Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.133",
+            "x-dynatrace": "FW4;-1326496830;2;-1647808591;278;0;43929345;370;c3d3;2h04;3h9641d6f7;4h88d7;5h01;6h0a9885c8f564d7c0e91655c10573a968;7h9905f96ec70048a3",
+            "x-arr-log-id": "cbbdb876-7118-4f55-8da6-551bb0da3e03",
+            "x-request-id": "0844fadb-6af3-4186-92b9-50d08bb8df07",
+            "x-client-port": "0",
+            "x-original-url": "/threads/1e23cac6-8af8-449c-adb7-624bd2ca9df3/runs/wait",
+            "x-forwarded-for": "10.34.104.41:64562, 10.121.106.133",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "263acffb7ef4db23e56f1ccb5a3a715c",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "0844fadb-6af3-4186-92b9-50d08bb8df07",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/1e23cac6-8af8-449c-adb7-624bd2ca9df3/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059825442,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "Πώς να γράψω στο αίτημα μου το υποκατάστημα της τράπεζας που θέλω"
+          ],
+          "messages": [
+            {
+              "id": "bc7e45af-bbbb-4a38-812b-eeb5d0a838de",
+              "name": null,
+              "type": "human",
+              "content": "Πώς να γράψω στο αίτημα μου το υποκατάστημα της τράπεζας που θέλω",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--1ebdd053-6fba-4734-ba69-292e0d305111-0",
+              "name": null,
+              "type": "ai",
+              "content": "Για την ευκολία σας, όταν υποβάλετε αίτημα προς την Εθνική Τράπεζα και θέλετε να δηλώσετε συγκεκριμένο υποκατάστημα, μπορείτε να αναφέρετε ξεκάθαρα τα παρακάτω στοιχεία μέσα στο κείμενο του αιτήματος:\n\n- Την επωνυμία του υποκαταστήματος (π.χ. \"Υποκατάστημα Σύνταγματος\")\n- Τη διεύθυνση του υποκαταστήματος (π.χ. \"Πλατεία Συντάγματος 1, Αθήνα\")\n- Εάν γνωρίζετε, τον κωδικό καταστήματος (π.χ. \"Κατάστημα 123\")\n\nΠαράδειγμα διατύπωσης:\n«Επιθυμώ το αίτημά μου να εξεταστεί/εξυπηρετηθεί από το Υποκατάστημα [Όνομα/Διεύθυνση/Κωδικός].»\n\nΈτσι, η Τράπεζα θα γνωρίζει ακριβώς ποιο κατάστημα προτιμάτε για την εξυπηρέτησή σας.\n\nΜπορώ να σας βοηθήσω με κάτι άλλο;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 17546,
+                "total_tokens": 17800,
+                "output_tokens": 254,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-BiynOeq8ZOqKVVolPNpYfv7eKcVf7",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 17800,
+                  "prompt_tokens": 17546,
+                  "completion_tokens": 254,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      },
+      {
+        "thread_id": "1b1e92a4-4159-448d-b54b-5d63d0279d4c",
+        "created_at": "2025-06-16T07:43:42.976Z",
+        "updated_at": "2025-06-16T07:43:57.498Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.136",
+            "x-dynatrace": "FW4;-1326496830;1;1034901582;301;0;43929345;358;0c6c;2h04;3h07ed7dc7;4h8d20;5h01;6h4ab026c33dc21277d599bf1b6194f966;7hd9b7359111f23e6b",
+            "x-arr-log-id": "4a1f3552-bcc7-485f-a4f3-480afe56d852",
+            "x-request-id": "b0bbe013-1f37-4261-bbb2-10422d9be9de",
+            "x-client-port": "0",
+            "x-original-url": "/threads/1b1e92a4-4159-448d-b54b-5d63d0279d4c/runs/wait",
+            "x-forwarded-for": "10.34.104.42:53019, 10.121.106.136",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "fbc150b7e278ad644d58b8877700f38a",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "b0bbe013-1f37-4261-bbb2-10422d9be9de",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/1b1e92a4-4159-448d-b54b-5d63d0279d4c/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059822970,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "ΘΕΛΩ ΝΑ ΚΛΕΙΣΩ ΡΑΝΤΕΒΟΥ ΣΕ ΚΑΤΑΣΤΗΜΑ ΚΑΙ ΔΕΝ ΜΠΟΡΩ"
+          ],
+          "messages": [
+            {
+              "id": "d6fe0b83-8096-40d2-9d54-1d719792e190",
+              "name": null,
+              "type": "human",
+              "content": "ΘΕΛΩ ΝΑ ΚΛΕΙΣΩ ΡΑΝΤΕΒΟΥ ΣΕ ΚΑΤΑΣΤΗΜΑ ΚΑΙ ΔΕΝ ΜΠΟΡΩ",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--bdca6358-6dc2-4984-9adf-4bd2c37c2983-0",
+              "name": null,
+              "type": "ai",
+              "content": "Μπορείτε να κλείσετε ραντεβού σε κατάστημα της Εθνικής Τράπεζας εύκολα και γρήγορα, όπου και να βρίσκεστε, με τους εξής τρόπους:\n\n- Μέσω Internet Banking:  \n  • Συνδεθείτε στο Internet Banking.  \n  • Από την ενότητα \"Υπηρεσίες\", επιλέξτε \"Καταστήματα & Ραντεβού\".  \n  • Επιλέξτε το κατάστημα που σας εξυπηρετεί και προγραμματίστε το ραντεβού σας για επίσκεψη ή τηλεφωνική επικοινωνία.\n\n- Μέσω της ιστοσελίδας της Εθνικής Τράπεζας:  \n  • Μπορείτε να κλείσετε το ραντεβού σας online με λίγα κλικ, συμπληρώνοντας τα στοιχεία σας και επιλέγοντας το κατάστημα και την ημερομηνία που επιθυμείτε.\n\n• Ηλεκτρονικό Ραντεβού - https://www.nbg.gr/el/footer/book-an-appointment\n\nΕάν αντιμετωπίζετε δυσκολία με τα παραπάνω, προτείνουμε να δοκιμάσετε ξανά ή να επικοινωνήσετε με το Κέντρο Τηλεφωνικής Εξυπηρέτησης στο +30 2104848484, όπου θα σας βοηθήσουν άμεσα και φιλικά.\n\nΜπορώ να σας βοηθήσω με κάτι άλλο;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 22651,
+                "total_tokens": 22964,
+                "output_tokens": 313,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-BiynMgZjONQYarjc9RUb6Sdh8oFl3",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 22964,
+                  "prompt_tokens": 22651,
+                  "completion_tokens": 313,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      },
+      {
+        "thread_id": "ff7a8961-0ae2-4061-997a-3fec7e692765",
+        "created_at": "2025-06-16T07:43:16.708Z",
+        "updated_at": "2025-06-16T07:43:34.583Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.136",
+            "x-dynatrace": "FW4;-1326496830;4;1034901582;300;0;43929345;569;ef71;2h04;3h9641d6f7;4h88ad;5h01;6hc10053ab71391af09b3dd52a605ce53b;7hd6e421b23816656f",
+            "x-arr-log-id": "d5a5bfea-c72f-4771-ab7a-f7362797857a",
+            "x-request-id": "898ca662-c311-43b2-b85d-307c277a0e22",
+            "x-client-port": "0",
+            "x-original-url": "/threads/ff7a8961-0ae2-4061-997a-3fec7e692765/runs/wait",
+            "x-forwarded-for": "10.34.104.42:53019, 10.121.106.136",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "ceaaad33e4a8cca5f431a047842bdf56",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "898ca662-c311-43b2-b85d-307c277a0e22",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/ff7a8961-0ae2-4061-997a-3fec7e692765/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059796675,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "Δεν μου δείχνει επιλογή για να διαλέξω καταστήματα για να κλείσω ραντεβού "
+          ],
+          "messages": [
+            {
+              "id": "623ee161-e528-4610-9992-fd5b7acec285",
+              "name": null,
+              "type": "human",
+              "content": "Δεν μου δείχνει επιλογή για να διαλέξω καταστήματα για να κλείσω ραντεβού ",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--3cf25bb0-ec08-4764-ac8b-fbd3190bed3e-0",
+              "name": null,
+              "type": "ai",
+              "content": "Για την ευκολία σας, μπορείτε να προγραμματίσετε ραντεβού με κατάστημα της Εθνικής Τράπεζας εύκολα και γρήγορα μέσω Internet Banking ή μέσω της ιστοσελίδας μας. Ακολουθήστε τα παρακάτω βήματα:\n\n- **Μέσω Internet Banking**:  \n  1. Συνδεθείτε στο Internet Banking.  \n  2. Επιλέξτε την ενότητα \"Υπηρεσίες\" και στη συνέχεια \"Καταστήματα & Ραντεβού\".  \n  3. Εκεί μπορείτε να επιλέξετε το κοντινότερο ή οποιοδήποτε κατάστημα επιθυμείτε και να προγραμματίσετε το ραντεβού σας, είτε για επίσκεψη είτε για τηλεφωνική επικοινωνία.\n\n- **Μέσω ιστοσελίδας**:  \n  Μπορείτε να κλείσετε ραντεβού online, όπου και να βρίσκεστε, από τον υπολογιστή ή το κινητό σας, μέσω του παρακάτω συνδέσμου:  \n  • [Ηλεκτρονικό Ραντεβού | Εθνική Τράπεζα](https://www.nbg.gr/el/footer/book-an-appointment)\n\nΑν δεν εμφανίζεται η επιλογή καταστήματος, προτείνουμε να ελέγξετε αν έχετε συνδεθεί σωστά ή να δοκιμάσετε από διαφορετική συσκευή ή browser. Επίσης, βεβαιωθείτε ότι έχετε ενημερώσει τα στοιχεία επικοινωνίας σας στο προφίλ σας.\n\nΓια άμεση εξυπηρέτηση, μπορείτε να δοκιμάσετε και μέσω του Mobile Banking, ακολουθώντας παρόμοια βήματα από την ενότητα \"Προφίλ\" > \"Ραντεβού\".\n\nΜπορώ να σας βοηθήσω με κάτι άλλο;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 25707,
+                "total_tokens": 26112,
+                "output_tokens": 405,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-Biymu2EOlPI0NRTXZUbYdMdVnFFJv",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 26112,
+                  "prompt_tokens": 25707,
+                  "completion_tokens": 405,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      },
+      {
+        "thread_id": "ee91cde0-b311-4326-ade3-aebc58b3fced",
+        "created_at": "2025-06-16T07:42:47.739Z",
+        "updated_at": "2025-06-16T07:43:03.066Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.136",
+            "x-dynatrace": "FW4;-1326496830;4;1034901582;297;0;43929345;572;559a;2h04;3h07ed7dc7;4h8cc6;5h01;6h37ccfcc9965cb21046a817fd5b8581d7;7hfd7d80ca74b183b5",
+            "x-arr-log-id": "504fff5a-f00b-43e5-9937-bf8216e950e6",
+            "x-request-id": "2e85a07c-06b9-485c-8917-b46836540d35",
+            "x-client-port": "0",
+            "x-original-url": "/threads/ee91cde0-b311-4326-ade3-aebc58b3fced/runs/wait",
+            "x-forwarded-for": "10.34.104.42:52942, 10.121.106.136",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "b314768d5c16cc5ef18db2acc5f97930",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "2e85a07c-06b9-485c-8917-b46836540d35",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/ee91cde0-b311-4326-ade3-aebc58b3fced/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059767734,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "επιλογη καταστηματος για ραντεβου"
+          ],
+          "messages": [
+            {
+              "id": "9fea71bf-4ffe-4e90-9ea8-1d1542352a2e",
+              "name": null,
+              "type": "human",
+              "content": "επιλογη καταστηματος για ραντεβου",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--b6319ecd-ef26-4dc5-b2b0-f0c2ef61a285-0",
+              "name": null,
+              "type": "ai",
+              "content": "Μπορείτε να επιλέξετε κατάστημα για το ραντεβού σας εύκολα και γρήγορα, όπου και να βρίσκεστε, μέσω των παρακάτω καναλιών:\n\n• Μέσω Internet Banking:  \n  - Από το μενού \"Υπηρεσίες\", επιλέγετε \"Καταστήματα & Ραντεβού\".\n  - Έχετε τη δυνατότητα να αναζητήσετε το πλησιέστερο κατάστημα ή να επιλέξετε οποιοδήποτε κατάστημα επιθυμείτε.\n  - Στη συνέχεια, προγραμματίζετε το ραντεβού σας για επίσκεψη ή τηλεφωνική επικοινωνία.\n\n• Μέσω Mobile Banking:  \n  - Από την ενότητα \"Προφίλ\", επιλέγετε \"Ραντεβού\".\n  - Μπορείτε να αναζητήσετε το πλησιέστερο σημείο εξυπηρέτησης ή να επιλέξετε κατάστημα με βάση τα φίλτρα που σας εξυπηρετούν.\n\n• Μέσω της ιστοσελίδας της Εθνικής Τράπεζας:  \n  - Μπορείτε να κλείσετε ραντεβού online, επιλέγοντας το κατάστημα που σας εξυπηρετεί καλύτερα.\n\nΓια την άμεση εξυπηρέτησή σας, ακολουθήστε τον παρακάτω σύνδεσμο:  \n• [Κλείνω ραντεβού μέσω nbg.gr](https://www.nbg.gr/el/footer/book-an-appointment)\n\nΜπορώ να σας βοηθήσω με κάτι άλλο;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 24096,
+                "total_tokens": 24440,
+                "output_tokens": 344,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10368
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-BiymQDoCJnH1XO6EINfjyTzxeK3q1",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 24440,
+                  "prompt_tokens": 24096,
+                  "completion_tokens": 344,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10368
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      },
+      {
+        "thread_id": "0e938bfd-06d0-4ede-acab-a6b3ea4ed636",
+        "created_at": "2025-06-16T07:42:33.941Z",
+        "updated_at": "2025-06-16T07:43:20.355Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.133",
+            "x-dynatrace": "FW4;-1326496830;1;1987642491;281;0;43929345;1078;a9b4;2h04;3hb24bdbd1;4h89f5;5h01;6h92e05b13a29a7e01db345cd8bf306f44;7h9fe81dcc10e01baf",
+            "x-arr-log-id": "54584613-ac80-4c1e-ae8b-cbc80ec64f8c",
+            "x-request-id": "84ad8011-016f-4c3e-a633-05312c1e53a8",
+            "x-client-port": "0",
+            "x-original-url": "/threads/0e938bfd-06d0-4ede-acab-a6b3ea4ed636/runs/wait",
+            "x-forwarded-for": "10.34.104.43:52456, 10.121.106.133",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "fe7dabab104eb26ea63bea68db7541f5",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "84ad8011-016f-4c3e-a633-05312c1e53a8",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/0e938bfd-06d0-4ede-acab-a6b3ea4ed636/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059753940,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "Θέλω να ενεργοποιήσω την κάρτα μου"
+          ],
+          "messages": [
+            {
+              "id": "3b48b2e4-16d1-4197-955a-6500575231fc",
+              "name": null,
+              "type": "human",
+              "content": "Θέλω να ενεργοποιήσω την κάρτα μου",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--6e867b75-7bff-443f-a03d-5776df214cd5-0",
+              "name": null,
+              "type": "ai",
+              "content": "Για την ενεργοποίηση της κάρτας σας, μπορείτε να ακολουθήσετε έναν από τους παρακάτω εύκολους και άμεσους τρόπους, ανάλογα με τον τύπο της κάρτας:\n\n- Για χρεωστικές, πιστωτικές και προπληρωμένες κάρτες Mastercard:\n  - Πραγματοποιήστε την πρώτη συναλλαγή της κάρτας σας σε ΑΤΜ της Εθνικής Τράπεζας, επιλέγοντας «Ενεργοποίηση Κάρτας» από το μενού. Με αυτόν τον τρόπο, η κάρτα σας ενεργοποιείται άμεσα και χωρίς κόπο.\n  - Για κατοίκους εξωτερικού ή απομακρυσμένων περιοχών, μπορείτε να ενεργοποιήσετε την κάρτα τηλεφωνικά μέσω του Contact Center στο +30 210 48 48 484.\n\n- Για Prepaid Voucher Mastercard:\n  - Μέσω Internet Banking: Επιλέγετε το μενού \"Κάρτες\", βρίσκετε την κάρτα που σας ενδιαφέρει, πατάτε τις 3 τελείες και επιλέγετε \"Ενεργοποίηση\". Αποδέχεστε τους όρους και καταχωρείτε το OTP για να ολοκληρώσετε τη διαδικασία.\n  - Μέσω Mobile Banking: Επιλέγετε την κάρτα, πηγαίνετε στην καρτέλα \"Διαχείριση\" και επιλέγετε \"Ενεργοποίηση κάρτας\". Η διαδικασία ολοκληρώνεται με χρήση OTP.\n\nΓια την ευκολία σας, η ενεργοποίηση γίνεται όπου και να βρίσκεστε, εύκολα και γρήγορα, με λίγα βήματα.\n\nΑν χρειάζεστε περισσότερες πληροφορίες για τη διαχείριση PIN ή άλλες λειτουργίες, μπορείτε να δείτε:\n- [Επανέκδοση SMART PIN](https://www.nbg.gr/-/jssmedia/Files/Idiwtes/Kathimerines-sunallages/kartes/diaxeirish-pin/epanekdosh-smart-pin.pdf?rev=cd636f685a804987bfe8451a1f2de207&hash=5EE91742E6DE75ED4911497662A42707)\n- [Ξεκλείδωμα PIN](https://www.nbg.gr/-/jssmedia/Files/Idiwtes/Kathimerines-sunallages/kartes/diaxeirish-pin/ksekleidwma-pin.pdf?rev=5e0e15e3a86a40f19c3d218afed9210f&hash=5CA07837CA1E9C39096438D1A6E15A61)\n\nΜπορώ να σας βοηθήσω με κάτι άλλο;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 35124,
+                "total_tokens": 35720,
+                "output_tokens": 596,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-BiymQjJhjnH7pOszRtiS27bdY3zBH",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 35720,
+                  "prompt_tokens": 35124,
+                  "completion_tokens": 596,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      },
+      {
+        "thread_id": "6a31e175-e440-4c5c-8c23-eb4a2e787a74",
+        "created_at": "2025-06-16T07:41:17.238Z",
+        "updated_at": "2025-06-16T07:41:42.621Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.133",
+            "x-dynatrace": "FW4;-1326496830;4;1987642491;278;0;43929345;273;22d6;2h04;3h07ed7dc7;4h8c37;5h01;6h8e8590e37f3240b24dd2a3b2a663e00f;7h2fc4e2a7bf20e24a",
+            "x-arr-log-id": "c1b3662b-ee14-493c-bb5e-df03d4b766ef",
+            "x-request-id": "0e3cc48b-341f-4f68-b6b2-61480346469a",
+            "x-client-port": "0",
+            "x-original-url": "/threads/6a31e175-e440-4c5c-8c23-eb4a2e787a74/runs/wait",
+            "x-forwarded-for": "10.34.104.43:52456, 10.121.106.133",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "40b66c584221c74e09715148d3fed90f",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "0e3cc48b-341f-4f68-b6b2-61480346469a",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/6a31e175-e440-4c5c-8c23-eb4a2e787a74/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059677229,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "Μπορώ να ανοίξω λογαριασμό στην τράπεζα σας και να μου στείλετε τη κάρτα. ??"
+          ],
+          "messages": [
+            {
+              "id": "8c264436-8208-467c-bed6-4875a82b51fb",
+              "name": null,
+              "type": "human",
+              "content": "Μπορώ να ανοίξω λογαριασμό στην τράπεζα σας και να μου στείλετε τη κάρτα. ??",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--72a221e5-d1bb-4e08-b846-d49aa7e1ef8d-0",
+              "name": null,
+              "type": "ai",
+              "content": "Μπορείτε να ανοίξετε λογαριασμό στην Εθνική Τράπεζα εύκολα και γρήγορα online, όπου και να βρίσκεστε, χωρίς να χρειάζεται να επισκεφθείτε κατάστημα. Μετά το άνοιγμα του λογαριασμού, μπορείτε να ζητήσετε να σας αποσταλεί η χρεωστική κάρτα στη διεύθυνση που θα δηλώσετε.\n\nΗ διαδικασία γίνεται μέσω του Digital Banking (Internet ή Mobile Banking) με λίγα κλικ:\n\n- Συμπληρώνετε τα προσωπικά σας στοιχεία και επιβεβαιώνετε τα στοιχεία σας μέσω eGov-KYC ή με τα απαραίτητα δικαιολογητικά.\n- Επιλέγετε τον τύπο λογαριασμού που επιθυμείτε (π.χ. ταμιευτηρίου, τρεχούμενος, e-Value, Value Plus).\n- Κατά τη διαδικασία, μπορείτε να αιτηθείτε και τη χρεωστική κάρτα, η οποία θα σας αποσταλεί ταχυδρομικά στη διεύθυνση που θα δηλώσετε.\n\nΑπαραίτητα δικαιολογητικά:\n- Δελτίο ταυτότητας ή διαβατήριο σε ισχύ\n- Ενημερωμένα στοιχεία επικοινωνίας και ΑΦΜ\n\nΜπορείτε να ξεκινήσετε τη διαδικασία online εδώ:\n• [Ξεκινήστε με την Εθνική Online](https://www.nbg.gr/el/idiwtes/kathimerines-sunallages/digital-banking/ksekiniste-me-thn-ethniki-online)\n\nΓια τη διαχείριση του λογαριασμού και της κάρτας σας, μπορείτε να χρησιμοποιείτε το Internet ή Mobile Banking, στη διάθεσή σας 24/7.\n\nΥπάρχει κάτι άλλο με το οποίο θα μπορούσα να σας βοηθήσω;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 31915,
+                "total_tokens": 32322,
+                "output_tokens": 407,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-Biyl4l4KsJaAmx3oJjxOQv0WnRRXb",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 32322,
+                  "prompt_tokens": 31915,
+                  "completion_tokens": 407,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      },
+      {
+        "thread_id": "f3c28d8b-c064-451a-baaf-219fbe2be372",
+        "created_at": "2025-06-16T07:41:01.863Z",
+        "updated_at": "2025-06-16T07:43:31.612Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.133",
+            "x-dynatrace": "FW4;-1326496830;2;-1647808591;276;0;43929345;468;c19a;2h04;3hb24bdbd1;4h8a3d;5h01;6h949b87e79940c2c3e5553c94e2b01f8c;7h457eb152b14e7428",
+            "x-arr-log-id": "d9c2a149-4c28-4889-89aa-0d1525097798",
+            "x-request-id": "28d0c299-cb9a-4e48-86b4-f1acf0e77a14",
+            "x-client-port": "0",
+            "x-original-url": "/threads/f3c28d8b-c064-451a-baaf-219fbe2be372/runs/wait",
+            "x-forwarded-for": "10.34.104.41:64562, 10.121.106.133",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "73f35406b5cc26719c96c85baa55ed25",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "28d0c299-cb9a-4e48-86b4-f1acf0e77a14",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/f3c28d8b-c064-451a-baaf-219fbe2be372/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059809565,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "Καλημέρα !",
+            "καθυστέρηση πληρωμής μισθοδοσίας Παρασκευή 13/6/2025 λόγοι",
+            "καθυστέρηση πληρωμής μισθοδοσίας Παρασκευή 13/6/2025 Εθνική Τράπεζα"
+          ],
+          "messages": [
+            {
+              "id": "9d954e6e-7852-4c75-8747-08c97f04cf68",
+              "name": null,
+              "type": "human",
+              "content": "Καλημέρα !",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--458d902d-d92b-4053-80a2-51fb2c17fcc0-0",
+              "name": null,
+              "type": "ai",
+              "content": "Καλημέρα! Είμαι η Σοφία, ο ψηφιακός βοηθός της Εθνικής Τράπεζας Ελλάδος, στη διάθεσή σας για να σας εξυπηρετήσω εύκολα και γρήγορα όπου και να βρίσκεστε. Πώς μπορώ να σας βοηθήσω σήμερα;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 38960,
+                "total_tokens": 39036,
+                "output_tokens": 76,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-BiykisycPhR2r2uymur4k3eoeZN0w",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 39036,
+                  "prompt_tokens": 38960,
+                  "completion_tokens": 76,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            },
+            {
+              "id": "ebcfa52a-eeb0-4d77-b1e3-15ca9641c150",
+              "name": null,
+              "type": "human",
+              "content": "έκανα πληρωμή μισθοδοσίας την Παρασκευή 13/6/2025 και δεν ολοκληρώθηκε ακόμη, γιατί ?",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--b67d4ee1-7354-4963-a74b-191df078b56e-0",
+              "name": null,
+              "type": "ai",
+              "content": "Ας δούμε μαζί τι μπορεί να συμβαίνει: Οι πληρωμές μισθοδοσίας που πραγματοποιούνται μέσω της Εθνικής Τράπεζας εκτελούνται σύμφωνα με τα στοιχεία που έχουν καταχωρηθεί και με βάση τις οδηγίες που λαμβάνει η Τράπεζα από τον εργοδότη ή τον οργανισμό. Εάν η πληρωμή έγινε Παρασκευή 13/6/2025, ενδέχεται να επηρεάζεται από τα εξής:\n\n- Αν η πληρωμή καταχωρήθηκε μετά το τέλος του ωραρίου συναλλαγών (Δευτέρα έως Παρασκευή 08:00 - 14:00), η εκτέλεση μπορεί να μεταφερθεί στην επόμενη εργάσιμη ημέρα.\n- Αν υπήρχε αργία ή Σαββατοκύριακο, η επεξεργασία πραγματοποιείται την επόμενη εργάσιμη.\n- Ελέγξτε αν τα στοιχεία του λογαριασμού ή της εντολής είναι σωστά και αν υπάρχει επαρκές υπόλοιπο.\n\nΓια την άμεση διευθέτηση και εξατομικευμένο έλεγχο της συναλλαγής σας, προτείνουμε να επικοινωνήσετε με το τμήμα εξυπηρέτησης πελατών στο +30 2104848484, όπου οι συνάδελφοί μας θα σας εξυπηρετήσουν άμεσα και με φιλικό τρόπο.\n\nΥπάρχει κάτι άλλο με το οποίο θα μπορούσα να σας βοηθήσω;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 22381,
+                "total_tokens": 22716,
+                "output_tokens": 335,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-BiylTisDxe0ZbjZKkcsuZkkeQTRTg",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 22716,
+                  "prompt_tokens": 22381,
+                  "completion_tokens": 335,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            },
+            {
+              "id": "79aff2d1-db1a-41b3-8e40-7ff42266cb86",
+              "name": null,
+              "type": "human",
+              "content": "όχι",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--5f14a0d8-8b5f-431a-98fd-22de300938ef-0",
+              "name": null,
+              "type": "ai",
+              "content": "Αν έχετε άλλη απορία, είμαι εδώ για εσάς. Καλή συνέχεια!",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 25415,
+                "total_tokens": 25437,
+                "output_tokens": 22,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10752
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-BiymvGVVlqZycKdokKZagk6LSPBeu",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 25437,
+                  "prompt_tokens": 25415,
+                  "completion_tokens": 22,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10752
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            },
+            {
+              "id": "5ab6d40e-b014-49cb-884a-3a5cb4d9743f",
+              "name": null,
+              "type": "human",
+              "content": "ευχαριστώ",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--c8012c27-9cb6-4e33-b763-ff302618bf43-0",
+              "name": null,
+              "type": "ai",
+              "content": "Αν έχετε άλλη απορία, είμαι εδώ για εσάς. Καλή συνέχεια!",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 25360,
+                "total_tokens": 25382,
+                "output_tokens": 22,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 24832
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-Biyn4xC2zaU8bRS6U8QTHux2QsY8j",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 25382,
+                  "prompt_tokens": 25360,
+                  "completion_tokens": 22,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 24832
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      },
+      {
+        "thread_id": "81863142-66cc-4b0e-bf27-2849aad05a23",
+        "created_at": "2025-06-16T07:40:24.477Z",
+        "updated_at": "2025-06-16T07:40:38.772Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.133",
+            "x-dynatrace": "FW4;-1326496830;4;-1647808591;272;0;43929345;462;feb3;2h04;3h07ed7dc7;4h8bce;5h01;6h167523e9d34a2cc188c3b1823f56f941;7hdd52cd5292b72878",
+            "x-arr-log-id": "9b6ed781-c08a-4b0a-a56e-ee8a65947acc",
+            "x-request-id": "eb52fcb9-c610-455e-90d0-d1b2f99e2804",
+            "x-client-port": "0",
+            "x-original-url": "/threads/81863142-66cc-4b0e-bf27-2849aad05a23/runs/wait",
+            "x-forwarded-for": "10.34.104.41:63969, 10.121.106.133",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "0024f210c6e0a6299fafdeb362d1d58f",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "eb52fcb9-c610-455e-90d0-d1b2f99e2804",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/81863142-66cc-4b0e-bf27-2849aad05a23/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059624475,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "Θέλω να κλείσω ραντεβού με NBG αλλά δεν μου εμφανίζει κανένα επιθυμητό κατάστημα "
+          ],
+          "messages": [
+            {
+              "id": "314b5c1a-2436-4103-b5e0-f118b98a246a",
+              "name": null,
+              "type": "human",
+              "content": "Θέλω να κλείσω ραντεβού με NBG αλλά δεν μου εμφανίζει κανένα επιθυμητό κατάστημα ",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--8ccba7d6-92d8-45f8-b250-95c128a8a914-0",
+              "name": null,
+              "type": "ai",
+              "content": "Για την ευκολία σας, μπορείτε να κλείσετε ραντεβού με την Εθνική Τράπεζα εύκολα και γρήγορα μέσω Internet Banking ή μέσω της ιστοσελίδας της τράπεζας. Αν δεν εμφανίζεται το κατάστημα που επιθυμείτε, προτείνουμε τα παρακάτω βήματα για άμεση εξυπηρέτηση:\n\n- Ελέγξτε αν το κατάστημα που αναζητάτε δέχεται ραντεβού μέσω της πλατφόρμας. Ορισμένα καταστήματα, όπως αυτά χωρίς ταμείο (tellerless) ή με ειδικό ωράριο, ενδέχεται να εμφανίζονται μόνο για συγκεκριμένες υπηρεσίες ή ώρες.\n- Δοκιμάστε να αναζητήσετε το κατάστημα με διαφορετικά φίλτρα (π.χ. περιοχή, ταχυδρομικός κώδικας).\n- Εάν συνεχίζει να μην εμφανίζεται το κατάστημα, μπορείτε να επιλέξετε άλλο κοντινό σημείο εξυπηρέτησης ή να προγραμματίσετε τηλεφωνικό ραντεβού.\n\nΓια να κλείσετε ραντεβού online:\n• Μέσω Internet Banking: Συνδεθείτε, επιλέξτε \"Υπηρεσίες\" > \"Καταστήματα & Ραντεβού\" και ακολουθήστε τα βήματα.\n• Μέσω ιστοσελίδας: [Κλείστε ραντεβού μέσω nbg.gr](https://www.nbg.gr/el/footer/book-an-appointment)\n\nΕναλλακτικά, μπορείτε να δείτε όλα τα καταστήματα και τα ωράριά τους εδώ: [Καταστήματα - ΑΤΜ | Εθνική Τράπεζα](https://www.nbg.gr/el/idiwtes/katastimata-atm)\n\nΑν χρειάζεστε περαιτέρω βοήθεια, μπορείτε να επικοινωνήσετε με την ομάδα εξυπηρέτησης μέσω της φόρμας: [Θέλω να επικοινωνήσω](https://www.nbg.gr/el/footer/epikoinwnia)\n\nΜπορώ να σας βοηθήσω με κάτι άλλο;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 31515,
+                "total_tokens": 31981,
+                "output_tokens": 466,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10368
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-Biyk6nrlO1AZ97mHYzB0HSUycO0RK",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 31981,
+                  "prompt_tokens": 31515,
+                  "completion_tokens": 466,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10368
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      },
+      {
+        "thread_id": "95889768-2d11-4cf3-ac3a-31745b4f41e2",
+        "created_at": "2025-06-16T07:39:49.007Z",
+        "updated_at": "2025-06-16T07:40:04.482Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.133",
+            "x-dynatrace": "FW4;-1326496830;2;-1647808591;270;0;43929345;307;24dc;2h04;3h07ed7dc7;4h8b83;5h01;6h2782a92b80773202050c687fd82717d8;7hfb9b333f75616962",
+            "x-arr-log-id": "9fd80d32-6aa0-4a81-a568-dac380554eb4",
+            "x-request-id": "71f6ebb8-910d-4531-835f-f752f82e4720",
+            "x-client-port": "0",
+            "x-original-url": "/threads/95889768-2d11-4cf3-ac3a-31745b4f41e2/runs/wait",
+            "x-forwarded-for": "10.34.104.41:63969, 10.121.106.133",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "eae0c5383d08ea509fca8ceccd7eb870",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "71f6ebb8-910d-4531-835f-f752f82e4720",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/95889768-2d11-4cf3-ac3a-31745b4f41e2/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059589004,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "δεν εμφανιζεται το καταστημα"
+          ],
+          "messages": [
+            {
+              "id": "8d2ccc3e-3027-4d39-a669-69f35380f796",
+              "name": null,
+              "type": "human",
+              "content": "δεν εμφανιζεται το καταστημα",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--dc85f561-1d0b-4a32-8b6f-f7e1fc94cfa0-0",
+              "name": null,
+              "type": "ai",
+              "content": "Για να βρείτε εύκολα και γρήγορα το κατάστημα της Εθνικής Τράπεζας που σας εξυπηρετεί, μπορείτε να χρησιμοποιήσετε το εργαλείο αναζήτησης καταστημάτων και ΑΤΜ στην επίσημη ιστοσελίδα της τράπεζας. Εκεί, με λίγα κλικ, μπορείτε να εντοπίσετε το κατάστημα με βάση τη διεύθυνση, την περιοχή ή τον ταχυδρομικό κώδικα που σας ενδιαφέρει.\n\n• [Κατάστημα & ΑΤΜ Locator – Εθνική Τράπεζα](https://www.nbg.gr/el/idiwtes/katastimata-atm)\n\nΑν συνεχίζετε να μην εντοπίζετε το κατάστημα που αναζητάτε, προτείνουμε να επικοινωνήσετε με το τηλεφωνικό κέντρο της Τράπεζας στο +30 2104848484 για άμεση και φιλική εξυπηρέτηση, όπου και να βρίσκεστε.\n\nΜπορώ να σας βοηθήσω με κάτι άλλο;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 23718,
+                "total_tokens": 23949,
+                "output_tokens": 231,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10368
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-BiyjdxDVjDF3jaQ0rE5qmF5ETkzSw",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 23949,
+                  "prompt_tokens": 23718,
+                  "completion_tokens": 231,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10368
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      },
+      {
+        "thread_id": "86d1bc9f-2103-4eda-b59b-7ece005420f2",
+        "created_at": "2025-06-16T07:39:42.800Z",
+        "updated_at": "2025-06-16T07:40:06.268Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.133",
+            "x-dynatrace": "FW4;-1326496830;1;1034901582;293;0;43929345;566;78b0;2h04;3h9641d6f7;4h8713;5h01;6h483d5b920ebe4631054d947c9d4f3519;7h7f2c33213646e3b4",
+            "x-arr-log-id": "cddd7cbe-983a-49e8-bf99-b5261b167bbf",
+            "x-request-id": "72bcc38d-7308-449c-809d-19b6f90b88a4",
+            "x-client-port": "0",
+            "x-original-url": "/threads/86d1bc9f-2103-4eda-b59b-7ece005420f2/runs/wait",
+            "x-forwarded-for": "10.34.104.42:52469, 10.121.106.133",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "3256a7a02c16acbe7c00ed0b24b197f5",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "72bcc38d-7308-449c-809d-19b6f90b88a4",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/86d1bc9f-2103-4eda-b59b-7ece005420f2/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059582796,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "ΠΩΣ ΜΠΟΡΩ ΝΑ ΕΝΕΡΓΟΠΟΙΗΣΩ ΤΗΝ ΚΑΡΤΑ ΜΕ ΤΑ ΕΠΙΔΟΜΑΤΑ"
+          ],
+          "messages": [
+            {
+              "id": "8c423dc1-1ee1-409a-a64d-f82ae3f1d629",
+              "name": null,
+              "type": "human",
+              "content": "ΠΩΣ ΜΠΟΡΩ ΝΑ ΕΝΕΡΓΟΠΟΙΗΣΩ ΤΗΝ ΚΑΡΤΑ ΜΕ ΤΑ ΕΠΙΔΟΜΑΤΑ",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--7c99f6f2-74f8-4173-851c-2afab0b1aa5d-0",
+              "name": null,
+              "type": "ai",
+              "content": "Μπορείτε να ενεργοποιήσετε την κάρτα Prepaid Mastercard Κοινωνικής Αλληλεγγύης (κάρτα με τα επιδόματα) εύκολα και γρήγορα με τους εξής τρόπους:\n\n- Αφού αποδεχτείτε τους όρους χρήσης της κάρτας μέσω Internet Banking (εφόσον είστε εγγεγραμμένος χρήστης) ή μέσω του Δικτύου των Καταστημάτων, πραγματοποιείτε την πρώτη συναλλαγή της κάρτας σας μέσω του Δικτύου ΑΤΜ της Εθνικής Τράπεζας, επιλέγοντας «Ενεργοποίηση Κάρτας» από το μενού.\n- Για περισσότερες πληροφορίες, μπορείτε να δείτε το σύντομο εκπαιδευτικό [video](https://www.youtube.com/watch?v=gZZM7bCzL3A) που δημιουργήθηκε για εσάς.\n\nΈτσι, η κάρτα σας θα είναι άμεσα διαθέσιμη για χρήση όπου και να βρίσκεστε, για αγορές και αναλήψεις σύμφωνα με τους όρους του προϊόντος.\n\nΥπάρχει κάτι άλλο με το οποίο θα μπορούσα να σας βοηθήσω;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 29639,
+                "total_tokens": 29899,
+                "output_tokens": 260,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-Biyjdn2IQGY6swMhTUqHVOTu68Fjf",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 29899,
+                  "prompt_tokens": 29639,
+                  "completion_tokens": 260,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      },
+      {
+        "thread_id": "63b64146-869e-4eac-89be-709914c40eee",
+        "created_at": "2025-06-16T07:38:47.264Z",
+        "updated_at": "2025-06-16T07:39:16.775Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.136",
+            "x-dynatrace": "FW4;-1326496830;2;-1647808591;268;0;43929345;328;1555;2h04;3hb24bdbd1;4h8883;5h01;6hc376b5f4ce91023911b9b3eb29b86cb9;7hf833e1e0605e05fe",
+            "x-arr-log-id": "7e76186a-f929-46ed-a6e6-584f79b3f712",
+            "x-request-id": "93eb1a0a-0d74-4826-9efd-c0d63242e47b",
+            "x-client-port": "0",
+            "x-original-url": "/threads/63b64146-869e-4eac-89be-709914c40eee/runs/wait",
+            "x-forwarded-for": "10.34.104.41:63595, 10.121.106.136",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "c308eaa84859d76a306e55aafcb114d4",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "93eb1a0a-0d74-4826-9efd-c0d63242e47b",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/63b64146-869e-4eac-89be-709914c40eee/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059527262,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "ΤΙ ΠΡΟΝΟΜΙΑ ΕΧΩ ΜΕ ΤΗΝ ΚΑΡΤΑ PRIVATE Q"
+          ],
+          "messages": [
+            {
+              "id": "67e4421e-19eb-47da-b2e9-67c13147f729",
+              "name": null,
+              "type": "human",
+              "content": "ΤΙ ΠΡΟΝΟΜΙΑ ΕΧΩ ΜΕ ΤΗΝ ΚΑΡΤΑ PRIVATE Q",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--d54391c5-8d39-44b6-a752-dc3bdbe4d7a4-0",
+              "name": null,
+              "type": "ai",
+              "content": "Με την κάρτα Private Debit Mastercard της Εθνικής Τράπεζας απολαμβάνετε μια σειρά από προνόμια που έχουν σχεδιαστεί αποκλειστικά για πελάτες Private Banking, ώστε να καλύπτονται οι πιο απαιτητικές σας ανάγκες, όπου και να βρίσκεστε. Συγκεκριμένα, μπορείτε να επωφεληθείτε από:\n\n- Υψηλά όρια συναλλαγών για άνεση στις καθημερινές και σημαντικές σας αγορές.\n- Ασφαλείς και ανέπαφες συναλλαγές σε φυσικά και ηλεκτρονικά καταστήματα παγκοσμίως.\n- Διαχείριση της κάρτας σας εύκολα και γρήγορα μέσω Internet και Mobile Banking.\n- Πρόσβαση στην υπηρεσία Mastercard Concierge για εξατομικευμένη εξυπηρέτηση σε ταξίδια, lifestyle και ψυχαγωγία.\n- Επιβράβευση μέσω του προγράμματος Premium Go For More, κερδίζοντας πόντους για τις συναλλαγές σας.\n- Απαλλαγή από προμήθεια συναλλαγών σε ξένο νόμισμα.\n- Ασφάλιση κάρτας και προσωπικών αντικειμένων.\n- Δωρεάν ασφαλιστικές παροχές, όπως ταξιδιωτική ασφάλιση και κάλυψη για διαφορές με ηλεκτρονικά καταστήματα.\n- Υπηρεσία Mastercard Priceless για μοναδικές εμπειρίες.\n- Instant issuing – άμεση έκδοση κάρτας.\n\nΜπορείτε να ενημερωθείτε αναλυτικά για όλα τα προνόμια και τις δυνατότητες της Private Debit Mastercard στον παρακάτω σύνδεσμο:\n• [Private Debit Mastercard Χρεωστική Κάρτα | Εθνική Τράπεζα](https://www.nbg.gr/el/private-banking/trapezikes-luseis/private-debit-mastercard)\n• [Premium Go For More Πρόγραμμα Επιβράβευσης | Εθνική Τράπεζα](https://www.nbg.gr/el/premium-banking/pronomia/pronomia-upiresies/premium-go4more-programma-epivraveusis)\n\nΥπάρχει κάτι άλλο με το οποίο θα μπορούσα να σας βοηθήσω;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 35816,
+                "total_tokens": 36311,
+                "output_tokens": 495,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-Biyie0DzwXhWoXFdcYeWH1lt6SDmX",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 36311,
+                  "prompt_tokens": 35816,
+                  "completion_tokens": 495,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      },
+      {
+        "thread_id": "2071f0ca-5eb2-4e81-a5aa-b82eaf2c4de2",
+        "created_at": "2025-06-16T07:38:08.525Z",
+        "updated_at": "2025-06-16T07:39:19.987Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.133",
+            "x-dynatrace": "FW4;-1326496830;1;1034901582;290;0;43929345;691;07d9;2h04;3h9641d6f7;4h86cd;5h01;6h231d9acbf4a468cd8244004e93191103;7h083847ecad03a2c7",
+            "x-arr-log-id": "2284e57b-c639-46c7-8402-e723439667d6",
+            "x-request-id": "2f17140a-c28d-42af-9da0-aea8de7ca3c4",
+            "x-client-port": "0",
+            "x-original-url": "/threads/2071f0ca-5eb2-4e81-a5aa-b82eaf2c4de2/runs/wait",
+            "x-forwarded-for": "10.34.104.42:52293, 10.121.106.133",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "43866ec36f63ce63d2ee178a08a2d6fb",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "2f17140a-c28d-42af-9da0-aea8de7ca3c4",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/2071f0ca-5eb2-4e81-a5aa-b82eaf2c4de2/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059537561,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "Δεν μπορώ να ενεργοποιήσω την κάρτα μου.",
+            "τι να κάνω αν έχω εισάγει λάθος κωδικό ενεργοποίησης κάρτας"
+          ],
+          "messages": [
+            {
+              "id": "7f2baada-bdab-4fef-8f83-8baa33252d3a",
+              "name": null,
+              "type": "human",
+              "content": "Δεν μπορώ να ενεργοποιήσω την κάρτα μου.",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--7c0542cf-434b-49ed-be60-27d024e30933-0",
+              "name": null,
+              "type": "ai",
+              "content": "Για να ενεργοποιήσετε την κάρτα σας, υπάρχουν διάφοροι τρόποι ανάλογα με τον τύπο της κάρτας που διαθέτετε:\n\n- Για χρεωστικές, πιστωτικές και προπληρωμένες κάρτες Mastercard:\n  - Μπορείτε να πραγματοποιήσετε την πρώτη συναλλαγή της κάρτας σας μέσω του Δικτύου ΑΤΜ της Εθνικής Τράπεζας, επιλέγοντας «Ενεργοποίηση Κάρτας» από το μενού.\n  - Εναλλακτικά, για κατοίκους εξωτερικού ή απομακρυσμένων περιοχών, μπορείτε να ενεργοποιήσετε την κάρτα τηλεφωνικά μέσω του Contact Center.\n\n- Για Prepaid Voucher Mastercard:\n  - Μπορείτε να ενεργοποιήσετε την κάρτα μέσω Internet Banking, επιλέγοντας το μενού \"Κάρτες\", την κάρτα που σας ενδιαφέρει, τις 3 τελείες και την επιλογή \"Ενεργοποίηση\". Αποδέχεστε τους όρους χρήσης και καταχωρείτε OTP.\n  - Επίσης, μπορείτε να την ενεργοποιήσετε μέσω της εφαρμογής NBG Mobile Banking, από την καρτέλα \"Διαχείριση\" και την επιλογή \"Ενεργοποίηση κάρτας\" (η επιλογή εμφανίζεται μόνο σε κάρτες με ανενεργό πλαστικό).\n\nΑν η κάρτα σας έχει εκδοθεί πρόσφατα, προτείνουμε να επαναλάβετε τη διαδικασία μετά την παραλαβή και ενεργοποίησή της.\n\nΑν συνεχίζετε να αντιμετωπίζετε δυσκολία, ελέγξτε αν τα προσωπικά σας στοιχεία στο τραπεζικό προφίλ είναι πλήρη και ενημερωμένα. Σε περίπτωση που παραμένει το ζήτημα, μπορείτε να επικοινωνήσετε με το Κέντρο Τηλεφωνικής Εξυπηρέτησης στο +30 210 48 48 484 για άμεση βοήθεια.\n\nΥπάρχει κάτι άλλο με το οποίο θα μπορούσα να σας βοηθήσω;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 28360,
+                "total_tokens": 28823,
+                "output_tokens": 463,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-BiyhuD8MiZpkWBODLblkQQ822o03B",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 28823,
+                  "prompt_tokens": 28360,
+                  "completion_tokens": 463,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            },
+            {
+              "id": "e1e5956f-ebe4-4c26-b1c7-63694956cf5d",
+              "name": null,
+              "type": "human",
+              "content": "Μου έχετε πει λάθος κωδικό ",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--2a48d7db-4d7c-46e5-8d5a-b9e7cdc3909b-0",
+              "name": null,
+              "type": "ai",
+              "content": "Σας ευχαριστώ που το επισημάνατε. Για την ασφάλειά σας, η Εθνική Τράπεζα δεν αποστέλλει ή γνωστοποιεί ποτέ κωδικούς μέσω συνομιλίας ή άλλου μέσου. Οι κωδικοί (όπως PIN, password ή OTP) είναι αυστηρά προσωπικοί και δημιουργούνται ή αλλάζουν μόνο από εσάς, μέσα από τα επίσημα κανάλια της Τράπεζας.\n\nΑν αντιμετωπίζετε θέμα με κάποιον κωδικό (π.χ. PIN κάρτας, password Digital Banking, κωδικό ασφάλειας συναλλαγών), μπορείτε εύκολα και γρήγορα να τον ανακτήσετε ή να τον αλλάξετε μέσω:\n\n- 📱 Mobile Banking ή  \n- 💻 Internet Banking (από το μενού Ρυθμίσεις/Διαχείριση κωδικών)  \n- ☎️ Τηλεφωνικά στο +30 210 4848484\n\nΓια την ευκολία σας, ακολουθήστε τις οδηγίες που εμφανίζονται στην οθόνη σας κατά τη διαδικασία ανάκτησης ή αλλαγής κωδικού.\n\nΑν χρειάζεστε συγκεκριμένη καθοδήγηση για κάποιον τύπο κωδικού, παρακαλώ διευκρινίστε ποιος κωδικός σας ενδιαφέρει (π.χ. PIN κάρτας, password Digital Banking, κωδικός ασφάλειας συναλλαγών) ώστε να σας βοηθήσω άμεσα και με ακρίβεια.\n\nΜπορώ να σας βοηθήσω με κάτι άλλο;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 28697,
+                "total_tokens": 29057,
+                "output_tokens": 360,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-BiyikUxXmUa1uFjSj5o0BkJX2jnIu",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 29057,
+                  "prompt_tokens": 28697,
+                  "completion_tokens": 360,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      },
+      {
+        "thread_id": "f7a80279-2a4b-4a14-841b-287d895fa6b0",
+        "created_at": "2025-06-16T07:37:37.241Z",
+        "updated_at": "2025-06-16T07:37:53.547Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.133",
+            "x-dynatrace": "FW4;-1326496830;1;-1647808591;262;0;43929345;718;002a;2h04;3h07ed7dc7;4h8a92;5h01;6h1e11ae4569179d23088e26dc39f81928;7he837c9582771497b",
+            "x-arr-log-id": "ea910ca1-0cb7-44f7-9480-10c6feeb5930",
+            "x-request-id": "32367b90-d966-4906-b85c-d5666a258e3d",
+            "x-client-port": "0",
+            "x-original-url": "/threads/f7a80279-2a4b-4a14-841b-287d895fa6b0/runs/wait",
+            "x-forwarded-for": "10.34.104.41:63508, 10.121.106.133",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "c1f0bc3bc8301785d278dd9aee132a78",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "32367b90-d966-4906-b85c-d5666a258e3d",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/f7a80279-2a4b-4a14-841b-287d895fa6b0/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059457235,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "Hello i need an appointment for POS "
+          ],
+          "messages": [
+            {
+              "id": "1fafd7e7-a100-4a60-9b42-64a1751924b8",
+              "name": null,
+              "type": "human",
+              "content": "Hello i need an appointment for POS ",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--f52ab35c-e546-4085-9afa-1d5806d7939e-0",
+              "name": null,
+              "type": "ai",
+              "content": "Μπορείτε να προγραμματίσετε το ραντεβού σας για POS εύκολα και γρήγορα, όπου και να βρίσκεστε, με τους εξής τρόπους:\n\n• Μέσω Internet Banking:  \n  - Συνδεθείτε και επιλέξτε \"Υπηρεσίες\" > \"Ραντεβού και Εξυπηρέτηση\".\n  - Επιλέξτε την κατηγορία υπηρεσίας (π.χ. POS), το θέμα, το κατάστημα και την ημερομηνία/ώρα που σας εξυπηρετεί.\n  - Επιβεβαιώστε τα στοιχεία σας και ολοκληρώστε τον προγραμματισμό.\n\n• Μέσω Mobile Banking:  \n  - Από το Προφίλ, επιλέξτε «Ραντεβού» και ακολουθήστε τα βήματα για να επιλέξετε κατάστημα, ημερομηνία και θέμα ραντεβού.\n\n• Μέσω της ιστοσελίδας της Εθνικής Τράπεζας:  \n  - Επισκεφθείτε τη σελίδα [Ηλεκτρονικό Ραντεβού | Εθνική Τράπεζα](https://www.nbg.gr/el/footer/book-an-appointment) και ακολουθήστε τα βήματα για να κλείσετε ραντεβού με το κατάστημα που σας εξυπηρετεί.\n\nΜπορείτε να προγραμματίσετε το ραντεβού σας μέχρι και 30 ημέρες μετά την τρέχουσα ημερομηνία. Για την καλύτερη εξυπηρέτησή σας, προτείνουμε να ενημερωθείτε για τα απαραίτητα δικαιολογητικά που χρειάζονται για το ραντεβού σας.\n\nΜπορώ να σας βοηθήσω με κάτι άλλο;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 28244,
+                "total_tokens": 28633,
+                "output_tokens": 389,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-BiyhPX5UTJLntez4qRvPxWUbPHqwM",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 28633,
+                  "prompt_tokens": 28244,
+                  "completion_tokens": 389,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      },
+      {
+        "thread_id": "711a5175-945b-4201-8c7f-21fae55d70b3",
+        "created_at": "2025-06-16T07:37:10.320Z",
+        "updated_at": "2025-06-16T07:38:35.250Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.133",
+            "x-dynatrace": "FW4;-1326496830;1;1987642491;276;0;43929345;1002;da93;2h04;3h07ed7dc7;4h8ae7;5h01;6h506543fcb87ecd925243d0394eb8e723;7h387374282d91585b",
+            "x-arr-log-id": "64e3c519-650a-4d1c-9d4c-314439abcc87",
+            "x-request-id": "78a59a27-6653-4d39-9c76-4c7c7be354ca",
+            "x-client-port": "0",
+            "x-original-url": "/threads/711a5175-945b-4201-8c7f-21fae55d70b3/runs/wait",
+            "x-forwarded-for": "10.34.104.43:51985, 10.121.106.133",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "a8962ea0984ba314a7592f810e9ba201",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "78a59a27-6653-4d39-9c76-4c7c7be354ca",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/711a5175-945b-4201-8c7f-21fae55d70b3/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059502700,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "eno exo asfalia gia to spiti me balate sto omadiko sas stelno kai to symboleo spitioy",
+            "κατάστημα Εθνικής Τράπεζας στου Ζωγράφου διεύθυνση ωράριο"
+          ],
+          "messages": [
+            {
+              "id": "c447181a-ae68-44ad-87ff-20c8e9ac16e3",
+              "name": null,
+              "type": "human",
+              "content": "eno exo asfalia gia to spiti me balate sto omadiko sas stelno kai to symboleo spitioy",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--c4b4f85a-fab5-4677-b2ea-2c83712e852c-0",
+              "name": null,
+              "type": "ai",
+              "content": "Για να ενταχθεί η ασφάλεια του σπιτιού σας σε ομαδικό ασφαλιστήριο της Εθνικής Τράπεζας, προτείνουμε να προσκομίσετε το συμβόλαιο του σπιτιού σας σε ένα κατάστημα της τράπεζας, όπου και να βρίσκεστε. Οι συνάδελφοί μας θα σας καθοδηγήσουν απλά και άμεσα για τα επόμενα βήματα και θα σας ενημερώσουν για τα απαραίτητα δικαιολογητικά ή διαδικασίες που απαιτούνται για την ομαλή ένταξη.\n\nΜπορώ να σας βοηθήσω με κάτι άλλο;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 44528,
+                "total_tokens": 44673,
+                "output_tokens": 145,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-Biyh0bDR60YMNrJlUlPAN7q2XSnML",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 44673,
+                  "prompt_tokens": 44528,
+                  "completion_tokens": 145,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            },
+            {
+              "id": "d9ed09b5-dd8e-4767-b852-e4ef569ca3f6",
+              "name": null,
+              "type": "human",
+              "content": "mporo na pao se katastima stoy zografoy?",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--f9a12d29-63d0-4170-87d2-c38a0e108ce8-0",
+              "name": null,
+              "type": "ai",
+              "content": "Μπορείτε να επισκεφθείτε κατάστημα της Εθνικής Τράπεζας στου Ζωγράφου, όπου και να βρίσκεστε, για να εξυπηρετηθείτε εύκολα και γρήγορα για το αίτημά σας. Για να βρείτε τη διεύθυνση, το ωράριο και να προγραμματίσετε ραντεβού, μπορείτε να χρησιμοποιήσετε τον παρακάτω σύνδεσμο:\n\n• [Καταστήματα - ΑΤΜ | Εθνική Τράπεζα](https://www.nbg.gr/el/idiwtes/katastimata-atm)\n\nΈτσι, θα εντοπίσετε το κατάστημα που σας εξυπηρετεί καλύτερα και θα ενημερωθείτε για όλες τις λεπτομέρειες.\n\nΥπάρχει κάτι άλλο με το οποίο θα μπορούσα να σας βοηθήσω;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 21837,
+                "total_tokens": 22028,
+                "output_tokens": 191,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10368
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-BiyiC73f4GRrmEJ5Oio3ID98cWphZ",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 22028,
+                  "prompt_tokens": 21837,
+                  "completion_tokens": 191,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10368
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      },
+      {
+        "thread_id": "23306b68-2391-4476-a581-330a79afe3ca",
+        "created_at": "2025-06-16T07:36:47.515Z",
+        "updated_at": "2025-06-16T07:37:50.196Z",
+        "metadata": {
+          "graph_id": "agent",
+          "assistant_id": "fe096781-5601-53d2-b2f6-0d3403f7e9ca"
+        },
+        "status": "idle",
+        "config": {
+          "configurable": {
+            "x-arr-ssl": "2048|256|CN=Microsoft Azure RSA TLS Issuing CA 08, O=Microsoft Corporation, C=US|CN=*.azurewebsites.net, O=Microsoft Corporation, L=Redmond, S=WA, C=US",
+            "x-client-ip": "10.121.106.136",
+            "x-dynatrace": "FW4;-1326496830;4;1987642491;273;0;43929345;421;943b;2h04;3hb24bdbd1;4h87a4;5h01;6h288950b00f9762f4e293a49aaba03517;7hb7dd8f84a82f3c30",
+            "x-arr-log-id": "b8388a61-6aeb-458e-9d29-b49570f053ba",
+            "x-request-id": "83d2d1cd-5370-4db0-9d7f-afebc1356a81",
+            "x-client-port": "0",
+            "x-original-url": "/threads/23306b68-2391-4476-a581-330a79afe3ca/runs/wait",
+            "x-forwarded-for": "10.34.104.42:51786, 10.121.106.136",
+            "x-original-host": "ai-services.nbg.gr",
+            "x-appgw-trace-id": "90741bd21729c9c26018e1aeaabada83",
+            "x-forwarded-port": "443",
+            "__after_seconds__": 0,
+            "x-forwarded-proto": "https",
+            "x-appservice-proto": "https",
+            "langgraph_auth_user": null,
+            "langgraph_request_id": "83d2d1cd-5370-4db0-9d7f-afebc1356a81",
+            "x-site-deployment-id": "nbg-webapp-langgraph-cc-we-prod-02",
+            "x-waws-unencoded-url": "/threads/23306b68-2391-4476-a581-330a79afe3ca/runs/wait",
+            "langgraph_auth_user_id": "",
+            "x-forwarded-tlsversion": "1.2",
+            "__request_start_time_ms__": 1750059460476,
+            "langgraph_auth_permissions": []
+          }
+        },
+        "values": {
+          "queries": [
+            "Θέλω κωδικούς για το e banking αλλά δεν έχω χρεωστική ",
+            "έκδοση κωδικών e-banking χωρίς χρεωστική κάρτα μέσω phone banking"
+          ],
+          "messages": [
+            {
+              "id": "8dd8f799-332e-4c54-b981-9ef8c2e2ce82",
+              "name": null,
+              "type": "human",
+              "content": "Θέλω κωδικούς για το e banking αλλά δεν έχω χρεωστική ",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--9c32f4e4-5988-454c-ad48-f07c9ebc42a8-0",
+              "name": null,
+              "type": "ai",
+              "content": "Μπορείτε να αποκτήσετε κωδικούς Digital Banking (e-Banking) και χωρίς να διαθέτετε ενεργή χρεωστική κάρτα, επισκεπτόμενοι οποιοδήποτε κατάστημα της Εθνικής Τράπεζας. Αρκεί να έχετε μαζί σας τα απαραίτητα νομιμοποιητικά έγγραφα (π.χ. ταυτότητα ή διαβατήριο). Οι συνάδελφοί μας θα σας καθοδηγήσουν απλά και άμεσα στη διαδικασία έκδοσης κωδικών, ώστε να αποκτήσετε πρόσβαση στις υπηρεσίες Digital και Phone Banking, όπου και να βρίσκεστε.\n\nΓια περισσότερες πληροφορίες σχετικά με τη διαδικασία, μπορείτε να δείτε αναλυτικά εδώ:\n• [Έκδοση Κωδικών Digital Banking – Εθνική Τράπεζα](https://www.nbg.gr/el/idiwtes/kathimerines-sunallages/digital-banking/dunatotites-internet-mobile-banking/ekdosi-kwdikwn-digital-banking)\n\nΥπάρχει κάτι άλλο με το οποίο θα μπορούσα να σας βοηθήσω;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 35674,
+                "total_tokens": 35924,
+                "output_tokens": 250,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-BiyghCreWqwwq0bLvsetUgM0gOezl",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 35924,
+                  "prompt_tokens": 35674,
+                  "completion_tokens": 250,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            },
+            {
+              "id": "9eca10f4-8aff-4134-9064-7173dccefd15",
+              "name": null,
+              "type": "human",
+              "content": "Μπορώ από το phone banking?",
+              "example": false,
+              "additional_kwargs": {},
+              "response_metadata": {}
+            },
+            {
+              "id": "run--8c486f66-de38-42a7-aa05-aff482095f46-0",
+              "name": null,
+              "type": "ai",
+              "content": "Για την έκδοση κωδικών Digital Banking, η διαδικασία μπορεί να ολοκληρωθεί μέσω των εφαρμογών Digital Banking (εφόσον διαθέτετε ενεργή χρεωστική κάρτα) ή με επίσκεψη σε κατάστημα της Εθνικής Τράπεζας με τα νομιμοποιητικά σας έγγραφα. Η έκδοση κωδικών δεν πραγματοποιείται μέσω Phone Banking.\n\nΓια την ευκολία σας, προτείνουμε να επισκεφθείτε ένα κατάστημα της Τράπεζας, όπου οι συνάδελφοί μας θα σας εξυπηρετήσουν άμεσα και με ασφάλεια.\n\nΜπορώ να σας βοηθήσω με κάτι άλλο;",
+              "example": false,
+              "tool_calls": [],
+              "usage_metadata": {
+                "input_tokens": 25411,
+                "total_tokens": 25565,
+                "output_tokens": 154,
+                "input_token_details": {
+                  "audio": 0,
+                  "cache_read": 10240
+                },
+                "output_token_details": {
+                  "audio": 0,
+                  "reasoning": 0
+                }
+              },
+              "additional_kwargs": {
+                "refusal": null
+              },
+              "response_metadata": {
+                "id": "chatcmpl-BiyhUePZFo8PXxdXrnoDLx8PpvSJn",
+                "logprobs": null,
+                "model_name": "gpt-4.1-2025-04-14",
+                "token_usage": {
+                  "total_tokens": 25565,
+                  "prompt_tokens": 25411,
+                  "completion_tokens": 154,
+                  "prompt_tokens_details": {
+                    "audio_tokens": 0,
+                    "cached_tokens": 10240
+                  },
+                  "completion_tokens_details": {
+                    "audio_tokens": 0,
+                    "reasoning_tokens": 0,
+                    "accepted_prediction_tokens": 0,
+                    "rejected_prediction_tokens": 0
+                  }
+                },
+                "service_tier": null,
+                "finish_reason": "stop",
+                "system_fingerprint": "fp_07e970ab25",
+                "prompt_filter_results": [
+                  {
+                    "prompt_index": 0,
+                    "content_filter_results": {
+                      "hate": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "sexual": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "violence": {
+                        "filtered": false,
+                        "severity": "safe"
+                      },
+                      "jailbreak": {
+                        "detected": false,
+                        "filtered": false
+                      },
+                      "self_harm": {
+                        "filtered": false,
+                        "severity": "safe"
+                      }
+                    }
+                  }
+                ],
+                "content_filter_results": {
+                  "hate": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "sexual": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "violence": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "self_harm": {
+                    "filtered": false,
+                    "severity": "safe"
+                  },
+                  "protected_material_code": {
+                    "detected": false,
+                    "filtered": false
+                  },
+                  "protected_material_text": {
+                    "detected": false,
+                    "filtered": false
+                  }
+                }
+              },
+              "invalid_tool_calls": []
+            }
+          ]
+        },
+        "interrupts": {}
+      }
+    ],
+    "pagination": {
+      "page": 1,
+      "limit": 20,
+      "total": 4218,
+      "totalPages": 211
+    }
+  }
+}
+
+Selected first thread: "71efe489-c65f-434f-b5aa-9361fea60aca"
+Thread created at: 2025-06-16T07:45:41.834Z
+
+
+STEP 3: RETRIEVE DOCUMENTS FOR FIRST THREAD
+--------------------------------------------------------------------------------
+
+================================================================================
+REQUEST: GET http://localhost:3001/api/agent/thread/71efe489-c65f-434f-b5aa-9361fea60aca/documents
+QUERY PARAMS: { agentName: 'Customer Facing' }
+
+RESPONSE STATUS: 200
+RESPONSE HEADERS: {
+  'content-type': 'application/json; charset=utf-8',
+  'content-length': '81'
+}
+
+RESPONSE BODY:
+{
+  "success": true,
+  "threadId": "71efe489-c65f-434f-b5aa-9361fea60aca",
+  "documents": []
+}
+
+Found 0 documents for thread
+
+
+TEST SUMMARY
+================================================================================
+✓ Retrieved 3 agents
+✓ Retrieved 20 threads for agent "Customer Facing"
+✓ Retrieved 0 documents for thread "71efe489-c65f-434f-b5aa-9361fea60aca"
+
+End Time: 2025-06-16T16:08:37.878Z

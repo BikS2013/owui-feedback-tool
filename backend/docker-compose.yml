@@ -8,12 +8,14 @@ services:
     image: owui-feedback-backend:latest
     container_name: owui-feedback-backend
     ports:
-      - "3001:3001"
+      - "3120:3001"
     restart: unless-stopped
+    env_file:
+      - .env
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - PORT=3001
-      - CORS_ORIGIN=http://localhost:5173,http://localhost:8080
+      - ALLOW_DEBUG_ENDPOINTS=true
       # Database connection (update with your values)
       - DB_HOST=${DB_HOST:-localhost}
       - DB_PORT=${DB_PORT:-5432}
