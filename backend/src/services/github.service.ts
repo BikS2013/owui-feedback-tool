@@ -217,6 +217,8 @@ export class GitHubService {
   async checkConnection(): Promise<{ 
     success: boolean; 
     repository?: string; 
+    dataFolder?: string;
+    promptsFolder?: string;
     rateLimit?: { limit: number; remaining: number; reset: Date };
     error?: string;
   }> {
@@ -229,6 +231,8 @@ export class GitHubService {
       return {
         success: true,
         repository: repoInfo.full_name,
+        dataFolder: process.env.GITHUB_DATA_FOLDER || 'data',
+        promptsFolder: process.env.GITHUB_PROMPTS_FOLDER || 'prompts',
         rateLimit: {
           limit: rateLimit.rate.limit,
           remaining: rateLimit.rate.remaining,

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Zap, Sparkles } from 'lucide-react';
-import { githubService } from '../../services/github.service';
-import { storageUtils } from '../../utils/storageUtils';
+import { GitHubApiService } from '../../services/github-api.service';
+import { GitHubFile } from '../../types/github';
 import { parsePromptParameters } from '../../utils/promptParser';
 import { llmService } from '../../services/llm.service';
 import { LLMConfiguration } from '../../types/llm';
@@ -283,27 +283,43 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
     setIsLoading(true);
     setError('');
     try {
-      const promptsFolder = storageUtils.getPromptsFolder();
+      // Get the prompts folder from backend configuration
+      let promptsFolder = 'prompts'; // Default
+      try {
+        const status = await GitHubApiService.checkStatus();
+        if (status.connected && status.promptsFolder) {
+          promptsFolder = status.promptsFolder;
+        }
+      } catch (e) {
+        console.warn('Could not get prompts folder from backend, using default:', e);
+      }
       console.log('Loading files from prompts folder:', promptsFolder);
       
-      let files;
+      let files: GitHubFile[] = [];
       try {
         // First try the standard contents API
-        files = await githubService.getFiles(promptsFolder);
+        files = await GitHubApiService.getFiles(promptsFolder);
         console.log('Raw files received from GitHub Contents API:', files);
         console.log('Total files count:', files.length);
         
         // If we get a large number of files, warn about potential truncation
         if (files.length >= 100) {
           console.warn('Large directory detected. Trying tree API for complete listing...');
-          // Try the tree API as a fallback
-          files = await githubService.getFilesUsingTree(promptsFolder);
-          console.log('Files from tree API:', files.length);
+          // Try the tree API as a fallback - search for files in the prompts folder
+          const searchResults = await GitHubApiService.searchFiles(promptsFolder, 'md');
+          console.log('Files from search API:', searchResults.length);
+          files = searchResults;
         }
       } catch (contentsError) {
-        console.error('Contents API failed, trying tree API:', contentsError);
-        // If contents API fails, try tree API
-        files = await githubService.getFilesUsingTree(promptsFolder);
+        console.error('Contents API failed, trying search with folder path:', contentsError);
+        try {
+          // If contents API fails, try searching in the prompts folder
+          const searchResults = await GitHubApiService.searchFiles(promptsFolder, 'md');
+          files = searchResults;
+        } catch (searchError) {
+          console.error('Search API also failed:', searchError);
+          files = [];
+        }
       }
       
       // Check for truncation in the response
@@ -364,7 +380,8 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
     setIsLoading(true);
     setError('');
     try {
-      const content = await githubService.getFileContentAsText(filePath);
+      const fileData = await GitHubApiService.getFileContent(filePath);
+      const content = fileData.content;
       setPromptContent(content);
     } catch (err) {
       setError('Failed to load prompt content: ' + (err instanceof Error ? err.message : 'Unknown error'));

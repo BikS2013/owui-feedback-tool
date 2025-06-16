@@ -152,7 +152,7 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
 
   const fetchLLMConfigurations = async () => {
     try {
-      const apiUrl = import.meta.env.VITE_API_URL;
+      const apiUrl = await storageUtils.getApiUrl();
       const response = await fetch(`${apiUrl}/llm/configurations`);
       
       if (!response.ok) {
@@ -233,7 +233,7 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
         console.log('   No sample data available - using schema-based approach');
       }
       
-      const apiUrl = import.meta.env.VITE_API_URL;
+      const apiUrl = await storageUtils.getApiUrl();
       const response = await fetch(`${apiUrl}/llm/get-prompt`, {
         method: 'POST',
         headers: {
@@ -299,7 +299,7 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
       }
       
       // Call backend endpoint to convert natural language to filter
-      const apiUrl = import.meta.env.VITE_API_URL;
+      const apiUrl = await storageUtils.getApiUrl();
       const response = await fetch(`${apiUrl}/llm/convert-to-filter`, {
         method: 'POST',
         headers: {

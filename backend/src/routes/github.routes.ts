@@ -53,6 +53,12 @@ const requireGitHub = (req: Request, res: Response, next: Function) => {
  *                 repository:
  *                   type: string
  *                   example: "owner/repo"
+ *                 dataFolder:
+ *                   type: string
+ *                   example: "data"
+ *                 promptsFolder:
+ *                   type: string
+ *                   example: "prompts"
  *                 rateLimit:
  *                   type: object
  *                   properties:
@@ -114,7 +120,7 @@ router.get('/status', requireGitHub, async (req, res): Promise<void> => {
 router.get('/repository', requireGitHub, async (req, res): Promise<void> => {
   try {
     const repoInfo = await githubService!.getRepositoryInfo();
-    res.json(repoInfo);
+    res.json({ repository: repoInfo }); // Wrap in object to match expected response format
   } catch (error: any) {
     res.status(500).json({
       error: 'Failed to get repository information',
@@ -159,9 +165,10 @@ router.get('/repository', requireGitHub, async (req, res): Promise<void> => {
  */
 router.get('/files', requireGitHub, async (req, res): Promise<void> => {
   try {
-    const path = req.query.path as string || '';
+    // Support both 'folder' and 'path' query parameters for backwards compatibility
+    const path = (req.query.folder as string) || (req.query.path as string) || '';
     const files = await githubService!.getFiles(path);
-    res.json(files);
+    res.json({ files }); // Wrap in object to match expected response format
   } catch (error: any) {
     res.status(500).json({
       error: 'Failed to list files',
@@ -210,7 +217,7 @@ router.get('/tree', requireGitHub, async (req, res): Promise<void> => {
   try {
     const recursive = req.query.recursive !== 'false';
     const tree = await githubService!.getTree('HEAD', recursive);
-    res.json(tree);
+    res.json({ tree }); // Wrap in object to match expected response format
   } catch (error: any) {
     res.status(500).json({
       error: 'Failed to get repository tree',
@@ -269,10 +276,25 @@ router.get('/file/*', requireGitHub, async (req, res): Promise<void> => {
     
     if (format === 'raw') {
       const content = await githubService!.getFileContentAsText(path);
-      res.type('text/plain').send(content);
+      // Return in expected format
+      res.json({
+        file: {
+          name: path.split('/').pop() || path,
+          path: path,
+          content: content,
+          size: content.length
+        }
+      });
     } else {
       const fileData = await githubService!.getFileContent(path);
-      res.json(fileData);
+      res.json({
+        file: {
+          name: path.split('/').pop() || path,
+          path: path,
+          content: Buffer.from(fileData.content, 'base64').toString('utf-8'),
+          size: fileData.size
+        }
+      });
     }
   } catch (error: any) {
     res.status(500).json({
@@ -330,10 +352,11 @@ router.get('/file/*', requireGitHub, async (req, res): Promise<void> => {
  */
 router.get('/search', requireGitHub, async (req, res): Promise<void> => {
   try {
-    const query = req.query.q as string;
+    const query = req.query.q as string || '';
     
-    if (!query) {
-      res.status(400).json({ error: 'Search query is required' });
+    // Allow empty query if path or extension is specified
+    if (!query && !req.query.path && !req.query.extension) {
+      res.status(400).json({ error: 'Search query, path, or extension is required' });
       return;
     }
     
@@ -343,7 +366,7 @@ router.get('/search', requireGitHub, async (req, res): Promise<void> => {
       maxResults: parseInt(req.query.limit as string) || 30
     });
     
-    res.json(results);
+    res.json({ files: results });
   } catch (error: any) {
     res.status(500).json({
       error: 'Failed to search files',
@@ -379,7 +402,7 @@ router.get('/files-by-extension/:extension', requireGitHub, async (req, res): Pr
   try {
     const extension = req.params.extension;
     const files = await githubService!.getFilesByExtension(extension);
-    res.json(files);
+    res.json({ files }); // Wrap in object to match expected response format
   } catch (error: any) {
     res.status(500).json({
       error: 'Failed to get files by extension',
@@ -419,7 +442,7 @@ router.get('/files-by-extension/:extension', requireGitHub, async (req, res): Pr
 router.get('/rate-limit', requireGitHub, async (req, res): Promise<void> => {
   try {
     const rateLimit = await githubService!.getRateLimit();
-    res.json(rateLimit);
+    res.json({ rateLimit }); // Wrap in object to match expected response format
   } catch (error: any) {
     res.status(500).json({
       error: 'Failed to get rate limit',

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { X, Activity, Github, ChevronRight, ChevronDown, FileText, Folder, Monitor, Info } from 'lucide-react';
 import { storageUtils, DisplayMode } from '../../utils/storageUtils';
 import { ApiService } from '../../services/api.service';
-import { GitHubService } from '../../services/github.service';
+import { GitHubApiService } from '../../services/github-api.service';
 import { buildFileTree, FileTreeNode } from '../../utils/githubUtils';
 import { useResizable } from '../../hooks/useResizable';
 import './SettingsModal.css';
@@ -81,10 +81,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   
   // Get configuration from environment variables
   const [apiUrl, setApiUrl] = useState<string>(storageUtils.getApiUrlSync());
-  const githubRepo = import.meta.env.VITE_GITHUB_REPO || 'Not configured';
-  const hasGitHubToken = !!import.meta.env.VITE_GITHUB_TOKEN;
-  const dataFolder = storageUtils.getDataFolder();
-  const promptsFolder = storageUtils.getPromptsFolder();
+  const [backendGitHubRepo, setBackendGitHubRepo] = useState<string>('Checking...');
+  const [dataFolder, setDataFolder] = useState<string>('data');
+  const [promptsFolder, setPromptsFolder] = useState<string>('prompts');
 
   // Load the actual API URL asynchronously and check if it's from runtime config
   useEffect(() => {
@@ -108,6 +107,25 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setGitHubTree(null);
       setGitHubError(null);
       setActiveTab('api'); // Reset to first tab
+      
+      // Check GitHub backend configuration
+      GitHubApiService.checkStatus()
+        .then(status => {
+          if (status.connected && status.repository) {
+            setBackendGitHubRepo(status.repository);
+            if (status.dataFolder) {
+              setDataFolder(status.dataFolder);
+            }
+            if (status.promptsFolder) {
+              setPromptsFolder(status.promptsFolder);
+            }
+          } else {
+            setBackendGitHubRepo('Not configured in backend');
+          }
+        })
+        .catch(() => {
+          setBackendGitHubRepo('Not configured in backend');
+        });
     }
   }, [isOpen]);
 
@@ -143,8 +161,8 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   };
   
   const handleTestGitHub = async () => {
-    if (githubRepo === 'Not configured' || githubRepo === 'owner/repository') {
-      setGitHubError('Please configure VITE_GITHUB_REPO in .env file');
+    if (backendGitHubRepo === 'Not configured in backend' || backendGitHubRepo === 'Checking...') {
+      setGitHubError('Please configure GITHUB_REPO in backend .env file');
       return;
     }
     
@@ -155,11 +173,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     
     try {
       // First, try to get repository info
-      const repoInfo = await GitHubService.getRepositoryInfo();
+      const repoInfo = await GitHubApiService.getRepository();
       console.log('Repository found:', repoInfo.full_name);
+      setBackendGitHubRepo(repoInfo.full_name);
       
       // Then get the full tree
-      const tree = await GitHubService.getTree('HEAD', true);
+      const tree = await GitHubApiService.getTree();
       console.log(`Found ${tree.tree.length} items in repository`);
       
       // Convert tree items to file nodes for building the tree
@@ -362,11 +381,10 @@ docker run -p 3121:80 owui-feedback-ui</pre>
                 <label>Repository</label>
                 <div className="settings-input readonly">
                   <Github size={16} />
-                  {githubRepo}
+                  {backendGitHubRepo}
                 </div>
                 <p className="settings-help">
-                  Configured in .env file (VITE_GITHUB_REPO)
-                  {hasGitHubToken && <span className="token-indicator"> • Token configured</span>}
+                  Configured on backend server (GITHUB_REPO)
                 </p>
               </div>
 
@@ -377,7 +395,7 @@ docker run -p 3121:80 owui-feedback-ui</pre>
                   {dataFolder}
                 </div>
                 <p className="settings-help">
-                  Configured in .env file (VITE_GITHUB_DATA_FOLDER)
+                  Default folder for data files
                 </p>
               </div>
 
@@ -388,7 +406,7 @@ docker run -p 3121:80 owui-feedback-ui</pre>
                   {promptsFolder}
                 </div>
                 <p className="settings-help">
-                  Configured in .env file (VITE_GITHUB_PROMPTS_FOLDER)
+                  Default folder for prompt files
                 </p>
               </div>
 
@@ -408,7 +426,7 @@ docker run -p 3121:80 owui-feedback-ui</pre>
                 type="button"
                 className="settings-button primary"
                 onClick={handleTestGitHub}
-                disabled={isCheckingGitHub || githubRepo === 'Not configured'}
+                disabled={isCheckingGitHub || backendGitHubRepo === 'Not configured in backend'}
               >
                 <Github size={16} />
                 {isCheckingGitHub ? 'Loading Repository...' : 'Test GitHub Access'}
