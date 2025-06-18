@@ -7,11 +7,20 @@ interface PaginationProps {
   totalRows: number;
   pageSize: number;
   onPageChange: (page: number, isJump?: boolean) => void;
+  onPageSizeChange?: (pageSize: number) => void;
   isLoading?: boolean;
   displayedRows?: number;
 }
 
-export function Pagination({ currentPage, totalPages, totalRows, pageSize, onPageChange, isLoading, displayedRows }: PaginationProps) {
+export function Pagination({ currentPage, totalPages, totalRows, pageSize, onPageChange, onPageSizeChange, isLoading, displayedRows }: PaginationProps) {
+  const pageSizeOptions = [10, 20, 50, 100, 200, 500];
+  
+  const handlePageSizeChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newPageSize = parseInt(e.target.value, 10);
+    if (onPageSizeChange) {
+      onPageSizeChange(newPageSize);
+    }
+  };
   const handlePrevious = () => {
     if (currentPage > 1 && !isLoading) {
       onPageChange(currentPage - 1);
@@ -43,11 +52,27 @@ export function Pagination({ currentPage, totalPages, totalRows, pageSize, onPag
 
   return (
     <div className="pagination-container">
-      <div className="pagination-info">
-        {displayedRows 
-          ? `1-${displayedRows}/${totalRows} rows`
-          : `${Math.min((currentPage - 1) * pageSize + 1, totalRows)}-${Math.min(currentPage * pageSize, totalRows)}/${totalRows} rows`
-        }
+      <div className="pagination-left">
+        <div className="pagination-info">
+          {displayedRows 
+            ? `1-${displayedRows}/${totalRows} rows`
+            : `${Math.min((currentPage - 1) * pageSize + 1, totalRows)}-${Math.min(currentPage * pageSize, totalRows)}/${totalRows} rows`
+          }
+        </div>
+        {onPageSizeChange && (
+          <div className="page-size-selector">
+            <label>Show:</label>
+            <select 
+              value={pageSize} 
+              onChange={handlePageSizeChange}
+              disabled={isLoading}
+            >
+              {pageSizeOptions.map(size => (
+                <option key={size} value={size}>{size}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
       
       <div className="pagination-controls">

@@ -178,7 +178,7 @@ router.get('/', (req: Request, res: Response): void => {
  *         schema:
  *           type: integer
  *           minimum: 1
- *           maximum: 100
+ *           maximum: 500
  *           default: 50
  *         description: Number of items per page
  *       - in: query
@@ -286,10 +286,10 @@ router.get('/threads', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+    if (isNaN(limitNum) || limitNum < 1 || limitNum > 500) {
       res.status(400).json({
         success: false,
-        error: 'Invalid limit parameter. Must be between 1 and 100.'
+        error: 'Invalid limit parameter. Must be between 1 and 500.'
       });
       return;
     }

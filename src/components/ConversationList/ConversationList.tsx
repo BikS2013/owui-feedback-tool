@@ -43,7 +43,7 @@ export function ConversationList({
   const [showSettings, setShowSettings] = useState(false);
   const [filterPanelSampleData, setFilterPanelSampleData] = useState<any>(null);
   const { colorScheme } = useTheme();
-  const { dataSource, agentPagination, currentAgent, agentDateRange, loadFromAgentThreads, isLoading, langGraphThreads } = useFeedbackStore();
+  const { dataSource, agentPagination, currentAgent, agentDateRange, loadFromAgentThreads, isLoading, langGraphThreads, pageSize, setPageSize } = useFeedbackStore();
   const [displayMode, setDisplayMode] = useState(storageUtils.getDisplayMode());
   
   // Listen for display mode changes
@@ -242,8 +242,9 @@ export function ConversationList({
             currentPage={agentPagination.page}
             totalPages={agentPagination.totalPages}
             totalRows={agentPagination.total}
-            pageSize={agentPagination.limit}
+            pageSize={pageSize}
             onPageChange={handlePageChange}
+            onPageSizeChange={setPageSize}
             isLoading={isLoading}
             displayedRows={conversations.length}
           />

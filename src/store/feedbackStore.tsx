@@ -40,6 +40,8 @@ interface FeedbackStore {
     fromDate?: Date;
     toDate?: Date;
   } | null;
+  pageSize: number;
+  setPageSize: (size: number) => void;
 }
 
 const FeedbackContext = createContext<FeedbackStore | undefined>(undefined);
@@ -59,7 +61,9 @@ interface FeedbackProviderProps {
 
 const STORAGE_KEY = 'owui-feedback-data';
 const VIEW_MODE_KEY = 'owui-view-mode';
+const PAGE_SIZE_KEY = 'owui-page-size';
 const TWO_WEEKS_MS = 14 * 24 * 60 * 60 * 1000; // 14 days in milliseconds
+const DEFAULT_PAGE_SIZE = 50;
 
 export function FeedbackProvider({ children }: FeedbackProviderProps) {
   const [rawData, setRawData] = useState<FeedbackEntry[]>([]);
@@ -107,6 +111,19 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
     fromDate?: Date;
     toDate?: Date;
   } | null>(null);
+  const [pageSize, setPageSizeState] = useState<number>(() => {
+    const savedPageSize = localStorage.getItem(PAGE_SIZE_KEY);
+    const parsedSize = savedPageSize ? parseInt(savedPageSize, 10) : DEFAULT_PAGE_SIZE;
+    // Ensure saved page size is within API limits
+    return Math.min(Math.max(parsedSize, 1), 500);
+  });
+  
+  const setPageSize = (size: number) => {
+    // Ensure page size is within API limits
+    const validSize = Math.min(Math.max(size, 1), 500);
+    setPageSizeState(validSize);
+    localStorage.setItem(PAGE_SIZE_KEY, validSize.toString());
+  };
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     // Load saved view mode from localStorage
     const savedViewMode = localStorage.getItem(VIEW_MODE_KEY);
@@ -313,7 +330,7 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
       setError(null);
       
       const apiUrl = await storageUtils.getApiUrl();
-      const limit = 50; // Show 50 threads per page
+      const limit = pageSize; // Use dynamic page size
       let url = `${apiUrl}/agent/threads?agentName=${encodeURIComponent(agentName)}&page=${page}&limit=${limit}`;
       
       // Add date parameters if provided
@@ -484,7 +501,9 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
     viewMode,
     setViewMode,
     selectedAnalyticsModel,
-    setSelectedAnalyticsModel
+    setSelectedAnalyticsModel,
+    pageSize,
+    setPageSize
   };
 
   return (
