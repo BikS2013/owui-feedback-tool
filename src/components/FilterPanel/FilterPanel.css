@@ -216,7 +216,7 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-left: auto;
+  margin-left: 16px; /* Reduced from auto to create space on the right */
 }
 
 .llm-selector-header label {
@@ -226,15 +226,15 @@
 }
 
 .llm-selector-header select {
-  padding: 6px 10px;
+  padding: 4px 8px;
   background: var(--bg-tertiary);
   border: 1px solid var(--border-color);
   border-radius: 6px;
   color: var(--text-primary);
-  font-size: 13px;
+  font-size: 12px;
   cursor: pointer;
   transition: border-color 0.2s ease;
-  min-width: 200px;
+  min-width: 150px; /* Further reduced for smaller size */
 }
 
 .llm-selector-header select:focus {
@@ -246,6 +246,69 @@
 .llm-selector-header select:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+/* History Navigation Controls */
+.history-controls {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: auto;
+}
+
+.history-controls button {
+  padding: 6px;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.history-controls button:hover:not(:disabled) {
+  background: var(--hover-bg);
+  color: var(--text-primary);
+}
+
+.history-controls button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.history-controls button[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 4px;
+  padding: 4px 8px;
+  background: var(--bg-tooltip, #333);
+  color: var(--text-tooltip, white);
+  font-size: 11px;
+  white-space: nowrap;
+  border-radius: 4px;
+  pointer-events: none;
+  z-index: 1000;
+}
+
+.history-controls .clear-history-btn {
+  margin-left: 8px;
+}
+
+.history-controls .clear-history-btn {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.history-controls .clear-history-btn:hover:not(:disabled) {
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
 }
 
 /* Active Filter Indicator removed - now shown inline in header */
@@ -880,6 +943,12 @@
 /* Adjust header spacing when label is hidden */
 .natural-language-section.magic-mode .filter-section-header {
   margin-bottom: 8px;
+  gap: 12px;
+}
+
+/* In magic mode, make sure the history controls are visible */
+.natural-language-section.magic-mode .history-controls {
+  opacity: 1;
 }
 
 /* Magic mode filter panel positioning */

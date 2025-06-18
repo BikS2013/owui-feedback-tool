@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { X, MessageSquare, Sparkles, Copy, Calendar, Bot, Star } from 'lucide-react';
+import { X, MessageSquare, Sparkles, Copy, Calendar, Bot, Star, ChevronUp, ChevronDown } from 'lucide-react';
 import { FilterOptions, Conversation } from '../../types/conversation';
 import { useFeedbackStore } from '../../store/feedbackStore';
 import { format } from 'date-fns';
@@ -27,6 +27,8 @@ interface FilterPanelProps {
 }
 
 const LLM_STORAGE_KEY = 'filterPanelSelectedLLM';
+const QUERY_HISTORY_KEY = 'filterPanelQueryHistory';
+const MAX_HISTORY_SIZE = 50;
 
 type FilterTab = 'static' | 'natural';
 
@@ -56,6 +58,11 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
     // Try to restore from localStorage
     return localStorage.getItem(LLM_STORAGE_KEY) || '';
   });
+  const [queryHistory, setQueryHistory] = useState<string[]>(() => {
+    const saved = localStorage.getItem(QUERY_HISTORY_KEY);
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [historyIndex, setHistoryIndex] = useState(-1);
   
   // Static filter state
   const [dateRange, setDateRange] = useState<{ start: string; end: string }>({
@@ -133,11 +140,27 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
     return cleanup;
   }, []);
 
-  // Handle ESC key to close panel
+  // Save query history to localStorage
+  useEffect(() => {
+    localStorage.setItem(QUERY_HISTORY_KEY, JSON.stringify(queryHistory));
+  }, [queryHistory]);
+
+  // Handle ESC key to close panel and history navigation hotkeys
   useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape' && isOpen) {
         onClose();
+      }
+      
+      // Only handle history navigation in magic mode on natural language tab
+      if (displayMode === 'magic' && activeTab === 'natural' && isOpen) {
+        if (event.altKey && event.key === 'ArrowUp') {
+          event.preventDefault();
+          navigateHistoryUp();
+        } else if (event.altKey && event.key === 'ArrowDown') {
+          event.preventDefault();
+          navigateHistoryDown();
+        }
       }
     };
 
@@ -147,8 +170,44 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
         document.removeEventListener('keydown', handleKeyDown);
       };
     }
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, displayMode, activeTab, historyIndex, queryHistory]);
 
+
+  const addToHistory = (query: string) => {
+    if (!query.trim()) return;
+    
+    // Remove duplicates and add to beginning
+    const newHistory = [query, ...queryHistory.filter(q => q !== query)].slice(0, MAX_HISTORY_SIZE);
+    setQueryHistory(newHistory);
+    setHistoryIndex(-1); // Reset index when new query is added
+  };
+
+  const navigateHistoryUp = () => {
+    if (queryHistory.length === 0) return;
+    
+    const newIndex = historyIndex < queryHistory.length - 1 ? historyIndex + 1 : historyIndex;
+    if (newIndex !== historyIndex) {
+      setHistoryIndex(newIndex);
+      setNaturalQuery(queryHistory[newIndex]);
+    }
+  };
+
+  const navigateHistoryDown = () => {
+    if (historyIndex <= 0) {
+      setHistoryIndex(-1);
+      setNaturalQuery('');
+    } else {
+      const newIndex = historyIndex - 1;
+      setHistoryIndex(newIndex);
+      setNaturalQuery(queryHistory[newIndex]);
+    }
+  };
+
+  const clearHistory = () => {
+    setQueryHistory([]);
+    setHistoryIndex(-1);
+    localStorage.removeItem(QUERY_HISTORY_KEY);
+  };
 
   const fetchLLMConfigurations = async () => {
     try {
@@ -267,6 +326,9 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
 
   const executeNaturalLanguageQuery = async () => {
     if (!naturalQuery.trim() || !selectedLLM) return null;
+
+    // Add to history when executing
+    addToHistory(naturalQuery);
 
     setIsExecuting(true);
     setExecutionError('');
@@ -711,6 +773,32 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
                       )}
                     </select>
                   </div>
+                  {displayMode === 'magic' && (
+                    <div className="history-controls">
+                      <button
+                        onClick={navigateHistoryUp}
+                        disabled={queryHistory.length === 0 || historyIndex >= queryHistory.length - 1}
+                        title="Previous query (⌥↑)"
+                      >
+                        <ChevronUp size={16} />
+                      </button>
+                      <button
+                        onClick={navigateHistoryDown}
+                        disabled={historyIndex < 0}
+                        title="Next query (⌥↓)"
+                      >
+                        <ChevronDown size={16} />
+                      </button>
+                      <button
+                        className="clear-history-btn"
+                        onClick={clearHistory}
+                        disabled={queryHistory.length === 0}
+                        title="Clear history"
+                      >
+                        C
+                      </button>
+                    </div>
+                  )}
                 </div>
                 
                 <div className="natural-query-input">
