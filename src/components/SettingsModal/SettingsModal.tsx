@@ -52,8 +52,13 @@ function TreeNode({ node, level = 0 }: { node: FileTreeNode; level?: number }) {
 
 type TabType = 'api' | 'github' | 'display';
 
+const SETTINGS_TAB_KEY = 'settingsModalSelectedTab';
+
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
-  const [activeTab, setActiveTab] = useState<TabType>('api');
+  const [activeTab, setActiveTab] = useState<TabType>(() => {
+    const saved = localStorage.getItem(SETTINGS_TAB_KEY);
+    return (saved === 'api' || saved === 'github' || saved === 'display') ? saved : 'api';
+  });
   const [isChecking, setIsChecking] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'success' | 'error' | null>(null);
   const [isCheckingGitHub, setIsCheckingGitHub] = useState(false);
@@ -71,9 +76,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     handleResizeStart,
     handleOverlayClick
   } = useResizable({
-    defaultWidth: 600,
-    defaultHeight: 500,
-    minWidth: 400,
+    defaultWidth: 800,
+    defaultHeight: 600,
+    minWidth: 600,
     minHeight: 400,
     storageKey: 'settingsModalSize'
   });
@@ -99,6 +104,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     });
   }, []);
 
+  // Save selected tab to localStorage
+  useEffect(() => {
+    localStorage.setItem(SETTINGS_TAB_KEY, activeTab);
+  }, [activeTab]);
+
   useEffect(() => {
     if (isOpen) {
       // Reset status when modal opens
@@ -106,7 +116,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       setGitHubStatus(null);
       setGitHubTree(null);
       setGitHubError(null);
-      setActiveTab('api'); // Reset to first tab
       
       // Check GitHub backend configuration
       GitHubApiService.checkStatus()
@@ -250,34 +259,35 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
           </button>
         </div>
         
-        <div className="settings-tabs">
-          <button
-            type="button"
-            className={`settings-tab ${activeTab === 'api' ? 'active' : ''}`}
-            onClick={() => setActiveTab('api')}
-          >
-            <Activity size={16} />
-            API Settings
-          </button>
-          <button
-            type="button"
-            className={`settings-tab ${activeTab === 'github' ? 'active' : ''}`}
-            onClick={() => setActiveTab('github')}
-          >
-            <Github size={16} />
-            GitHub Settings
-          </button>
-          <button
-            type="button"
-            className={`settings-tab ${activeTab === 'display' ? 'active' : ''}`}
-            onClick={() => setActiveTab('display')}
-          >
-            <Monitor size={16} />
-            Display
-          </button>
-        </div>
-        
-        <div className="settings-modal-content">
+        <div className="settings-modal-body">
+          <div className="settings-tabs-vertical">
+            <button
+              type="button"
+              className={`settings-tab ${activeTab === 'api' ? 'active' : ''}`}
+              onClick={() => setActiveTab('api')}
+            >
+              <Activity size={16} />
+              <span>API Settings</span>
+            </button>
+            <button
+              type="button"
+              className={`settings-tab ${activeTab === 'github' ? 'active' : ''}`}
+              onClick={() => setActiveTab('github')}
+            >
+              <Github size={16} />
+              <span>GitHub Settings</span>
+            </button>
+            <button
+              type="button"
+              className={`settings-tab ${activeTab === 'display' ? 'active' : ''}`}
+              onClick={() => setActiveTab('display')}
+            >
+              <Monitor size={16} />
+              <span>Display</span>
+            </button>
+          </div>
+          
+          <div className="settings-modal-content">
           {activeTab === 'api' && (
             <div className="settings-tab-panel">
               <div className="settings-field">
@@ -484,6 +494,7 @@ docker run -p 3121:80 owui-feedback-ui</pre>
               </div>
             </div>
           )}
+          </div>
         </div>
 
         <div className="settings-modal-footer">

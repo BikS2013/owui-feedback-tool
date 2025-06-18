@@ -28,13 +28,17 @@ interface FilterPanelProps {
 
 const LLM_STORAGE_KEY = 'filterPanelSelectedLLM';
 const QUERY_HISTORY_KEY = 'filterPanelQueryHistory';
+const SELECTED_TAB_KEY = 'filterPanelSelectedTab';
 const MAX_HISTORY_SIZE = 50;
 
 type FilterTab = 'static' | 'natural';
 
 export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, currentThread, conversations, sampleData }: FilterPanelProps) {
   const { dataSource } = useFeedbackStore();
-  const [activeTab, setActiveTab] = useState<FilterTab>('static');
+  const [activeTab, setActiveTab] = useState<FilterTab>(() => {
+    const saved = localStorage.getItem(SELECTED_TAB_KEY);
+    return (saved === 'static' || saved === 'natural') ? saved : 'static';
+  });
   const [displayMode, setDisplayMode] = useState(storageUtils.getDisplayMode());
   
   // Use resizable hook for engineering mode
@@ -144,6 +148,11 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
   useEffect(() => {
     localStorage.setItem(QUERY_HISTORY_KEY, JSON.stringify(queryHistory));
   }, [queryHistory]);
+
+  // Save selected tab to localStorage
+  useEffect(() => {
+    localStorage.setItem(SELECTED_TAB_KEY, activeTab);
+  }, [activeTab]);
 
   // Handle ESC key to close panel and history navigation hotkeys
   useEffect(() => {
