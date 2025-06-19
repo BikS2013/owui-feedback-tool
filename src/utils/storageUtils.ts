@@ -38,9 +38,9 @@ export const storageUtils = {
   },
   
   getDisplayMode(): DisplayMode {
-    // Get display mode from localStorage, default to 'engineering'
+    // Get display mode from localStorage, default to 'magic'
     const mode = localStorage.getItem('displayMode');
-    return (mode === 'magic' || mode === 'engineering') ? mode : 'engineering';
+    return (mode === 'magic' || mode === 'engineering') ? mode : 'magic';
   },
   
   setDisplayMode(mode: DisplayMode): void {

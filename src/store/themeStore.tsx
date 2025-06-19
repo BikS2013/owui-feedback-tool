@@ -28,7 +28,7 @@ export function ThemeProvider({ children }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
     // Check localStorage for saved theme preference
     const savedTheme = localStorage.getItem('theme');
-    return (savedTheme as Theme) || 'dark';
+    return (savedTheme as Theme) || 'light';
   });
 
   const [colorScheme, setColorScheme] = useState<ColorScheme>(() => {
