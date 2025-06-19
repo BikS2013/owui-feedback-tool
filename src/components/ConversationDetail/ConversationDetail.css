@@ -1003,6 +1003,270 @@
   border-color: #e1e4e8;
 }
 
+/* Runs styles */
+.runs-container {
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.runs-loading,
+.runs-error,
+.runs-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-secondary);
+}
+
+.runs-empty .empty-icon {
+  color: var(--text-tertiary);
+  margin-bottom: 16px;
+}
+
+.runs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.run-item {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.run-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.run-id {
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.run-status {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+}
+
+.run-status.success {
+  background: var(--success-light);
+  color: var(--success);
+}
+
+.run-status.error {
+  background: var(--error-light);
+  color: var(--error);
+}
+
+.run-status.pending {
+  background: var(--warning-light);
+  color: var(--warning);
+}
+
+.run-details {
+  padding: 16px;
+}
+
+.run-time {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.run-metadata,
+.run-config {
+  margin-top: 12px;
+}
+
+.run-metadata summary,
+.run-config summary {
+  cursor: pointer;
+  padding: 8px 0;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.run-metadata pre,
+.run-config pre {
+  margin: 8px 0 0 0;
+  background: var(--bg-secondary);
+  padding: 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 12px;
+}
+
+.runs-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color);
+}
+
+.runs-pagination button {
+  padding: 6px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.runs-pagination button:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+  border-color: var(--accent-primary);
+}
+
+.runs-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Checkpoints styles */
+.checkpoints-container {
+  padding: 20px;
+  height: 100%;
+  overflow-y: auto;
+}
+
+.checkpoints-loading,
+.checkpoints-error,
+.checkpoints-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: var(--text-secondary);
+}
+
+.checkpoints-empty .empty-icon {
+  color: var(--text-tertiary);
+  margin-bottom: 16px;
+}
+
+.checkpoints-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.checkpoint-item {
+  background: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.checkpoint-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-color);
+}
+
+.checkpoint-id {
+  font-family: var(--font-mono);
+  font-size: 14px;
+}
+
+.checkpoint-namespace {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+}
+
+.checkpoint-details {
+  padding: 16px;
+}
+
+.checkpoint-info {
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: var(--text-secondary);
+}
+
+.checkpoint-metadata,
+.checkpoint-data {
+  margin-top: 12px;
+}
+
+.checkpoint-metadata summary,
+.checkpoint-data summary {
+  cursor: pointer;
+  padding: 8px 0;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.checkpoint-metadata pre,
+.checkpoint-data pre {
+  margin: 8px 0 0 0;
+  background: var(--bg-secondary);
+  padding: 12px;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 12px;
+}
+
+.checkpoints-pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border-color);
+}
+
+.checkpoints-pagination button {
+  padding: 6px 16px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.checkpoints-pagination button:hover:not(:disabled) {
+  background: var(--bg-tertiary);
+  border-color: var(--accent-primary);
+}
+
+.checkpoints-pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .conversation-header-top {

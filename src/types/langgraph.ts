@@ -21,6 +21,7 @@ export interface LangGraphThread {
   status?: string;
   config?: any;
   interrupts?: any;
+  runs?: any[]; // Cached runs for this thread
 }
 
 export interface LangGraphMessage {

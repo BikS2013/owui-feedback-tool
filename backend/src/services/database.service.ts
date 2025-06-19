@@ -1,6 +1,6 @@
 import { Pool, PoolClient } from 'pg';
 import { Agent } from '../types/agent.types.js';
-import { Thread, ThreadPaginatedResponse } from '../types/thread.types.js';
+import { Thread, ThreadPaginatedResponse, Run, RunsPaginatedResponse, Checkpoint, CheckpointsPaginatedResponse } from '../types/thread.types.js';
 
 export class DatabaseService {
   private pools: Map<string, Pool> = new Map();
@@ -178,6 +178,140 @@ export class DatabaseService {
     } catch (error) {
       console.error(`Error fetching documents for thread ${threadId}:`, error);
       throw new Error(`Failed to fetch documents: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      if (client) {
+        client.release();
+      }
+    }
+  }
+
+  async getThreadRuns(
+    agent: Agent,
+    threadId: string,
+    page: number = 1,
+    limit: number = 50
+  ): Promise<RunsPaginatedResponse> {
+    console.log(`Fetching runs for thread: ${threadId} from agent: ${agent.name}`);
+    
+    const pool = this.getPool(agent);
+    let client: PoolClient | null = null;
+
+    try {
+      client = await pool.connect();
+      
+      // Calculate offset
+      const offset = (page - 1) * limit;
+
+      // Get total count - note the table is 'run' not 'runs'
+      const countQuery = `SELECT COUNT(*) FROM run WHERE thread_id = $1::uuid`;
+      const countResult = await client.query(countQuery, [threadId]);
+      const total = parseInt(countResult.rows[0].count, 10);
+
+      // Get paginated runs from the 'run' table
+      const runsQuery = `SELECT 
+          run_id::text as run_id,
+          thread_id::text as thread_id,
+          created_at,
+          updated_at,
+          status,
+          metadata,
+          kwargs as config,
+          assistant_id::text as assistant_id,
+          multitask_strategy
+        FROM run 
+        WHERE thread_id = $1::uuid
+        ORDER BY created_at ASC
+        LIMIT $2 OFFSET $3`;
+      
+      const runsResult = await client.query(runsQuery, [threadId, limit, offset]);
+      
+      const runs: Run[] = runsResult.rows.map(row => ({
+        run_id: row.run_id,
+        thread_id: row.thread_id,
+        created_at: row.created_at,
+        updated_at: row.updated_at,
+        status: row.status,
+        metadata: row.metadata,
+        config: row.config,
+        // Additional fields from the actual schema
+        assistant_id: row.assistant_id,
+        multitask_strategy: row.multitask_strategy
+      }));
+      
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        runs,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+        },
+      };
+    } catch (error) {
+      console.error(`Error fetching runs for thread ${threadId}:`, error);
+      throw new Error(`Failed to fetch runs: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    } finally {
+      if (client) {
+        client.release();
+      }
+    }
+  }
+
+  async getThreadCheckpoints(
+    agent: Agent,
+    threadId: string,
+    page: number = 1,
+    limit: number = 50
+  ): Promise<CheckpointsPaginatedResponse> {
+    console.log(`Fetching checkpoints for thread: ${threadId} from agent: ${agent.name}`);
+    
+    const pool = this.getPool(agent);
+    let client: PoolClient | null = null;
+
+    try {
+      client = await pool.connect();
+      
+      // Calculate offset
+      const offset = (page - 1) * limit;
+
+      // Get total count
+      const countQuery = `SELECT COUNT(*) FROM checkpoints WHERE thread_id = $1::uuid`;
+      const countResult = await client.query(countQuery, [threadId]);
+      const total = parseInt(countResult.rows[0].count, 10);
+
+      // Get paginated checkpoints
+      const checkpointsQuery = `SELECT 
+          thread_id::text as thread_id,
+          checkpoint_id::text as checkpoint_id,
+          run_id::text as run_id,
+          parent_checkpoint_id::text as parent_checkpoint_id,
+          checkpoint,
+          metadata,
+          checkpoint_ns
+        FROM checkpoints 
+        WHERE thread_id = $1::uuid
+        ORDER BY checkpoint_id ASC
+        LIMIT $2 OFFSET $3`;
+      
+      const checkpointsResult = await client.query(checkpointsQuery, [threadId, limit, offset]);
+      
+      const checkpoints: Checkpoint[] = checkpointsResult.rows;
+      const totalPages = Math.ceil(total / limit);
+
+      return {
+        checkpoints,
+        pagination: {
+          page,
+          limit,
+          total,
+          totalPages,
+        },
+      };
+    } catch (error) {
+      console.error(`Error fetching checkpoints for thread ${threadId}:`, error);
+      throw new Error(`Failed to fetch checkpoints: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       if (client) {
         client.release();

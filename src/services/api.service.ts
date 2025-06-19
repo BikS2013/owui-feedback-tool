@@ -79,4 +79,68 @@ export class ApiService {
 
     return await response.json();
   }
+
+  static async getThreadRuns(threadId: string, agentName: string, page: number = 1, limit: number = 50): Promise<{
+    success: boolean;
+    threadId: string;
+    data: {
+      runs: Array<{
+        run_id: string;
+        thread_id: string;
+        created_at?: string;
+        updated_at?: string;
+        status?: string;
+        metadata?: any;
+        config?: any;
+        checkpoint?: any;
+        parent_checkpoint?: any;
+      }>;
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      };
+    };
+  }> {
+    const apiUrl = await this.getApiBaseUrl();
+    const response = await fetch(`${apiUrl}/agent/thread/${threadId}/runs?agentName=${encodeURIComponent(agentName)}&page=${page}&limit=${limit}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch thread runs: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
+
+  static async getThreadCheckpoints(threadId: string, agentName: string, page: number = 1, limit: number = 50): Promise<{
+    success: boolean;
+    threadId: string;
+    data: {
+      checkpoints: Array<{
+        thread_id: string;
+        checkpoint_id: string;
+        run_id?: string;
+        parent_checkpoint_id?: string;
+        checkpoint: any;
+        metadata?: any;
+        checkpoint_ns?: string;
+      }>;
+      pagination: {
+        page: number;
+        limit: number;
+        total: number;
+        totalPages: number;
+      };
+    };
+  }> {
+    const apiUrl = await this.getApiBaseUrl();
+    const response = await fetch(`${apiUrl}/agent/thread/${threadId}/checkpoints?agentName=${encodeURIComponent(agentName)}&page=${page}&limit=${limit}`);
+    
+    if (!response.ok) {
+      throw new Error(`Failed to fetch thread checkpoints: ${response.statusText}`);
+    }
+
+    return await response.json();
+  }
 }

@@ -503,6 +503,338 @@ router.get('/thread/:threadId/documents', async (req: Request, res: Response): P
 
 /**
  * @swagger
+ * /api/agent/thread/{threadId}/runs:
+ *   get:
+ *     summary: Get runs for a specific thread
+ *     tags: [Agents]
+ *     description: Returns the runs associated with a specific thread
+ *     parameters:
+ *       - in: path
+ *         name: threadId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The thread ID to retrieve runs for
+ *         example: "thread_abc123"
+ *       - in: query
+ *         name: agentName
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Name of the agent that owns the thread
+ *         example: "Customer Facing"
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number (starts from 1)
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 50
+ *         description: Number of items per page
+ *     responses:
+ *       200:
+ *         description: Runs retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 threadId:
+ *                   type: string
+ *                   example: "thread_abc123"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     runs:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           run_id:
+ *                             type: string
+ *                           thread_id:
+ *                             type: string
+ *                           created_at:
+ *                             type: string
+ *                             format: date-time
+ *                           updated_at:
+ *                             type: string
+ *                             format: date-time
+ *                           status:
+ *                             type: string
+ *                           metadata:
+ *                             type: object
+ *                           config:
+ *                             type: object
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         page:
+ *                           type: integer
+ *                         limit:
+ *                           type: integer
+ *                         total:
+ *                           type: integer
+ *                         totalPages:
+ *                           type: integer
+ *       400:
+ *         description: Bad request - missing parameters
+ *       404:
+ *         description: Thread or agent not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/thread/:threadId/runs', async (req: Request, res: Response): Promise<void> => {
+  console.log('🔍 Thread runs endpoint hit with params:', req.params, req.query);
+  try {
+    const { threadId } = req.params;
+    const { agentName, page = '1', limit = '50' } = req.query;
+
+    // Validate thread ID
+    if (!threadId) {
+      res.status(400).json({
+        success: false,
+        error: 'Thread ID is required'
+      });
+      return;
+    }
+
+    // Validate agent name
+    if (!agentName || typeof agentName !== 'string') {
+      res.status(400).json({
+        success: false,
+        error: 'Agent name is required'
+      });
+      return;
+    }
+
+    // Validate and parse pagination parameters
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+
+    if (isNaN(pageNum) || pageNum < 1) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid page parameter. Must be a positive integer.'
+      });
+      return;
+    }
+
+    if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid limit parameter. Must be between 1 and 100.'
+      });
+      return;
+    }
+
+    // Get agent by name
+    const agent = agentService.getAgentByName(agentName);
+    if (!agent) {
+      res.status(404).json({
+        success: false,
+        error: 'Agent not found'
+      });
+      return;
+    }
+
+    // Fetch runs from database
+    const result = await databaseService.getThreadRuns(agent, threadId, pageNum, limitNum);
+
+    res.json({
+      success: true,
+      threadId,
+      data: result
+    });
+  } catch (error) {
+    console.error('Error fetching thread runs:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve runs',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/agent/thread/{threadId}/checkpoints:
+ *   get:
+ *     summary: Get checkpoints for a specific thread
+ *     tags: [Agents]
+ *     description: Returns the checkpoints associated with a specific thread
+ *     parameters:
+ *       - in: path
+ *         name: threadId
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The thread ID to retrieve checkpoints for
+ *         example: "thread_abc123"
+ *       - in: query
+ *         name: agentName
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Name of the agent that owns the thread
+ *         example: "Customer Facing"
+ *       - in: query
+ *         name: page
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           default: 1
+ *         description: Page number (starts from 1)
+ *       - in: query
+ *         name: limit
+ *         required: false
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           maximum: 100
+ *           default: 50
+ *         description: Number of items per page
+ *     responses:
+ *       200:
+ *         description: Checkpoints retrieved successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 threadId:
+ *                   type: string
+ *                   example: "thread_abc123"
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     checkpoints:
+ *                       type: array
+ *                       items:
+ *                         type: object
+ *                         properties:
+ *                           thread_id:
+ *                             type: string
+ *                           checkpoint_id:
+ *                             type: string
+ *                           run_id:
+ *                             type: string
+ *                           parent_checkpoint_id:
+ *                             type: string
+ *                           checkpoint:
+ *                             type: object
+ *                           metadata:
+ *                             type: object
+ *                           checkpoint_ns:
+ *                             type: string
+ *                     pagination:
+ *                       type: object
+ *                       properties:
+ *                         page:
+ *                           type: integer
+ *                         limit:
+ *                           type: integer
+ *                         total:
+ *                           type: integer
+ *                         totalPages:
+ *                           type: integer
+ *       400:
+ *         description: Bad request - missing parameters
+ *       404:
+ *         description: Thread or agent not found
+ *       500:
+ *         description: Internal server error
+ */
+router.get('/thread/:threadId/checkpoints', async (req: Request, res: Response): Promise<void> => {
+  console.log('🔍 Thread checkpoints endpoint hit with params:', req.params, req.query);
+  try {
+    const { threadId } = req.params;
+    const { agentName, page = '1', limit = '50' } = req.query;
+
+    // Validate thread ID
+    if (!threadId) {
+      res.status(400).json({
+        success: false,
+        error: 'Thread ID is required'
+      });
+      return;
+    }
+
+    // Validate agent name
+    if (!agentName || typeof agentName !== 'string') {
+      res.status(400).json({
+        success: false,
+        error: 'Agent name is required'
+      });
+      return;
+    }
+
+    // Validate and parse pagination parameters
+    const pageNum = parseInt(page as string, 10);
+    const limitNum = parseInt(limit as string, 10);
+
+    if (isNaN(pageNum) || pageNum < 1) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid page parameter. Must be a positive integer.'
+      });
+      return;
+    }
+
+    if (isNaN(limitNum) || limitNum < 1 || limitNum > 100) {
+      res.status(400).json({
+        success: false,
+        error: 'Invalid limit parameter. Must be between 1 and 100.'
+      });
+      return;
+    }
+
+    // Get agent by name
+    const agent = agentService.getAgentByName(agentName);
+    if (!agent) {
+      res.status(404).json({
+        success: false,
+        error: 'Agent not found'
+      });
+      return;
+    }
+
+    // Fetch checkpoints from database
+    const result = await databaseService.getThreadCheckpoints(agent, threadId, pageNum, limitNum);
+
+    res.json({
+      success: true,
+      threadId,
+      data: result
+    });
+  } catch (error) {
+    console.error('Error fetching thread checkpoints:', error);
+    res.status(500).json({
+      success: false,
+      error: 'Failed to retrieve checkpoints',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * @swagger
  * /api/agent/reload:
  *   post:
  *     summary: Reload agent configuration

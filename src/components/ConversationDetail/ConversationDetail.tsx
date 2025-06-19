@@ -57,16 +57,34 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     console.log('ConversationDetail - currentAgent:', currentAgent);
     console.log('ConversationDetail - currentThread:', currentThread);
   }, [dataSource, currentAgent, currentThread]);
+
+  // Fetch runs when a thread is selected (for Q&A matching)
+  useEffect(() => {
+    if (conversation && dataSource === 'agent' && currentAgent && currentThread) {
+      // Check if runs are already cached in the thread
+      if (currentThread.runs && currentThread.runs.length > 0) {
+        console.log('📦 [ConversationDetail] Using cached runs from thread');
+        setAllRuns(currentThread.runs);
+      } else {
+        console.log('🏃 [ConversationDetail] Fetching runs for Q&A matching...');
+        fetchRunsForQAMatching();
+      }
+    }
+  }, [conversation?.id, dataSource, currentAgent, currentThread]);
   const [showDownloadMenu, setShowDownloadMenu] = useState(false);
   const [qaDownloadMenus, setQaDownloadMenus] = useState<{ [key: string]: boolean }>({});
   const [showSourceView, setShowSourceView] = useState<{
     text: boolean;
     analytics: boolean;
     documents: boolean;
+    runs: boolean;
+    checkpoints: boolean;
   }>({
     text: false,
     analytics: false,
-    documents: false
+    documents: false,
+    runs: false,
+    checkpoints: false
   });
   const [showPromptSelector, setShowPromptSelector] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
@@ -82,10 +100,29 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     promptName?: string;
     llmConfiguration?: string;
   } | null>(null);
-  const [activeTab, setActiveTab] = useState<'text' | 'analytics' | 'documents'>('text');
+  const [activeTab, setActiveTab] = useState<'text' | 'analytics' | 'documents' | 'runs' | 'checkpoints'>('text');
   const [documents, setDocuments] = useState<any[] | null>(null);
   const [isLoadingDocuments, setIsLoadingDocuments] = useState(false);
   const [documentsError, setDocumentsError] = useState<string | null>(null);
+  const [runs, setRuns] = useState<any[] | null>(null);
+  const [isLoadingRuns, setIsLoadingRuns] = useState(false);
+  const [runsError, setRunsError] = useState<string | null>(null);
+  const [runsPagination, setRunsPagination] = useState<{
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  } | null>(null);
+  const [checkpoints, setCheckpoints] = useState<any[] | null>(null);
+  const [isLoadingCheckpoints, setIsLoadingCheckpoints] = useState(false);
+  const [checkpointsError, setCheckpointsError] = useState<string | null>(null);
+  const [checkpointsPagination, setCheckpointsPagination] = useState<{
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+  } | null>(null);
+  const [allRuns, setAllRuns] = useState<any[]>([]); // Store all runs for Q&A matching
   const downloadRef = useRef<HTMLDivElement>(null);
 
   // Close menus when clicking outside
@@ -108,6 +145,22 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     if (activeTab === 'documents' && conversation && dataSource === 'agent' && currentAgent) {
       console.log('📄 [ConversationDetail] Fetching documents...');
       fetchDocuments();
+    }
+  }, [activeTab, conversation?.id]);
+
+  // Fetch runs when Runs tab is active and conversation changes
+  useEffect(() => {
+    if (activeTab === 'runs' && conversation && dataSource === 'agent' && currentAgent) {
+      console.log('🏃 [ConversationDetail] Fetching runs...');
+      fetchRuns();
+    }
+  }, [activeTab, conversation?.id]);
+
+  // Fetch checkpoints when Checkpoints tab is active and conversation changes
+  useEffect(() => {
+    if (activeTab === 'checkpoints' && conversation && dataSource === 'agent' && currentAgent) {
+      console.log('📍 [ConversationDetail] Fetching checkpoints...');
+      fetchCheckpoints();
     }
   }, [activeTab, conversation?.id]);
 
@@ -135,6 +188,92 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
       setDocumentsError(error instanceof Error ? error.message : 'Failed to fetch documents');
     } finally {
       setIsLoadingDocuments(false);
+    }
+  };
+
+  const fetchRuns = async (page: number = 1) => {
+    if (!conversation || dataSource !== 'agent' || !currentAgent) return;
+    
+    setIsLoadingRuns(true);
+    setRunsError(null);
+    
+    try {
+      const result = await ApiService.getThreadRuns(conversation.id, currentAgent, page, 50);
+      
+      if (result.success) {
+        setRuns(result.data.runs);
+        setRunsPagination(result.data.pagination);
+      } else {
+        throw new Error('Failed to fetch runs');
+      }
+    } catch (error) {
+      console.error('Error fetching runs:', error);
+      setRunsError(error instanceof Error ? error.message : 'Failed to fetch runs');
+    } finally {
+      setIsLoadingRuns(false);
+    }
+  };
+
+  const fetchCheckpoints = async (page: number = 1) => {
+    if (!conversation || dataSource !== 'agent' || !currentAgent) return;
+    
+    setIsLoadingCheckpoints(true);
+    setCheckpointsError(null);
+    
+    try {
+      const result = await ApiService.getThreadCheckpoints(conversation.id, currentAgent, page, 50);
+      
+      if (result.success) {
+        setCheckpoints(result.data.checkpoints);
+        setCheckpointsPagination(result.data.pagination);
+      } else {
+        throw new Error('Failed to fetch checkpoints');
+      }
+    } catch (error) {
+      console.error('Error fetching checkpoints:', error);
+      setCheckpointsError(error instanceof Error ? error.message : 'Failed to fetch checkpoints');
+    } finally {
+      setIsLoadingCheckpoints(false);
+    }
+  };
+
+  // Fetch all runs for Q&A matching
+  const fetchRunsForQAMatching = async () => {
+    if (!conversation || dataSource !== 'agent' || !currentAgent || !currentThread) return;
+    
+    try {
+      // Fetch first page to get total count
+      const firstPageResult = await ApiService.getThreadRuns(conversation.id, currentAgent, 1, 100);
+      
+      if (firstPageResult.success) {
+        const totalRuns = firstPageResult.data.pagination.total;
+        const runsArray = [...firstPageResult.data.runs];
+        
+        // If there are more runs, fetch remaining pages
+        if (totalRuns > 100) {
+          const totalPages = Math.ceil(totalRuns / 100);
+          const fetchPromises = [];
+          
+          for (let page = 2; page <= totalPages; page++) {
+            fetchPromises.push(ApiService.getThreadRuns(conversation.id, currentAgent, page, 100));
+          }
+          
+          const results = await Promise.all(fetchPromises);
+          results.forEach(result => {
+            if (result.success) {
+              runsArray.push(...result.data.runs);
+            }
+          });
+        }
+        
+        setAllRuns(runsArray);
+        console.log(`📊 Fetched ${runsArray.length} runs for Q&A matching`);
+        
+        // Store runs in the thread object for caching
+        currentThread.runs = runsArray;
+      }
+    } catch (error) {
+      console.error('Error fetching runs for Q&A matching:', error);
     }
   };
 
@@ -232,23 +371,43 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
           <span>Chat</span>
         </button>
         {dataSource === 'agent' && (
+          <>
+            <button
+              type="button"
+              className="tab-button-header"
+              disabled
+            >
+              {Files && <Files size={16} />}
+              <span>Documents</span>
+            </button>
+            <button
+              type="button"
+              className="tab-button-header"
+              disabled
+            >
+              {BarChart3 && <BarChart3 size={16} />}
+              <span>Runs</span>
+            </button>
+            <button
+              type="button"
+              className="tab-button-header"
+              disabled
+            >
+              {Code && <Code size={16} />}
+              <span>Checkpoints</span>
+            </button>
+          </>
+        )}
+        {dataSource !== 'agent' && (
           <button
             type="button"
             className="tab-button-header"
             disabled
           >
-            {Files && <Files size={16} />}
-            <span>Documents</span>
+            {BarChart3 && <BarChart3 size={16} />}
+            <span>Ratings</span>
           </button>
         )}
-        <button
-          type="button"
-          className="tab-button-header"
-          disabled
-        >
-          {BarChart3 && <BarChart3 size={16} />}
-          <span>Ratings</span>
-        </button>
       </div>
     );
 
@@ -611,14 +770,32 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
         <span>Chat</span>
       </button>
       {dataSource === 'agent' && (
-        <button
-          type="button"
-          className={`tab-button-header ${activeTab === 'documents' ? 'active' : ''}`}
-          onClick={() => setActiveTab('documents')}
-        >
-          {Files && <Files size={16} />}
-          <span>Documents</span>
-        </button>
+        <>
+          <button
+            type="button"
+            className={`tab-button-header ${activeTab === 'documents' ? 'active' : ''}`}
+            onClick={() => setActiveTab('documents')}
+          >
+            {Files && <Files size={16} />}
+            <span>Documents</span>
+          </button>
+          <button
+            type="button"
+            className={`tab-button-header ${activeTab === 'runs' ? 'active' : ''}`}
+            onClick={() => setActiveTab('runs')}
+          >
+            {BarChart3 && <BarChart3 size={16} />}
+            <span>Runs</span>
+          </button>
+          <button
+            type="button"
+            className={`tab-button-header ${activeTab === 'checkpoints' ? 'active' : ''}`}
+            onClick={() => setActiveTab('checkpoints')}
+          >
+            {Code && <Code size={16} />}
+            <span>Checkpoints</span>
+          </button>
+        </>
       )}
       {dataSource !== 'agent' && (
         <button
@@ -770,6 +947,7 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
           <LangGraphChatView 
             thread={currentThread} 
             showSourceView={showSourceView.text}
+            runs={allRuns}
           />
         ) : dataSource === 'agent' ? (
           <div className="messages-container">
@@ -921,6 +1099,200 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
             </div>
           )}
         </div>
+        )
+      ) : activeTab === 'runs' ? (
+        showSourceView.runs ? (
+          <div className="raw-json-container">
+            <CollapsibleJSON 
+              data={runs || []}
+              defaultExpanded={false}
+              maxInitialDepth={1}
+            />
+          </div>
+        ) : (
+          <div className="runs-container">
+            {isLoadingRuns ? (
+              <div className="runs-loading">
+                <div className="spinner" />
+                <p>Loading runs...</p>
+              </div>
+            ) : runsError ? (
+              <div className="runs-error">
+                <p>Error loading runs: {runsError}</p>
+                <button onClick={() => fetchRuns(runsPagination?.page || 1)}>Retry</button>
+              </div>
+            ) : !runs || runs.length === 0 ? (
+              <div className="runs-empty">
+                <BarChart3 size={48} className="empty-icon" />
+                <p>No runs found for this thread</p>
+              </div>
+            ) : (
+              <div className="runs-list">
+                {runs.map((run: any, index: number) => (
+                  <div key={run.run_id || index} className="run-item">
+                    <div className="run-header">
+                      <div className="run-id">
+                        <strong>Run ID:</strong> {run.run_id}
+                      </div>
+                      <div className={`run-status ${run.status}`}>
+                        {run.status || 'Unknown'}
+                      </div>
+                    </div>
+                    <div className="run-details">
+                      <div className="run-time">
+                        <div>
+                          <strong>Created:</strong> {run.created_at ? format(new Date(run.created_at), 'yyyy-MM-dd HH:mm:ss') : 'N/A'}
+                        </div>
+                        {run.updated_at && (
+                          <div>
+                            <strong>Updated:</strong> {format(new Date(run.updated_at), 'yyyy-MM-dd HH:mm:ss')}
+                          </div>
+                        )}
+                        {run.assistant_id && (
+                          <div>
+                            <strong>Assistant ID:</strong> {run.assistant_id}
+                          </div>
+                        )}
+                        {run.multitask_strategy && (
+                          <div>
+                            <strong>Multitask Strategy:</strong> {run.multitask_strategy}
+                          </div>
+                        )}
+                      </div>
+                      {run.metadata && Object.keys(run.metadata).length > 0 && (
+                        <div className="run-metadata">
+                          <details>
+                            <summary>Metadata</summary>
+                            <pre>{JSON.stringify(run.metadata, null, 2)}</pre>
+                          </details>
+                        </div>
+                      )}
+                      {run.config && Object.keys(run.config).length > 0 && (
+                        <div className="run-config">
+                          <details>
+                            <summary>Config</summary>
+                            <pre>{JSON.stringify(run.config, null, 2)}</pre>
+                          </details>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {runsPagination && runsPagination.totalPages > 1 && (
+                  <div className="runs-pagination">
+                    <button
+                      onClick={() => fetchRuns(runsPagination.page - 1)}
+                      disabled={runsPagination.page === 1}
+                    >
+                      Previous
+                    </button>
+                    <span>
+                      Page {runsPagination.page} of {runsPagination.totalPages}
+                    </span>
+                    <button
+                      onClick={() => fetchRuns(runsPagination.page + 1)}
+                      disabled={runsPagination.page === runsPagination.totalPages}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        )
+      ) : activeTab === 'checkpoints' ? (
+        showSourceView.checkpoints ? (
+          <div className="raw-json-container">
+            <CollapsibleJSON 
+              data={checkpoints || []}
+              defaultExpanded={false}
+              maxInitialDepth={1}
+            />
+          </div>
+        ) : (
+          <div className="checkpoints-container">
+            {isLoadingCheckpoints ? (
+              <div className="checkpoints-loading">
+                <div className="spinner" />
+                <p>Loading checkpoints...</p>
+              </div>
+            ) : checkpointsError ? (
+              <div className="checkpoints-error">
+                <p>Error loading checkpoints: {checkpointsError}</p>
+                <button onClick={() => fetchCheckpoints(checkpointsPagination?.page || 1)}>Retry</button>
+              </div>
+            ) : !checkpoints || checkpoints.length === 0 ? (
+              <div className="checkpoints-empty">
+                <Code size={48} className="empty-icon" />
+                <p>No checkpoints found for this thread</p>
+              </div>
+            ) : (
+              <div className="checkpoints-list">
+                {checkpoints.map((checkpoint: any, index: number) => (
+                  <div key={checkpoint.checkpoint_id || index} className="checkpoint-item">
+                    <div className="checkpoint-header">
+                      <div className="checkpoint-id">
+                        <strong>Checkpoint ID:</strong> {checkpoint.checkpoint_id}
+                      </div>
+                      {checkpoint.checkpoint_ns && (
+                        <div className="checkpoint-namespace">
+                          {checkpoint.checkpoint_ns}
+                        </div>
+                      )}
+                    </div>
+                    <div className="checkpoint-details">
+                      {checkpoint.run_id && (
+                        <div className="checkpoint-info">
+                          <strong>Run ID:</strong> {checkpoint.run_id}
+                        </div>
+                      )}
+                      {checkpoint.parent_checkpoint_id && (
+                        <div className="checkpoint-info">
+                          <strong>Parent Checkpoint:</strong> {checkpoint.parent_checkpoint_id}
+                        </div>
+                      )}
+                      {checkpoint.metadata && Object.keys(checkpoint.metadata).length > 0 && (
+                        <div className="checkpoint-metadata">
+                          <details>
+                            <summary>Metadata</summary>
+                            <pre>{JSON.stringify(checkpoint.metadata, null, 2)}</pre>
+                          </details>
+                        </div>
+                      )}
+                      {checkpoint.checkpoint && Object.keys(checkpoint.checkpoint).length > 0 && (
+                        <div className="checkpoint-data">
+                          <details>
+                            <summary>Checkpoint Data</summary>
+                            <pre>{JSON.stringify(checkpoint.checkpoint, null, 2)}</pre>
+                          </details>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {checkpointsPagination && checkpointsPagination.totalPages > 1 && (
+                  <div className="checkpoints-pagination">
+                    <button
+                      onClick={() => fetchCheckpoints(checkpointsPagination.page - 1)}
+                      disabled={checkpointsPagination.page === 1}
+                    >
+                      Previous
+                    </button>
+                    <span>
+                      Page {checkpointsPagination.page} of {checkpointsPagination.totalPages}
+                    </span>
+                    <button
+                      onClick={() => fetchCheckpoints(checkpointsPagination.page + 1)}
+                      disabled={checkpointsPagination.page === checkpointsPagination.totalPages}
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         )
       ) : null}
       <PromptSelectorModal 
