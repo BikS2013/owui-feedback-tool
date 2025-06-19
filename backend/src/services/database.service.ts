@@ -4,8 +4,12 @@ import { Thread, ThreadPaginatedResponse, Run, RunsPaginatedResponse, Checkpoint
 
 export class DatabaseService {
   private pools: Map<string, Pool> = new Map();
+  public verbose: boolean;
 
   constructor() {
+    // Check if verbose logging is enabled
+    this.verbose = process.env.DATABASE_VERBOSE === 'true';
+    
     // Cleanup pools on process exit
     process.on('SIGINT', () => this.closeAllPools());
     process.on('SIGTERM', () => this.closeAllPools());
@@ -32,6 +36,40 @@ export class DatabaseService {
     }
 
     return this.pools.get(agent.name)!;
+  }
+
+  private logQuery(query: string, params: any[], duration: number, rowCount?: number) {
+    if (!this.verbose) return;
+    
+    console.log('\n--- SQL Query Executed ---');
+    console.log('Query:', query.trim());
+    console.log('Parameters:', params);
+    console.log('Duration:', `${duration}ms`);
+    if (rowCount !== undefined) {
+      console.log('Rows affected:', rowCount);
+    }
+    console.log('-------------------------\n');
+  }
+
+  private async executeQuery(client: PoolClient, query: string, params: any[] = []): Promise<any> {
+    const startTime = Date.now();
+    try {
+      const result = await client.query(query, params);
+      const duration = Date.now() - startTime;
+      this.logQuery(query, params, duration, result.rowCount);
+      return result;
+    } catch (error) {
+      const duration = Date.now() - startTime;
+      if (this.verbose) {
+        console.error('\n--- SQL Query Failed ---');
+        console.error('Query:', query.trim());
+        console.error('Parameters:', params);
+        console.error('Duration:', `${duration}ms`);
+        console.error('Error:', error);
+        console.error('------------------------\n');
+      }
+      throw error;
+    }
   }
 
   async getThreads(
@@ -77,7 +115,7 @@ export class DatabaseService {
 
       // Get total count with date filtering
       const countQuery = `SELECT COUNT(*) FROM thread ${whereClause}`;
-      const countResult = await client.query(countQuery, queryParams);
+      const countResult = await this.executeQuery(client, countQuery, queryParams);
       const total = parseInt(countResult.rows[0].count, 10);
 
       // Add pagination parameters
@@ -99,7 +137,7 @@ export class DatabaseService {
         ORDER BY created_at DESC NULLS LAST
         LIMIT $${paramCounter} OFFSET $${paramCounter + 1}`;
       
-      const threadsResult = await client.query(threadsQuery, queryParams);
+      const threadsResult = await this.executeQuery(client, threadsQuery, queryParams);
 
       let threads: Thread[] = threadsResult.rows;
       
@@ -145,7 +183,7 @@ export class DatabaseService {
 
     try {
       client = await pool.connect();
-      await client.query('SELECT 1');
+      await this.executeQuery(client, 'SELECT 1');
       return true;
     } catch (error) {
       console.error(`Connection test failed for agent ${agent.name}:`, error);
@@ -168,7 +206,7 @@ export class DatabaseService {
                      FROM thread 
                      WHERE thread_id = $1`;
       
-      const result = await client.query(query, [threadId]);
+      const result = await this.executeQuery(client, query, [threadId]);
       
       if (result.rows.length === 0) {
         return null;
@@ -204,7 +242,7 @@ export class DatabaseService {
 
       // Get total count - note the table is 'run' not 'runs'
       const countQuery = `SELECT COUNT(*) FROM run WHERE thread_id = $1::uuid`;
-      const countResult = await client.query(countQuery, [threadId]);
+      const countResult = await this.executeQuery(client, countQuery, [threadId]);
       const total = parseInt(countResult.rows[0].count, 10);
 
       // Get paginated runs from the 'run' table
@@ -223,7 +261,7 @@ export class DatabaseService {
         ORDER BY created_at ASC
         LIMIT $2 OFFSET $3`;
       
-      const runsResult = await client.query(runsQuery, [threadId, limit, offset]);
+      const runsResult = await this.executeQuery(client, runsQuery, [threadId, limit, offset]);
       
       const runs: Run[] = runsResult.rows.map(row => ({
         run_id: row.run_id,
@@ -278,7 +316,7 @@ export class DatabaseService {
 
       // Get total count
       const countQuery = `SELECT COUNT(*) FROM checkpoints WHERE thread_id = $1::uuid`;
-      const countResult = await client.query(countQuery, [threadId]);
+      const countResult = await this.executeQuery(client, countQuery, [threadId]);
       const total = parseInt(countResult.rows[0].count, 10);
 
       // Get paginated checkpoints
@@ -295,7 +333,7 @@ export class DatabaseService {
         ORDER BY checkpoint_id ASC
         LIMIT $2 OFFSET $3`;
       
-      const checkpointsResult = await client.query(checkpointsQuery, [threadId, limit, offset]);
+      const checkpointsResult = await this.executeQuery(client, checkpointsQuery, [threadId, limit, offset]);
       
       const checkpoints: Checkpoint[] = checkpointsResult.rows;
       const totalPages = Math.ceil(total / limit);

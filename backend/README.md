@@ -23,6 +23,12 @@ Backend API service for the OWUI Feedback application, providing server-side ope
 - Markdown processing (bold, links, headings)
 - CORS support for frontend integration
 - Swagger API documentation at `/api-docs`
+- Interactive console commands:
+  - Type `c` and press Enter: Clear console
+  - Type `f` and press Enter: Freeze/Unfreeze console output
+  - Type `v` and press Enter: Toggle verbose database logging
+  - Type `h` and press Enter: Show command help
+  - `Ctrl+C`: Exit application
 
 ## Prerequisites
 
@@ -47,6 +53,7 @@ cp .env.example .env
 ```
 PORT=3001
 NODE_ENV=development
+DATABASE_VERBOSE=false  # Set to 'true' to enable SQL query logging in console
 
 # CORS Configuration (choose one)
 # Option 1: Multiple origins (comma-separated)
@@ -106,6 +113,32 @@ Run the production server:
 ```bash
 npm start
 ```
+
+## Console Features
+
+The backend server includes interactive console controls for managing output during development:
+
+### Console Commands
+
+When the server is running, you can type these single-letter commands and press Enter:
+
+- **`c` + Enter (Clear)**: Clears the console screen
+- **`f` + Enter (Freeze)**: Toggles freeze/unfreeze of console output
+  - When frozen, new log messages are buffered instead of displayed
+  - When unfrozen, buffered messages are displayed
+  - Useful for pausing output during high-traffic periods
+- **`v` + Enter (Verbose)**: Toggles database query logging on/off
+  - Dynamically enables/disables SQL query logging without restart
+  - Overrides the `DATABASE_VERBOSE` environment variable
+- **`h` + Enter (Help)**: Shows the command help menu
+- **`Ctrl+C`**: Gracefully exits the application
+
+### Console Status
+
+The console displays the current status including:
+- Whether output is frozen or active
+- Whether verbose mode is enabled or disabled
+- Number of buffered messages (when frozen)
 
 ## API Endpoints
 

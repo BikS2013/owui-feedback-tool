@@ -11,6 +11,11 @@ import { llmRoutes } from './routes/llm.routes.js';
 import { agentRoutes } from './routes/agent.routes.js';
 import { debugRoutes } from './routes/debug.routes.js';
 import { swaggerSpec } from './swagger.config.js';
+import { consoleController } from './utils/console-controller.js';
+import { databaseService } from './services/database.service.js';
+
+// Initialize console controller with database service reference
+consoleController.setDatabaseService(databaseService);
 
 const app: Application = express();
 const PORT = process.env.PORT || 3001;
@@ -140,6 +145,7 @@ app.listen(PORT, () => {
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log(`📡 Port: ${PORT}`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🗄️  Database Verbose Logging: ${process.env.DATABASE_VERBOSE === 'true' ? '✅ Enabled' : '❌ Disabled'}`);
   
   // Display CORS configuration
   const allowedOrigins = getAllowedOrigins();
