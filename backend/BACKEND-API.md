@@ -142,6 +142,102 @@ Export a single Q&A pair to PDF or HTML format.
 
 ---
 
+## Assets Routes
+
+Base path: `/api/assets`
+
+The assets API provides access to configuration files and text-based resources stored in a dedicated GitHub repository.
+
+### GET /api/assets/:key
+
+Retrieves the content of a specific asset from the GitHub configuration repository.
+
+**Parameters:**
+- `key` (path parameter): The full path to the file in the repository (e.g., `config/production/api-settings.json`)
+
+**Response:**
+- Content-Type is automatically set based on file extension
+- Returns the raw content of the file
+
+**Example:**
+```bash
+curl -X GET http://localhost:3001/api/assets/config/production/api-settings.json
+```
+
+**Status Codes:**
+- `200 OK`: Asset retrieved successfully
+- `400 Bad Request`: Asset key is missing
+- `401 Unauthorized`: GitHub authentication failed
+- `404 Not Found`: Asset not found
+- `429 Too Many Requests`: GitHub API rate limit exceeded
+- `500 Internal Server Error`: Server error
+
+### GET /api/assets
+
+Lists available assets in a directory.
+
+**Query Parameters:**
+- `path` (optional): Directory path to list (defaults to repository root)
+
+**Response:**
+```json
+[
+  "config/production/api-settings.json",
+  "config/staging/api-settings.json",
+  "templates/email-template.html"
+]
+```
+
+**Example:**
+```bash
+curl -X GET http://localhost:3001/api/assets?path=config
+```
+
+### GET /api/assets/:key/metadata
+
+Retrieves an asset with its metadata including SHA, size, and last modified date.
+
+**Parameters:**
+- `key` (path parameter): The full path to the file in the repository
+
+**Response:**
+```json
+{
+  "content": "file content here...",
+  "sha": "abc123...",
+  "size": 1234,
+  "encoding": "base64",
+  "lastModified": "2025-01-09T10:30:00Z"
+}
+```
+
+### POST /api/assets/cache/clear
+
+Clears the asset cache for improved performance.
+
+**Request Body (optional):**
+```json
+{
+  "key": "config/production/api-settings.json"
+}
+```
+
+If no key is provided, the entire cache is cleared.
+
+**Response:**
+```json
+{
+  "message": "Cache cleared for key: config/production/api-settings.json"
+}
+```
+
+**Environment Variables:**
+- `GITHUB_CONFIG_REPO`: Repository containing configuration files (format: owner/repo)
+- `GITHUB_CONFIG_TOKEN`: GitHub personal access token with read access
+- `GITHUB_CONFIG_BRANCH`: Branch to read from (default: main)
+
+---
+
 ## GitHub Routes
 
 Base path: `/api/github`
@@ -673,6 +769,9 @@ Key environment variables for backend configuration:
 - `CORS_ORIGINS` or `CORS_ORIGIN`: Allowed CORS origins
 - `GITHUB_REPO`: GitHub repository (format: owner/repo)
 - `GITHUB_TOKEN`: GitHub personal access token
+- `GITHUB_CONFIG_REPO`: Configuration repository (format: owner/repo)
+- `GITHUB_CONFIG_TOKEN`: Configuration repository access token
+- `GITHUB_CONFIG_BRANCH`: Configuration repository branch (default: main)
 - `OPENAI_API_KEY`: OpenAI API key for LLM
 - `ANTHROPIC_API_KEY`: Anthropic API key for LLM
 - `GOOGLE_API_KEY`: Google API key for LLM

@@ -129,9 +129,9 @@ const router = Router();
  *                   type: string
  *                   example: "Error details"
  */
-router.get('/', (req: Request, res: Response): void => {
+router.get('/', async (req: Request, res: Response): Promise<void> => {
   try {
-    const agents = agentService.getAgents();
+    const agents = await agentService.getAgents();
     // Mask the database connection strings before sending response
     const maskedAgents = maskAgentsConnectionStrings(agents);
     res.json({
@@ -330,7 +330,7 @@ router.get('/threads', async (req: Request, res: Response): Promise<void> => {
     }
 
     // Get agent by name
-    const agent = agentService.getAgentByName(agentName);
+    const agent = await agentService.getAgentByName(agentName);
     if (!agent) {
       res.status(404).json({
         success: false,
@@ -466,7 +466,7 @@ router.get('/thread/:threadId/documents', async (req: Request, res: Response): P
     }
 
     // Get agent by name
-    const agent = agentService.getAgentByName(agentName);
+    const agent = await agentService.getAgentByName(agentName);
     if (!agent) {
       res.status(404).json({
         success: false,
@@ -641,7 +641,7 @@ router.get('/thread/:threadId/runs', async (req: Request, res: Response): Promis
     }
 
     // Get agent by name
-    const agent = agentService.getAgentByName(agentName);
+    const agent = await agentService.getAgentByName(agentName);
     if (!agent) {
       res.status(404).json({
         success: false,
@@ -806,7 +806,7 @@ router.get('/thread/:threadId/checkpoints', async (req: Request, res: Response):
     }
 
     // Get agent by name
-    const agent = agentService.getAgentByName(agentName);
+    const agent = await agentService.getAgentByName(agentName);
     if (!agent) {
       res.status(404).json({
         success: false,
@@ -895,7 +895,7 @@ router.get('/test-connection', async (req: Request, res: Response): Promise<void
       return;
     }
 
-    const agent = agentService.getAgentByName(agentName);
+    const agent = await agentService.getAgentByName(agentName);
     if (!agent) {
       res.status(404).json({
         success: false,
@@ -921,10 +921,10 @@ router.get('/test-connection', async (req: Request, res: Response): Promise<void
   }
 });
 
-router.post('/reload', (req: Request, res: Response): void => {
+router.post('/reload', async (req: Request, res: Response): Promise<void> => {
   try {
-    agentService.reloadAgents();
-    const agents = agentService.getAgents();
+    await agentService.reloadAgents();
+    const agents = await agentService.getAgents();
     
     res.json({
       success: true,
@@ -985,10 +985,10 @@ router.post('/reload', (req: Request, res: Response): void => {
  *       500:
  *         description: Internal server error
  */
-router.get('/:name', (req: Request, res: Response): void => {
+router.get('/:name', async (req: Request, res: Response): Promise<void> => {
   try {
     const { name } = req.params;
-    const agent = agentService.getAgentByName(name);
+    const agent = await agentService.getAgentByName(name);
     
     if (!agent) {
       res.status(404).json({
@@ -1010,6 +1010,59 @@ router.get('/:name', (req: Request, res: Response): void => {
       success: false,
       error: 'Failed to retrieve agent',
       message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+});
+
+/**
+ * @swagger
+ * /api/agent/test-connection/{name}:
+ *   get:
+ *     summary: Test database connection for a specific agent
+ *     tags: [Agent]
+ *     parameters:
+ *       - in: path
+ *         name: name
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: The name of the agent
+ *     responses:
+ *       200:
+ *         description: Connection test result
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 details:
+ *                   type: object
+ *       404:
+ *         description: Agent not found
+ *       500:
+ *         description: Server error
+ */
+router.get('/test-connection/:name', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { name } = req.params;
+    const agent = await agentService.getAgentByName(name);
+    
+    if (!agent) {
+      res.status(404).json({ error: 'Agent not found' });
+      return;
+    }
+    
+    const result = await databaseService.testConnection(agent);
+    res.json(result);
+  } catch (error: any) {
+    console.error('Error testing connection:', error);
+    res.status(500).json({
+      error: 'Failed to test connection',
+      message: error.message
     });
   }
 });

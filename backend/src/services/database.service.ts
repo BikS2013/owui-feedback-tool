@@ -17,19 +17,48 @@ export class DatabaseService {
 
   private getPool(agent: Agent): Pool {
     if (!this.pools.has(agent.name)) {
+      // Parse the connection string to check if it's Azure PostgreSQL
+      const isAzure = agent.database_connection_string.includes('.database.azure.com');
+      
       const pool = new Pool({
         connectionString: agent.database_connection_string,
         max: 10, // Maximum number of clients in the pool
         idleTimeoutMillis: 30000, // Close idle clients after 30 seconds
-        connectionTimeoutMillis: 5000, // Return an error after 5 seconds if connection cannot be established
-        ssl: {
-          rejectUnauthorized: false // For Azure PostgreSQL
+        connectionTimeoutMillis: isAzure ? 30000 : 10000, // Azure needs more time (30s), others 10s
+        statement_timeout: 30000, // Statement timeout 30 seconds
+        query_timeout: 30000, // Query timeout 30 seconds
+        ssl: isAzure ? {
+          rejectUnauthorized: false, // For Azure PostgreSQL
+          requestCert: true
+        } : {
+          rejectUnauthorized: false
         }
       });
 
       // Handle pool errors
       pool.on('error', (err) => {
         console.error(`Database pool error for agent ${agent.name}:`, err);
+        // Log additional details for Azure connection issues
+        if (err.message.includes('timeout') || err.message.includes('ETIMEDOUT')) {
+          console.error('Connection timeout - possible causes:');
+          console.error('- Azure PostgreSQL firewall rules may need to be updated');
+          console.error('- Network connectivity issues');
+          console.error('- SSL/TLS configuration mismatch');
+        }
+      });
+
+      // Monitor pool connections
+      pool.on('connect', () => {
+        console.log(`New connection established for agent ${agent.name}`);
+      });
+
+      pool.on('acquire', () => {
+        const poolStats = {
+          total: pool.totalCount,
+          idle: pool.idleCount,
+          waiting: pool.waitingCount
+        };
+        console.log(`Connection acquired for agent ${agent.name}. Pool stats:`, poolStats);
       });
 
       this.pools.set(agent.name, pool);
@@ -88,8 +117,35 @@ export class DatabaseService {
 
     try {
       console.log('Acquiring database connection...');
-      client = await pool.connect();
-      console.log('Database connection acquired successfully');
+      
+      // Add retry logic for connection
+      let connectionAttempts = 0;
+      const maxAttempts = 3;
+      let lastError: Error | null = null;
+      
+      while (connectionAttempts < maxAttempts) {
+        try {
+          connectionAttempts++;
+          console.log(`Connection attempt ${connectionAttempts}/${maxAttempts}...`);
+          client = await pool.connect();
+          console.log('Database connection acquired successfully');
+          break;
+        } catch (error) {
+          lastError = error as Error;
+          console.error(`Connection attempt ${connectionAttempts} failed:`, error);
+          
+          if (connectionAttempts < maxAttempts) {
+            // Wait before retrying (exponential backoff)
+            const waitTime = Math.min(1000 * Math.pow(2, connectionAttempts - 1), 5000);
+            console.log(`Waiting ${waitTime}ms before retry...`);
+            await new Promise(resolve => setTimeout(resolve, waitTime));
+          }
+        }
+      }
+      
+      if (!client) {
+        throw lastError || new Error('Failed to acquire database connection after multiple attempts');
+      }
       
       // Calculate offset
       const offset = (page - 1) * limit;
@@ -370,6 +426,62 @@ export class DatabaseService {
 
     await Promise.all(closePromises);
     this.pools.clear();
+  }
+
+  async testConnection(agent: Agent): Promise<{ success: boolean; message: string; details?: any }> {
+    const pool = this.getPool(agent);
+    let client: PoolClient | null = null;
+
+    try {
+      console.log(`Testing database connection for agent: ${agent.name}`);
+      const startTime = Date.now();
+      
+      client = await pool.connect();
+      const connectTime = Date.now() - startTime;
+      
+      // Run a simple query to test the connection
+      const result = await client.query('SELECT NOW() as current_time, version() as pg_version');
+      const queryTime = Date.now() - startTime - connectTime;
+      
+      return {
+        success: true,
+        message: 'Database connection successful',
+        details: {
+          connectionTime: `${connectTime}ms`,
+          queryTime: `${queryTime}ms`,
+          totalTime: `${Date.now() - startTime}ms`,
+          serverTime: result.rows[0].current_time,
+          postgresVersion: result.rows[0].pg_version,
+          poolStats: {
+            total: pool.totalCount,
+            idle: pool.idleCount,
+            waiting: pool.waitingCount
+          }
+        }
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      console.error(`Database connection test failed for agent ${agent.name}:`, error);
+      
+      return {
+        success: false,
+        message: `Database connection failed: ${errorMessage}`,
+        details: {
+          error: errorMessage,
+          suggestions: [
+            'Check if the database server is accessible from your network',
+            'Verify the connection string is correct',
+            'Ensure Azure PostgreSQL firewall rules allow your IP',
+            'Check if SSL is required and properly configured',
+            'Verify database credentials are correct'
+          ]
+        }
+      };
+    } finally {
+      if (client) {
+        client.release();
+      }
+    }
   }
 }
 

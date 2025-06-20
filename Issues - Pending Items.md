@@ -1,6 +1,41 @@
 # Issues - Pending Items
 
+## Pending Items
+
+### Azure PostgreSQL Connection Timeouts
+**Issue**: Database connections to Azure PostgreSQL are timing out with "Connection terminated due to connection timeout" errors
+**Impact**: Unable to fetch thread data from agent databases
+**Status**: Improvements implemented, needs testing
+**Details**:
+- Azure PostgreSQL requires longer connection timeouts than local databases
+- May need firewall rule updates to allow connections from the application's IP
+- SSL/TLS configuration may need adjustment
+
+**Implemented Solutions**:
+1. Increased connection timeout from 5s to 30s for Azure databases
+2. Added retry logic with exponential backoff (3 attempts)
+3. Enhanced error logging to identify timeout causes
+4. Added connection pool monitoring
+5. Created test connection endpoint: GET /api/agent/test-connection/{name}
+
+**Next Steps**:
+- Test the connection using the new test endpoint
+- Verify Azure PostgreSQL firewall rules allow the application's IP
+- Monitor connection pool statistics during usage
+
 ## Completed Items (Most Recent First)
+
+### LLM Configuration Caching Not Working (Completed: 2025-06-20)
+**Issue**: The LLM Config Service was fetching configurations from GitHub on every request instead of caching them
+**Impact**: Performance degradation and unnecessary API calls to GitHub
+**Resolution**: Fixed by removing the proxy export pattern in the service
+**Details**: 
+- The issue was caused by a proxy object in llm-config.service.ts that was intercepting property assignments
+- The proxy only had a `get` trap but no `set` trap, preventing the `initialized` flag from being properly set
+- Removed the proxy export (`export const llmConfigService = new Proxy(...)`) entirely
+- All routes were already using `getLLMConfigService()` directly, so no route changes were needed
+- Now configurations are loaded once from GitHub and cached in memory for the lifetime of the application
+- Subsequent requests use the cached configurations as confirmed by logs showing "✅ Using cached LLM configurations"
 
 ### Execute Button Styling in Magic Mode (Completed: 2025-01-15)
 **Issue**: The Execute button in magic mode used different styling (green) compared to the Generate button in engineering mode (blue gradient).

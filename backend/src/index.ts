@@ -13,6 +13,9 @@ import { debugRoutes } from './routes/debug.routes.js';
 import { swaggerSpec } from './swagger.config.js';
 import { consoleController } from './utils/console-controller.js';
 import { databaseService } from './services/database.service.js';
+import assetsRouter from './routes/assets.js';
+import { getGitHubAssetService } from './services/githubAssetService.js';
+import { getAssetDatabaseService } from './services/assetDatabaseService.js';
 
 // Initialize console controller with database service reference
 consoleController.setDatabaseService(databaseService);
@@ -129,6 +132,7 @@ app.use('/api/github', githubRoutes);
 app.use('/api/llm', llmRoutes);
 app.use('/api/agent', agentRoutes);
 app.use('/api/debug', debugRoutes);
+app.use('/api/assets', assetsRouter);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -178,6 +182,16 @@ app.listen(PORT, () => {
   console.log(`   • GET  http://${HOST}:${PORT}/api/agent/:name`);
   console.log(`   • GET  http://${HOST}:${PORT}/api/agent/threads?agentName=xxx`);
   console.log(`   • POST http://${HOST}:${PORT}/api/agent/reload`);
+  console.log(`   • GET  http://${HOST}:${PORT}/api/assets/:key`);
+  console.log(`   • GET  http://${HOST}:${PORT}/api/assets`);
+  console.log(`   • POST http://${HOST}:${PORT}/api/assets/cache/clear`);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('📦 Asset Services Configuration:');
+  
+  // Initialize asset services to report their configuration status
+  getGitHubAssetService();
+  getAssetDatabaseService();
+  
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 });
 

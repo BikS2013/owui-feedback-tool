@@ -1,9 +1,11 @@
 import { Router, Request, Response } from 'express';
 import { LLMPromptExecutionRequest, LLMPromptExecutionResponse, LLMTestRequest } from '../types/llm.types.js';
 import { v4 as uuidv4 } from 'uuid';
-import { llmConfigService } from '../services/llm-config.service.js';
+import { getLLMConfigService } from '../services/llm-config.service.js';
 import { GitHubService } from '../services/github.service.js';
 import { PromptLoader } from '../utils/prompt-loader.js';
+import { prepareFilterWithSamplePrompt } from '../services/filterWithSamplePromptService.js';
+import { prepareFilterWithoutSamplePrompt } from '../services/filterWithoutSamplePromptService.js';
 
 const router = Router();
 
@@ -246,8 +248,9 @@ router.get('/status/:requestId', async (req: Request, res: Response): Promise<vo
  */
 router.get('/configurations', async (req: Request, res: Response): Promise<void> => {
   try {
-    const configurations = llmConfigService.getConfigurations();
-    const defaultConfiguration = llmConfigService.getDefaultConfigurationName();
+    const llmConfigService = getLLMConfigService();
+    const configurations = await llmConfigService.getConfigurations();
+    const defaultConfiguration = await llmConfigService.getDefaultConfigurationName();
     
     res.json({
       configurations: configurations.map(config => ({
@@ -330,7 +333,8 @@ router.post('/test', async (req: Request, res: Response): Promise<void> => {
     }
     
     // Check if configuration exists
-    const config = llmConfigService.getConfiguration(configurationName);
+    const llmConfigService = getLLMConfigService();
+    const config = await llmConfigService.getConfiguration(configurationName);
     if (!config) {
       res.status(404).json({
         success: false,
@@ -382,8 +386,8 @@ router.post('/test', async (req: Request, res: Response): Promise<void> => {
  */
 router.post('/reload', async (req: Request, res: Response): Promise<void> => {
   try {
-    llmConfigService.reloadConfigurations();
-    const configurations = llmConfigService.getConfigurations();
+    await getLLMConfigService().reloadConfigurations();
+    const configurations = await getLLMConfigService().getConfigurations();
     
     res.json({
       success: true,
@@ -467,7 +471,7 @@ router.post('/execute-prompt-direct', async (req: Request, res: Response): Promi
     }
     
     // Check if configuration exists and is enabled
-    const config = llmConfigService.getConfiguration(llmConfiguration);
+    const config = await getLLMConfigService().getConfiguration(llmConfiguration);
     if (!config) {
       res.status(404).json({
         success: false,
@@ -493,7 +497,7 @@ router.post('/execute-prompt-direct', async (req: Request, res: Response): Promi
     const processedPrompt = PromptLoader.replacePlaceholders(promptText, parameterValues as Record<string, string>);
     
     // Create the chat model
-    const model = llmConfigService.createChatModel(llmConfiguration);
+    const model = await getLLMConfigService().createChatModel(llmConfiguration);
     
     // Execute the prompt
     const startTime = Date.now();
@@ -698,7 +702,7 @@ router.post('/get-prompt', async (req: Request, res: Response): Promise<void> =>
     }
     
     // Check if configuration exists
-    const config = llmConfigService.getConfiguration(llmConfiguration);
+    const config = await getLLMConfigService().getConfiguration(llmConfiguration);
     if (!config) {
       res.status(404).json({
         success: false,
@@ -717,13 +721,13 @@ router.post('/get-prompt', async (req: Request, res: Response): Promise<void> =>
     
     if (sampleData) {
       // Use actual sample data to guide the LLM
-      prompt = PromptLoader.preparePrompt('filter-with-sample.prompt.txt', {
+      prompt = await prepareFilterWithSamplePrompt({
         sampleData: JSON.stringify(sampleData, null, 2),
         query: query
       });
     } else {
       // Fall back to schema-based approach with dual-script support
-      prompt = PromptLoader.preparePrompt('filter-without-sample.prompt.txt', {
+      prompt = await prepareFilterWithoutSamplePrompt({
         query: query
       });
     }
@@ -758,7 +762,7 @@ router.post('/convert-to-filter', async (req: Request, res: Response): Promise<v
     }
     
     // Check if configuration exists and is enabled
-    const config = llmConfigService.getConfiguration(llmConfiguration);
+    const config = await getLLMConfigService().getConfiguration(llmConfiguration);
     if (!config) {
       res.status(404).json({
         success: false,
@@ -785,19 +789,19 @@ router.post('/convert-to-filter', async (req: Request, res: Response): Promise<v
     
     if (sampleData) {
       // Use actual sample data to guide the LLM
-      prompt = PromptLoader.preparePrompt('filter-with-sample.prompt.txt', {
+      prompt = await prepareFilterWithSamplePrompt({
         sampleData: JSON.stringify(sampleData, null, 2),
         query: query
       });
     } else {
       // Fall back to schema-based approach with dual-script support
-      prompt = PromptLoader.preparePrompt('filter-without-sample.prompt.txt', {
+      prompt = await prepareFilterWithoutSamplePrompt({
         query: query
       });
     }
     
     // Create the chat model
-    const model = llmConfigService.createChatModel(llmConfiguration);
+    const model = await getLLMConfigService().createChatModel(llmConfiguration);
     
     // Execute the prompt
     const startTime = Date.now();

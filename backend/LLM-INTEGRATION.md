@@ -165,6 +165,28 @@ POST /api/llm/reload
 
 LLM configurations are managed through a YAML file (`llm-config.yaml`) that defines available models, providers, and their settings.
 
+#### GitHub Asset Repository Loading
+
+As of January 2025, the LLM configuration can be loaded from a GitHub asset repository instead of the local file system. This provides centralized configuration management with version control.
+
+**Environment Variables:**
+```env
+# Path to LLM configuration file in GitHub asset repo
+LLM_CONFIG_ASSET_KEY=settings/llm-config.yaml
+```
+
+**Loading Priority:**
+1. If `LLM_CONFIG_ASSET_KEY` is set and GitHub asset service is configured, the system attempts to load from GitHub
+2. If GitHub loading fails, it falls back to the local `llm-config.yaml` file
+3. If the asset is cached in the database (when ASSET_DB is configured), it serves from the database when GitHub is unavailable
+4. If no configuration file is found, an exception is thrown
+
+**Benefits:**
+- Centralized LLM configuration management across multiple deployments
+- Version control and audit trail for model changes
+- No need to redeploy application for configuration updates
+- Automatic fallback to database cache for high availability
+
 #### Configuration File Structure
 
 ```yaml

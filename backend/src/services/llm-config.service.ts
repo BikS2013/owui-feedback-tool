@@ -1,5 +1,3 @@
-import { readFileSync, existsSync } from 'fs';
-import { join } from 'path';
 import yaml from 'js-yaml';
 import { ChatOpenAI } from '@langchain/openai';
 import { ChatAnthropic } from '@langchain/anthropic';
@@ -17,102 +15,96 @@ import {
   LiteLLMConfig, 
   OllamaConfig 
 } from '../types/llm.types.js';
+import { ConfigService } from './config-service-template.js';
 
-export class LLMConfigService {
-  private configs: Map<string, LLMConfig> = new Map();
+interface LLMConfigData extends LLMConfigFile {
+  defaultConfiguration?: string;
+}
+
+export class LLMConfigService extends ConfigService<LLMConfigData> {
   private defaultConfig: string | null = null;
-  private configPath: string;
 
   constructor() {
-    this.configPath = join(process.cwd(), 'llm-config.yaml');
-    this.loadConfigurations();
-  }
-
-  /**
-   * Load configurations from YAML file
-   */
-  private loadConfigurations(): void {
-    try {
-      if (!existsSync(this.configPath)) {
-        console.warn('⚠️  LLM configuration file not found. Using default configuration.');
-        // Create a minimal default configuration
-        const defaultConfig: LLMConfig = {
-          name: 'default',
-          provider: 'openai',
-          model: 'gpt-3.5-turbo',
-          description: 'Default OpenAI configuration',
-          enabled: true,
-          temperature: 0.7,
-          maxTokens: 1000
-        } as OpenAIConfig;
-        
-        this.configs.set('default', defaultConfig);
-        this.defaultConfig = 'default';
-        return;
-      }
-
-      const fileContents = readFileSync(this.configPath, 'utf8');
-      const configData = yaml.load(fileContents) as LLMConfigFile & { defaultConfiguration?: string };
-
-      if (!configData.configurations || !Array.isArray(configData.configurations)) {
-        throw new Error('Invalid configuration file format');
-      }
-
-      // Load all configurations
-      for (const config of configData.configurations) {
-        if (config.enabled !== false) { // Default to enabled if not specified
-          this.configs.set(config.name, config);
+    super(
+      process.env.LLM_CONFIG_ASSET_KEY || 'settings/llm-config.yaml',
+      'llm-config.yaml',
+      (content) => {
+        try {
+          return yaml.load(content) as LLMConfigData;
+        } catch (error) {
+          console.error('❌ Failed to parse YAML:', error);
+          throw new Error(`Invalid YAML format: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
       }
+    );
+  }
 
-      // Set default configuration
-      if (configData.defaultConfiguration) {
-        this.defaultConfig = configData.defaultConfiguration;
-      } else if (this.configs.size > 0) {
-        this.defaultConfig = this.configs.keys().next().value || null;
-      }
-
-      console.log(`✅ Loaded ${this.configs.size} LLM configurations`);
-      console.log(`   Default: ${this.defaultConfig}`);
-    } catch (error) {
-      console.error('❌ Error loading LLM configurations:', error);
-      throw new Error('Failed to load LLM configurations');
+  protected processConfiguration(data: LLMConfigData): void {
+    if (!data || typeof data !== 'object') {
+      throw new Error('Configuration file is empty or not an object');
     }
+
+    if (!data.configurations || !Array.isArray(data.configurations)) {
+      throw new Error('Invalid configuration file format: missing or invalid "configurations" array');
+    }
+
+    // Clear existing configurations
+    this.configs.clear();
+    
+    // Load all enabled configurations
+    for (const config of data.configurations) {
+      if (config.enabled !== false) { // Default to enabled if not specified
+        this.configs.set(config.name, config);
+      }
+    }
+
+    // Set default configuration
+    if (data.defaultConfiguration) {
+      this.defaultConfig = data.defaultConfiguration;
+    } else if (this.configs.size > 0) {
+      this.defaultConfig = this.configs.keys().next().value || null;
+    }
+
+    console.log(`✅ Loaded ${this.configs.size} LLM configurations`);
+    console.log(`   Default: ${this.defaultConfig}`);
   }
 
   /**
    * Get all available configurations
    */
-  getConfigurations(): LLMConfig[] {
+  async getConfigurations(): Promise<LLMConfig[]> {
+    await this.getAll(); // Ensures initialization
     return Array.from(this.configs.values());
   }
 
   /**
    * Get configuration names
    */
-  getConfigurationNames(): string[] {
+  async getConfigurationNames(): Promise<string[]> {
+    await this.getAll(); // Ensures initialization
     return Array.from(this.configs.keys());
   }
 
   /**
    * Get a specific configuration
    */
-  getConfiguration(name: string): LLMConfig | null {
-    return this.configs.get(name) || null;
+  async getConfiguration(name: string): Promise<LLMConfig | null> {
+    return await this.getConfig(name) || null;
   }
 
   /**
    * Get default configuration name
    */
-  getDefaultConfigurationName(): string | null {
+  async getDefaultConfigurationName(): Promise<string | null> {
+    await this.getAll(); // Ensures initialization
     return this.defaultConfig;
   }
 
   /**
    * Create a LangChain chat model from configuration
    */
-  createChatModel(configName: string): BaseChatModel {
-    const config = this.getConfiguration(configName);
+  async createChatModel(configName: string): Promise<BaseChatModel> {
+    const config = await this.getConfiguration(configName);
     if (!config) {
       throw new Error(`Configuration '${configName}' not found`);
     }
@@ -236,7 +228,7 @@ export class LLMConfigService {
     const testPrompt = prompt || "Hello! Please respond with a brief greeting.";
     
     try {
-      const model = this.createChatModel(configName);
+      const model = await this.createChatModel(configName);
       const response = await model.invoke(testPrompt);
       const duration = Date.now() - startTime;
       
@@ -258,12 +250,23 @@ export class LLMConfigService {
   /**
    * Reload configurations from file
    */
-  reloadConfigurations(): void {
-    this.configs.clear();
+  async reloadConfigurations(): Promise<void> {
     this.defaultConfig = null;
-    this.loadConfigurations();
+    await this.reload();
   }
 }
 
-// Export singleton instance
-export const llmConfigService = new LLMConfigService();
+// Export singleton instance with lazy initialization
+let instance: LLMConfigService | null = null;
+
+export const getLLMConfigService = (): LLMConfigService => {
+  if (!instance) {
+    console.log('🎯 Creating LLMConfigService instance...');
+    console.log(`   LLM_CONFIG_ASSET_KEY at creation time: ${process.env.LLM_CONFIG_ASSET_KEY}`);
+    instance = new LLMConfigService();
+  }
+  return instance;
+};
+
+// Note: Direct proxy export removed to fix initialization issues
+// Always use getLLMConfigService() instead

@@ -12,6 +12,27 @@ The agent integration system allows the application to connect to multiple AI ag
 
 All agent configurations are stored in `backend/agent-config.yaml`. This file contains the essential connection information for each integrated agent.
 
+#### GitHub Asset Repository Loading
+
+As of January 2025, the agent configuration can be loaded from a GitHub asset repository instead of the local file system. This provides centralized configuration management with version control.
+
+**Environment Variables:**
+```env
+# Path to agent configuration file in GitHub asset repo
+AGENT_CONFIG_ASSET_KEY=settings/agent-config.yaml
+```
+
+**Loading Priority:**
+1. If `AGENT_CONFIG_ASSET_KEY` is set and GitHub asset service is configured, the system attempts to load from GitHub
+2. If GitHub loading fails, it falls back to the local `agent-config.yaml` file
+3. If the asset is cached in the database (when ASSET_DB is configured), it serves from the database when GitHub is unavailable
+
+**Benefits:**
+- Centralized configuration management
+- Version control and audit trail
+- No need to redeploy application for configuration changes
+- Automatic fallback to database cache for high availability
+
 #### File Structure
 
 ```yaml

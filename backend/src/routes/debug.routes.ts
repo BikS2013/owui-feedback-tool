@@ -64,6 +64,18 @@ router.get('/env', (req: any, res: any) => {
       DATABASE_USER: process.env.DATABASE_USER || 'agent',
       DATABASE_PASSWORD: process.env.DATABASE_PASSWORD ? '***' : '(not set)'
     },
+    assets: {
+      GITHUB_CONFIG_REPO: process.env.GITHUB_CONFIG_REPO || '(not set)',
+      GITHUB_CONFIG_TOKEN: process.env.GITHUB_CONFIG_TOKEN ? '***' + process.env.GITHUB_CONFIG_TOKEN.slice(-4) : '(not set)',
+      GITHUB_CONFIG_BRANCH: process.env.GITHUB_CONFIG_BRANCH || '(not set)',
+      ASSET_DB: process.env.ASSET_DB ? 'configured' : '(not set)',
+      ASSET_OWNER_CLASS: process.env.ASSET_OWNER_CLASS || '(not set)',
+      ASSET_OWNER_NAME: process.env.ASSET_OWNER_NAME || '(not set)',
+      ASSET_MEMORY_CACHE_ENABLED: process.env.ASSET_MEMORY_CACHE_ENABLED || '(not set)',
+      ASSET_MEMORY_CACHE_TTL: process.env.ASSET_MEMORY_CACHE_TTL || '(not set)',
+      AGENT_CONFIG_ASSET_KEY: process.env.AGENT_CONFIG_ASSET_KEY || '(not set)',
+      LLM_CONFIG_ASSET_KEY: process.env.LLM_CONFIG_ASSET_KEY || '(not set)'
+    },
     timestamp: new Date().toISOString()
   });
 });

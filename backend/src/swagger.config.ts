@@ -37,6 +37,10 @@ const options: swaggerJsdoc.Options = {
       {
         name: 'Agents',
         description: 'Agent management and database access endpoints'
+      },
+      {
+        name: 'Assets',
+        description: 'Configuration assets management from GitHub repository'
       }
     ],
     components: {

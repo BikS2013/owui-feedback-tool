@@ -1,40 +1,18 @@
-import fs from 'fs';
-import path from 'path';
-import yaml from 'yaml';
-import { Agent, AgentConfig } from '../types/agent.types.js';
+import { Agent } from '../types/agent.types.js';
+import { getAllAgents, getAgentByName, reloadAgentConfig } from './agentConfigService.js';
 
 export class AgentService {
-  private configPath: string;
-  private agents: Agent[] = [];
-
-  constructor() {
-    this.configPath = path.join(process.cwd(), 'agent-config.yaml');
-    this.loadAgents();
+  public async getAgents(): Promise<Agent[]> {
+    return await getAllAgents();
   }
 
-  private loadAgents(): void {
-    try {
-      const fileContent = fs.readFileSync(this.configPath, 'utf-8');
-      const config: AgentConfig = yaml.parse(fileContent);
-      this.agents = config.agents || [];
-      console.log(`✅ Loaded ${this.agents.length} agents from configuration`);
-    } catch (error) {
-      console.error('❌ Failed to load agent configuration:', error);
-      this.agents = [];
-    }
+  public async getAgentByName(name: string): Promise<Agent | undefined> {
+    return await getAgentByName(name);
   }
 
-  public getAgents(): Agent[] {
-    return this.agents;
-  }
-
-  public getAgentByName(name: string): Agent | undefined {
-    return this.agents.find(agent => agent.name === name);
-  }
-
-  public reloadAgents(): void {
+  public async reloadAgents(): Promise<void> {
     console.log('🔄 Reloading agent configuration...');
-    this.loadAgents();
+    await reloadAgentConfig();
   }
 }
 
