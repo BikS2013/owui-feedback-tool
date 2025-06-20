@@ -1,0 +1,29 @@
+# Example environment settings file
+# This file should be placed in your GitHub configuration repository
+# at the path specified by ENV_SETTINGS_ASSET_KEY (default: settings/env-settings)
+
+# Database configuration
+DATABASE_VERBOSE=false
+DATABASE_URL=postgresql://user:password@localhost:5432/dbname
+
+# CORS configuration
+CORS_ORIGINS=http://localhost:5173,http://localhost:5176,http://localhost:5179,http://localhost:3001
+
+# GitHub integration
+GITHUB_REPO=owner/repository-name
+GITHUB_TOKEN=github_pat_YOUR_TOKEN_HERE
+
+# Azure OpenAI configuration
+AZURE_OPENAI_API_KEY=your-api-key-here
+AZURE_OPENAI_API_VERSION=2024-12-01-preview
+AZURE_OPENAI_API_ENDPOINT=https://your-instance.openai.azure.com
+AZURE_OPENAI_API_DEPLOYMENT_NAME=gpt-4
+
+# Application settings
+LOG_LEVEL=info
+API_TIMEOUT=30000
+FEATURE_FLAG_NEW_UI=true
+
+# Service URLs
+BACKEND_API_URL=https://api.example.com
+WEBHOOK_URL=https://webhooks.example.com/notify

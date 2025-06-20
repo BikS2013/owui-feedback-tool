@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { reloadEnvironmentSettings } from '../services/environmentSettingsService.js';
 
 const router = Router();
 
@@ -74,10 +75,47 @@ router.get('/env', (req: any, res: any) => {
       ASSET_MEMORY_CACHE_ENABLED: process.env.ASSET_MEMORY_CACHE_ENABLED || '(not set)',
       ASSET_MEMORY_CACHE_TTL: process.env.ASSET_MEMORY_CACHE_TTL || '(not set)',
       AGENT_CONFIG_ASSET_KEY: process.env.AGENT_CONFIG_ASSET_KEY || '(not set)',
-      LLM_CONFIG_ASSET_KEY: process.env.LLM_CONFIG_ASSET_KEY || '(not set)'
+      LLM_CONFIG_ASSET_KEY: process.env.LLM_CONFIG_ASSET_KEY || '(not set)',
+      ENV_SETTINGS_ASSET_KEY: process.env.ENV_SETTINGS_ASSET_KEY || '(not set)'
     },
     timestamp: new Date().toISOString()
   });
+});
+
+/**
+ * @swagger
+ * /api/debug/env/reload:
+ *   post:
+ *     summary: Reload environment settings from configuration repository
+ *     tags: [Debug]
+ *     responses:
+ *       200:
+ *         description: Environment settings reloaded successfully
+ *       403:
+ *         description: Debug endpoints disabled in production
+ *       500:
+ *         description: Failed to reload environment settings
+ */
+router.post('/env/reload', async (req: any, res: any) => {
+  // Only allow in development mode for security
+  if (process.env.NODE_ENV === 'production' && !process.env.ALLOW_DEBUG_ENDPOINTS) {
+    return res.status(403).json({ error: 'Debug endpoints are disabled in production' });
+  }
+  
+  try {
+    await reloadEnvironmentSettings();
+    res.json({ 
+      success: true, 
+      message: 'Environment settings reloaded successfully',
+      timestamp: new Date().toISOString()
+    });
+  } catch (error: any) {
+    console.error('Failed to reload environment settings:', error);
+    res.status(500).json({ 
+      error: 'Failed to reload environment settings',
+      message: error.message
+    });
+  }
 });
 
 export const debugRoutes = router;

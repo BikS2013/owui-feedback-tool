@@ -16,13 +16,15 @@ import { databaseService } from './services/database.service.js';
 import assetsRouter from './routes/assets.js';
 import { getGitHubAssetService } from './services/githubAssetService.js';
 import { getAssetDatabaseService } from './services/assetDatabaseService.js';
+import { loadEnvironmentSettings } from './services/environmentSettingsService.js';
 
 // Initialize console controller with database service reference
 consoleController.setDatabaseService(databaseService);
 
 const app: Application = express();
-const PORT = process.env.PORT || 3001;
-const HOST = process.env.HOST || 'localhost';
+// These will be re-read after environment settings are loaded
+let PORT = process.env.PORT || 3001;
+let HOST = process.env.HOST || 'localhost';
 
 // Parse allowed origins from environment variable
 const getAllowedOrigins = (): string[] | string => {
@@ -143,56 +145,73 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
   });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log('\n🚀 Server is running!');
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log(`📡 Port: ${PORT}`);
-  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-  console.log(`🗄️  Database Verbose Logging: ${process.env.DATABASE_VERBOSE === 'true' ? '✅ Enabled' : '❌ Disabled'}`);
-  
-  // Display CORS configuration
-  const allowedOrigins = getAllowedOrigins();
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🔒 CORS Configuration:');
-  if (allowedOrigins === '*') {
-    console.log('   ⚠️  All origins allowed (wildcard)');
-  } else if (Array.isArray(allowedOrigins)) {
-    console.log('   Allowed origins:');
-    allowedOrigins.forEach(origin => console.log(`   • ${origin}`));
+// Start server with async initialization
+async function startServer() {
+  try {
+    // Load environment settings from configuration repository (if available)
+    await loadEnvironmentSettings();
+    
+    // Re-read PORT and HOST in case they were loaded from settings
+    PORT = process.env.PORT || 3001;
+    HOST = process.env.HOST || 'localhost';
+    
+    app.listen(PORT, () => {
+      console.log('\n🚀 Server is running!');
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log(`📡 Port: ${PORT}`);
+      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+      console.log(`🗄️  Database Verbose Logging: ${process.env.DATABASE_VERBOSE === 'true' ? '✅ Enabled' : '❌ Disabled'}`);
+      
+      // Display CORS configuration
+      const allowedOrigins = getAllowedOrigins();
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🔒 CORS Configuration:');
+      if (allowedOrigins === '*') {
+        console.log('   ⚠️  All origins allowed (wildcard)');
+      } else if (Array.isArray(allowedOrigins)) {
+        console.log('   Allowed origins:');
+        allowedOrigins.forEach(origin => console.log(`   • ${origin}`));
+      }
+      
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📚 API Documentation:');
+      console.log(`   👉 http://${HOST}:${PORT}/api-docs`);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🔗 Available endpoints:');
+      console.log(`   • GET  http://${HOST}:${PORT}/health`);
+      console.log(`   • POST http://${HOST}:${PORT}/api/export/conversation`);
+      console.log(`   • POST http://${HOST}:${PORT}/api/export/qa-pair`);
+      console.log(`   • GET  http://${HOST}:${PORT}/api/github/status`);
+      console.log(`   • GET  http://${HOST}:${PORT}/api/github/tree`);
+      console.log(`   • GET  http://${HOST}:${PORT}/api/github/files`);
+      console.log(`   • POST http://${HOST}:${PORT}/api/llm/execute-prompt`);
+      console.log(`   • GET  http://${HOST}:${PORT}/api/llm/status/:requestId`);
+      console.log(`   • GET  http://${HOST}:${PORT}/api/llm/configurations`);
+      console.log(`   • POST http://${HOST}:${PORT}/api/llm/test`);
+      console.log(`   • POST http://${HOST}:${PORT}/api/llm/reload`);
+      console.log(`   • GET  http://${HOST}:${PORT}/api/agent`);
+      console.log(`   • GET  http://${HOST}:${PORT}/api/agent/:name`);
+      console.log(`   • GET  http://${HOST}:${PORT}/api/agent/threads?agentName=xxx`);
+      console.log(`   • POST http://${HOST}:${PORT}/api/agent/reload`);
+      console.log(`   • GET  http://${HOST}:${PORT}/api/assets/:key`);
+      console.log(`   • GET  http://${HOST}:${PORT}/api/assets`);
+      console.log(`   • POST http://${HOST}:${PORT}/api/assets/cache/clear`);
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('📦 Asset Services Configuration:');
+      
+      // Initialize asset services to report their configuration status
+      getGitHubAssetService();
+      getAssetDatabaseService();
+      
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
   }
-  
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('📚 API Documentation:');
-  console.log(`   👉 http://${HOST}:${PORT}/api-docs`);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('🔗 Available endpoints:');
-  console.log(`   • GET  http://${HOST}:${PORT}/health`);
-  console.log(`   • POST http://${HOST}:${PORT}/api/export/conversation`);
-  console.log(`   • POST http://${HOST}:${PORT}/api/export/qa-pair`);
-  console.log(`   • GET  http://${HOST}:${PORT}/api/github/status`);
-  console.log(`   • GET  http://${HOST}:${PORT}/api/github/tree`);
-  console.log(`   • GET  http://${HOST}:${PORT}/api/github/files`);
-  console.log(`   • POST http://${HOST}:${PORT}/api/llm/execute-prompt`);
-  console.log(`   • GET  http://${HOST}:${PORT}/api/llm/status/:requestId`);
-  console.log(`   • GET  http://${HOST}:${PORT}/api/llm/configurations`);
-  console.log(`   • POST http://${HOST}:${PORT}/api/llm/test`);
-  console.log(`   • POST http://${HOST}:${PORT}/api/llm/reload`);
-  console.log(`   • GET  http://${HOST}:${PORT}/api/agent`);
-  console.log(`   • GET  http://${HOST}:${PORT}/api/agent/:name`);
-  console.log(`   • GET  http://${HOST}:${PORT}/api/agent/threads?agentName=xxx`);
-  console.log(`   • POST http://${HOST}:${PORT}/api/agent/reload`);
-  console.log(`   • GET  http://${HOST}:${PORT}/api/assets/:key`);
-  console.log(`   • GET  http://${HOST}:${PORT}/api/assets`);
-  console.log(`   • POST http://${HOST}:${PORT}/api/assets/cache/clear`);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('📦 Asset Services Configuration:');
-  
-  // Initialize asset services to report their configuration status
-  getGitHubAssetService();
-  getAssetDatabaseService();
-  
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-});
+}
+
+// Start the server
+startServer();
 
 export default app;

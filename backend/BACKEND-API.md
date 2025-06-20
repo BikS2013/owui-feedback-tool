@@ -775,6 +775,37 @@ Key environment variables for backend configuration:
 - `OPENAI_API_KEY`: OpenAI API key for LLM
 - `ANTHROPIC_API_KEY`: Anthropic API key for LLM
 - `GOOGLE_API_KEY`: Google API key for LLM
+- `ENV_SETTINGS_ASSET_KEY`: Path to environment settings file in GitHub configuration repository (default: `settings/env-settings`)
+- `OVERRIDE_ENV_VARS`: If 'true', allows environment settings to override existing variables (default: false)
+
+### Environment Settings Loading
+
+The backend supports loading additional environment variables from a plain text file stored in the GitHub configuration repository. This allows for:
+
+1. **Centralized Configuration**: Store environment-specific settings in your configuration repository
+2. **Dynamic Updates**: Reload settings without restarting the application
+3. **Fallback Support**: Application continues to work if settings file is not available
+
+#### File Format:
+The environment settings file should be a plain text file with KEY=VALUE pairs (one per line):
+```
+DATABASE_VERBOSE=false
+CORS_ORIGINS=http://localhost:5173,http://localhost:5176
+GITHUB_REPO=owner/repository-name
+API_KEY=your-api-key
+```
+
+Empty lines and lines starting with `#` are ignored.
+
+#### Setup:
+1. Create a plain text file with your environment settings (see `env-settings.example`)
+2. Upload it to your GitHub configuration repository
+3. Set `ENV_SETTINGS_ASSET_KEY` to the path of the file (default: `settings/env-settings`)
+4. Settings are loaded automatically on application startup
+
+#### API Endpoints:
+- `GET /api/debug/env`: View current environment configuration (development only)
+- `POST /api/debug/env/reload`: Reload environment settings from repository (development only)
 
 ## Development
 

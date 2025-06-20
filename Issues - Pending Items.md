@@ -25,6 +25,31 @@
 
 ## Completed Items (Most Recent First)
 
+### Environment Settings Loading from Configuration Repository (Completed: 2025-06-20)
+**Requirements**: Implement loading of environment variables from GitHub configuration repository using ENV_SETTINGS_ASSET_KEY
+**Solution**: Created a new environment settings service following the Configuration Service Pattern
+**Implementation**:
+1. Created `environmentSettingsService.ts` that follows the standard configuration service pattern
+2. Loads environment settings from a JSON file in the GitHub configuration repository
+3. Settings are loaded on application startup before the server starts
+4. Existing environment variables are preserved by default (can override with OVERRIDE_ENV_VARS=true)
+5. Added reload functionality via POST /api/debug/env/reload endpoint
+6. Added ENV_SETTINGS_ASSET_KEY to debug env endpoint to show current configuration
+
+**Features**:
+- Centralized environment configuration in GitHub repository
+- Dynamic reloading without server restart
+- Graceful fallback if settings file doesn't exist
+- Logging shows which settings were loaded/skipped
+- Test script created: `test_scripts/test-env-settings.sh`
+- Example configuration file: `environment-settings.example.json`
+
+**Usage**:
+1. Create a JSON file with key-value pairs for environment settings
+2. Upload to GitHub configuration repository
+3. Set `ENV_SETTINGS_ASSET_KEY=settings/environment-settings.json` in .env
+4. Settings load automatically on startup or can be reloaded via API
+
 ### LLM Configuration Caching Not Working (Completed: 2025-06-20)
 **Issue**: The LLM Config Service was fetching configurations from GitHub on every request instead of caching them
 **Impact**: Performance degradation and unnecessary API calls to GitHub
