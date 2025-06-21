@@ -6,6 +6,7 @@ import { FilterPanel } from '../FilterPanel/FilterPanel';
 import { DataControls } from '../DataControls/DataControls';
 import { ThemeToggle } from '../ThemeToggle/ThemeToggle';
 import { ColorSchemeToggle } from '../ColorSchemeToggle/ColorSchemeToggle';
+import { AuthStatus } from '../AuthStatus/AuthStatus';
 import { ListItem } from '../ListItem/ListItem';
 import { List } from '../List/List';
 import { LogoHeader } from '../LogoHeader/LogoHeader';
@@ -82,9 +83,10 @@ export function ConversationList({
   };
 
   const topRightControls = (
-    <>
+    <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
       <DataControls />
-    </>
+      <AuthStatus />
+    </div>
   );
 
   const hasActiveFilters = !!(filters.naturalLanguageQuery || filters.dateRange || filters.modelFilter || filters.ratingFilter);

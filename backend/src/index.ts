@@ -17,6 +17,20 @@ import assetsRouter from './routes/assets.js';
 import { getGitHubAssetService } from './services/githubAssetService.js';
 import { getAssetDatabaseService } from './services/assetDatabaseService.js';
 import { loadEnvironmentSettings } from './services/environmentSettingsService.js';
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get current directory for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const shutdownLockPath = path.join(__dirname, '..', 'shutdown.lock');
+
+// NBG OAuth imports
+import authRouter from './routes/auth.routes.js';
+import { globalAuthMiddleware } from './middleware/auth-helpers.js';
+import { requireAuth } from './middleware/token-validator.js';
+import { isAuthEnabled } from './middleware/nbg-auth.config.js';
 
 // Initialize console controller with database service reference
 consoleController.setDatabaseService(databaseService);
@@ -128,13 +142,32 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
-// Routes
-app.use('/api/export', exportRoutes);
-app.use('/api/github', githubRoutes);
-app.use('/api/llm', llmRoutes);
-app.use('/api/agent', agentRoutes);
-app.use('/api/debug', debugRoutes);
-app.use('/api/assets', assetsRouter);
+// NBG OAuth routes - MUST be before other routes
+app.use('/api/auth', authRouter);
+
+// NBG OAuth callback routes - required by NBG Identity Server
+app.get('/signin-nbg', (req, res) => {
+  // Redirect to auth callback handler with query parameters
+  const queryString = req.url.split('?')[1] || '';
+  res.redirect(`/api/auth/callback${queryString ? '?' + queryString : ''}`);
+});
+
+app.get('/signout-callback-nbg', (req, res) => {
+  // Redirect to logout callback handler with query parameters
+  const queryString = req.url.split('?')[1] || '';
+  res.redirect(`/api/auth/logout-callback${queryString ? '?' + queryString : ''}`);
+});
+
+// Apply global auth middleware - checks if auth is required
+app.use(globalAuthMiddleware);
+
+// Routes - now with auth protection where needed
+app.use('/api/export', requireAuth, exportRoutes);
+app.use('/api/github', requireAuth, githubRoutes);
+app.use('/api/llm', requireAuth, llmRoutes);
+app.use('/api/agent', requireAuth, agentRoutes);
+app.use('/api/debug', debugRoutes); // Debug routes might be conditionally protected
+app.use('/api/assets', requireAuth, assetsRouter);
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -148,6 +181,21 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 // Start server with async initialization
 async function startServer() {
   try {
+    // Check if another instance is shutting down
+    if (fs.existsSync(shutdownLockPath)) {
+      console.log('⏳ Another instance is shutting down, waiting...');
+      // Wait for the lock file to be removed (max 10 seconds)
+      let waitTime = 0;
+      while (fs.existsSync(shutdownLockPath) && waitTime < 10000) {
+        await new Promise(resolve => setTimeout(resolve, 500));
+        waitTime += 500;
+      }
+      if (fs.existsSync(shutdownLockPath)) {
+        // Force remove stale lock
+        fs.unlinkSync(shutdownLockPath);
+      }
+    }
+    
     // Load environment settings from configuration repository (if available)
     await loadEnvironmentSettings();
     
@@ -155,12 +203,24 @@ async function startServer() {
     PORT = process.env.PORT || 3001;
     HOST = process.env.HOST || 'localhost';
     
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log('\n🚀 Server is running!');
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log(`📡 Port: ${PORT}`);
       console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
       console.log(`🗄️  Database Verbose Logging: ${process.env.DATABASE_VERBOSE === 'true' ? '✅ Enabled' : '❌ Disabled'}`);
+      
+      // Display NBG OAuth status
+      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+      console.log('🔐 NBG OAuth Configuration:');
+      if (isAuthEnabled()) {
+        console.log('   ✅ Authentication ENABLED');
+        console.log(`   • Issuer: ${process.env.NBG_OAUTH_ISSUER || 'Not configured'}`);
+        console.log(`   • Client ID: ${process.env.NBG_CLIENT_ID ? '***' + process.env.NBG_CLIENT_ID.slice(-4) : 'Not configured'}`);
+        console.log(`   • Scopes: ${process.env.NBG_OAUTH_SCOPES || 'openid profile email'}`);
+      } else {
+        console.log('   ❌ Authentication DISABLED (Development mode)');
+      }
       
       // Display CORS configuration
       const allowedOrigins = getAllowedOrigins();
@@ -179,20 +239,30 @@ async function startServer() {
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
       console.log('🔗 Available endpoints:');
       console.log(`   • GET  http://${HOST}:${PORT}/health`);
+      console.log('   ── Authentication ──');
+      console.log(`   • GET  http://${HOST}:${PORT}/api/auth/status`);
+      console.log(`   • GET  http://${HOST}:${PORT}/api/auth/login`);
+      console.log(`   • GET  http://${HOST}:${PORT}/api/auth/logout`);
+      console.log(`   • POST http://${HOST}:${PORT}/api/auth/refresh`);
+      console.log('   ── Export (Protected) ──');
       console.log(`   • POST http://${HOST}:${PORT}/api/export/conversation`);
       console.log(`   • POST http://${HOST}:${PORT}/api/export/qa-pair`);
+      console.log('   ── GitHub (Protected) ──');
       console.log(`   • GET  http://${HOST}:${PORT}/api/github/status`);
       console.log(`   • GET  http://${HOST}:${PORT}/api/github/tree`);
       console.log(`   • GET  http://${HOST}:${PORT}/api/github/files`);
+      console.log('   ── LLM (Protected) ──');
       console.log(`   • POST http://${HOST}:${PORT}/api/llm/execute-prompt`);
       console.log(`   • GET  http://${HOST}:${PORT}/api/llm/status/:requestId`);
       console.log(`   • GET  http://${HOST}:${PORT}/api/llm/configurations`);
       console.log(`   • POST http://${HOST}:${PORT}/api/llm/test`);
       console.log(`   • POST http://${HOST}:${PORT}/api/llm/reload`);
+      console.log('   ── Agent (Protected) ──');
       console.log(`   • GET  http://${HOST}:${PORT}/api/agent`);
       console.log(`   • GET  http://${HOST}:${PORT}/api/agent/:name`);
       console.log(`   • GET  http://${HOST}:${PORT}/api/agent/threads?agentName=xxx`);
       console.log(`   • POST http://${HOST}:${PORT}/api/agent/reload`);
+      console.log('   ── Assets (Protected) ──');
       console.log(`   • GET  http://${HOST}:${PORT}/api/assets/:key`);
       console.log(`   • GET  http://${HOST}:${PORT}/api/assets`);
       console.log(`   • POST http://${HOST}:${PORT}/api/assets/cache/clear`);
@@ -205,6 +275,78 @@ async function startServer() {
       
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
     });
+
+    // Track active connections for proper cleanup
+    const connections = new Set<any>();
+    
+    server.on('connection', (connection) => {
+      connections.add(connection);
+      connection.on('close', () => {
+        connections.delete(connection);
+      });
+    });
+
+    // Graceful shutdown handling
+    const gracefulShutdown = (signal: string) => {
+      console.log(`\n📛 ${signal} signal received: closing HTTP server...`);
+      
+      // Create shutdown lock
+      try {
+        fs.writeFileSync(shutdownLockPath, 'shutting down');
+      } catch (err) {
+        // Ignore errors creating lock file
+      }
+      
+      // Immediately destroy all connections for faster shutdown
+      connections.forEach((connection) => {
+        connection.destroy();
+      });
+      
+      // Stop accepting new connections
+      server.close(() => {
+        console.log('✅ HTTP server closed');
+        // Remove shutdown lock
+        try {
+          if (fs.existsSync(shutdownLockPath)) {
+            fs.unlinkSync(shutdownLockPath);
+          }
+        } catch (err) {
+          // Ignore errors removing lock file
+        }
+        process.exit(0);
+      });
+
+      // Force close after 2 seconds
+      setTimeout(() => {
+        console.error('❌ Could not close connections in time, forcefully shutting down');
+        // Remove shutdown lock
+        try {
+          if (fs.existsSync(shutdownLockPath)) {
+            fs.unlinkSync(shutdownLockPath);
+          }
+        } catch (err) {
+          // Ignore errors removing lock file
+        }
+        process.exit(1);
+      }, 2000);
+    };
+
+    // Listen for termination signals
+    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+    process.on('SIGUSR2', () => gracefulShutdown('SIGUSR2')); // Nodemon restart
+
+    // Handle uncaught errors
+    process.on('uncaughtException', (error) => {
+      console.error('❌ Uncaught Exception:', error);
+      gracefulShutdown('UNCAUGHT_EXCEPTION');
+    });
+
+    process.on('unhandledRejection', (reason, promise) => {
+      console.error('❌ Unhandled Rejection at:', promise, 'reason:', reason);
+      gracefulShutdown('UNHANDLED_REJECTION');
+    });
+
   } catch (error) {
     console.error('Failed to start server:', error);
     process.exit(1);

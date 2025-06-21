@@ -1,4 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ConversationList } from './components/ConversationList/ConversationList';
 import { ConversationDetail } from './components/ConversationDetail/ConversationDetail';
 import { ResizablePanel } from './components/ResizablePanel/ResizablePanel';
@@ -6,6 +7,10 @@ import { DataNotification } from './components/DataNotification/DataNotification
 import { RenderingOverlay } from './components/RenderingOverlay';
 import { FeedbackProvider, useFeedbackStore } from './store/feedbackStore';
 import { ThemeProvider } from './store/themeStore';
+import { AuthProvider } from './contexts/AuthContext';
+import { ProtectedRoute } from './components/ProtectedRoute/ProtectedRoute';
+import { LoginPage } from './pages/LoginPage';
+import { OAuthCallback } from './pages/OAuthCallback';
 import { 
   searchInConversations
 } from './utils/dataProcessor';
@@ -249,13 +254,35 @@ function AppContent() {
   );
 }
 
+function MainApp() {
+  return (
+    <FeedbackProvider>
+      <AppContent />
+    </FeedbackProvider>
+  );
+}
+
 function App() {
   return (
-    <ThemeProvider>
-      <FeedbackProvider>
-        <AppContent />
-      </FeedbackProvider>
-    </ThemeProvider>
+    <BrowserRouter>
+      <ThemeProvider>
+        <AuthProvider>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/signin-nbg" element={<OAuthCallback />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <MainApp />
+                </ProtectedRoute>
+              }
+            />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AuthProvider>
+      </ThemeProvider>
+    </BrowserRouter>
   );
 }
 

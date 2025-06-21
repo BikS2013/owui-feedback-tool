@@ -1,13 +1,23 @@
 import { storageUtils } from '../utils/storageUtils';
+import { AuthService } from './auth.service';
 
 export class ApiService {
   private static apiUrlPromise: Promise<string> | null = null;
+  private static initialized = false;
 
   static async getApiBaseUrl(): Promise<string> {
     if (!this.apiUrlPromise) {
       this.apiUrlPromise = storageUtils.getApiUrl();
     }
     return this.apiUrlPromise;
+  }
+
+  static initialize() {
+    if (!this.initialized) {
+      // Setup auth interceptor
+      AuthService.setupInterceptor();
+      this.initialized = true;
+    }
   }
 
   static async exportConversationPDF(conversation: any, qaPairs: any[], metadata?: any): Promise<Blob> {

@@ -2,6 +2,91 @@
 
 ## Pending Items
 
+### NBG OAuth Authentication - Bypass When Disabled (Completed: 2025-06-21)
+**Date Added:** 2025-06-21
+**Status:** Completed
+**Description:** Modified authentication middleware to properly bypass authentication when NBG_OAUTH_ENABLED is set to false.
+
+**Changes Made:**
+1. **Token Validator Middleware:**
+   - Added check for `isAuthEnabled()` in `requireAuth` function
+   - When auth is disabled, sets mock auth object and bypasses validation
+   - `requireRole` middleware also bypasses checks when auth is disabled
+   - `optionalAuth` sets mock auth when disabled for consistency
+
+2. **Auth Routes:**
+   - `/api/auth/status` returns `authenticated: true` when auth is disabled
+   - Provides mock user data in development mode
+   - Login endpoint returns error when auth is disabled
+
+3. **Global Auth Middleware:**
+   - Sets mock auth object when auth is disabled
+   - Ensures downstream code that checks `req.auth` works properly
+
+4. **Config Module:**
+   - Returns mock config when auth is disabled to prevent errors
+   - Prevents "missing configuration" errors during startup
+
+**Benefits:**
+- No authentication prompts when `NBG_OAUTH_ENABLED=false`
+- Development mode works without OAuth configuration
+- All protected endpoints accessible in dev mode
+- Consistent behavior across all middleware
+
+### OAuth Authentication Implementation Analysis
+**Date Added:** 2025-06-20
+**Status:** Analysis Complete - Implementation Planning Required
+**Description:** Analyzed the backend codebase to understand current authentication state and create OAuth implementation plan.
+
+**Findings:**
+1. **No Existing Authentication:**
+   - No authentication middleware currently exists
+   - No JWT or session management dependencies installed
+   - All API endpoints are publicly accessible
+   - No user context in current implementation
+
+2. **Sensitive Endpoints Identified:**
+   - High Priority: Export endpoints, Agent database access, LLM operations, GitHub operations, Asset management
+   - Medium Priority: Configuration reloads, Test endpoints
+   - Low Priority: Health checks, Read-only status endpoints
+
+3. **CORS Ready for OAuth:**
+   - Authorization header already allowed in CORS configuration
+   - Credentials support enabled
+   - Dynamic origin validation supports multiple frontends
+
+4. **Documentation Created:**
+   - Created `/backend/docs/OAUTH-ANALYSIS.md` with comprehensive analysis
+   - Includes endpoint classification, implementation considerations, and recommendations
+
+**Next Steps:**
+1. Decide on OAuth provider(s) to support
+2. Choose JWT validation library
+3. Determine which endpoints should remain public
+4. Define user context and RBAC requirements
+5. Implement phased OAuth rollout
+
+### Dead Code in Backend Module
+**Date Added:** 2025-06-20
+**Status:** Analysis Complete - Cleanup Required
+**Description:** Found unused service file and exports in the backend module during dead code analysis.
+
+**Findings:**
+1. **Completely Unused Service File:**
+   - `executeDirectPromptService.ts` - Never imported anywhere
+   - Exports: `getExecuteDirectPromptContent`, `prepareExecuteDirectPrompt`, `reloadExecuteDirectPrompt`
+   
+2. **Unused Service Exports:**
+   - `agentConfigService.ts`: `getAgentConfigService()` function is never called directly
+   
+3. **All Other Components Are Used:**
+   - All route files are properly registered
+   - All utility files are imported and used
+   - All type files are referenced
+   - All database service methods are called
+
+**Recommendation:** Remove `executeDirectPromptService.ts` file as it appears to be obsolete code.
+
 ### Azure PostgreSQL Connection Timeouts
 **Issue**: Database connections to Azure PostgreSQL are timing out with "Connection terminated due to connection timeout" errors
 **Impact**: Unable to fetch thread data from agent databases
@@ -24,6 +109,25 @@
 - Monitor connection pool statistics during usage
 
 ## Completed Items (Most Recent First)
+
+### Fixed Server Crash When Changing NBG_OAUTH_ENABLED (Completed: 2025-06-21)
+**Date Added:** 2025-06-21
+**Status:** Completed
+**Description:** Server was crashing with EADDRINUSE error when changing NBG_OAUTH_ENABLED due to rapid restarts.
+
+**Solution Implemented:**
+1. **Increased nodemon delay** from 2.5 to 4 seconds in nodemon.json
+2. **Added shutdown lock mechanism** using a lock file to prevent startup during shutdown
+3. **Improved graceful shutdown:**
+   - Track active connections and destroy them immediately
+   - Create/remove shutdown lock file during shutdown process
+   - New instance waits up to 10 seconds for lock to be removed
+4. **Added shutdown lock to .gitignore**
+
+**Benefits:**
+- Prevents port conflicts during rapid environment variable changes
+- Ensures clean shutdown before new instance starts
+- More reliable development experience
 
 ### Environment Settings Loading from Configuration Repository (Completed: 2025-06-20)
 **Requirements**: Implement loading of environment variables from GitHub configuration repository using ENV_SETTINGS_ASSET_KEY

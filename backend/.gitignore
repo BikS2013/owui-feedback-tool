@@ -7,3 +7,4 @@ dist/
 .tsbuildinfo
 llm-config.yaml
 agent-config.yaml
+shutdown.lock
