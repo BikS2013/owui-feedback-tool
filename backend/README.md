@@ -82,6 +82,19 @@ cp llm-config.example.yaml llm-config.yaml
 # Edit llm-config.yaml to enable/configure LLM providers
 ```
 
+4. Configure runtime settings:
+```bash
+cp config/configuration.template.json config/configuration.json
+# Edit configuration.json to set runtime configuration values
+```
+
+The configuration file supports:
+- Environment settings (production/staging/development)
+- Feature flags (show_documents, show_runs, show_checkpoints)
+- Version and timestamp information
+
+See [config/README.md](./config/README.md) for detailed configuration options.
+
 For detailed CORS configuration options, see [CORS-CONFIGURATION.md](./CORS-CONFIGURATION.md)
 
 ## Development
@@ -152,6 +165,12 @@ Interactive Swagger documentation for all endpoints.
 ```
 GET /health
 ```
+
+### Configuration
+```
+GET /configuration
+```
+Returns runtime configuration settings for the client application, including environment, version, and feature flags.
 
 ### Export Endpoints
 

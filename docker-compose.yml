@@ -12,7 +12,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
-      - API_URL=http://owui-feedback-backend:3001/api
+      - API_BASE_URL=http://owui-feedback-backend:3001
     volumes:
       # Optional: Mount a local directory for custom feedback data
       # - ./data:/usr/share/nginx/html/data

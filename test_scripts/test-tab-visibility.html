@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Tab Visibility Configuration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .config-box {
+            background: #f0f0f0;
+            padding: 20px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success {
+            background: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        pre {
+            background: #333;
+            color: #fff;
+            padding: 15px;
+            border-radius: 5px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Tab Visibility Configuration Test</h1>
+    
+    <div class="config-box">
+        <h2>Current Configuration</h2>
+        <p>This test loads the config.json file and shows what tab visibility settings are configured.</p>
+        <div id="config-status"></div>
+    </div>
+    
+    <div class="config-box">
+        <h2>Test Results</h2>
+        <div id="test-results"></div>
+    </div>
+
+    <script>
+        async function testConfig() {
+            const statusEl = document.getElementById('config-status');
+            const resultsEl = document.getElementById('test-results');
+            
+            try {
+                // Fetch the config.json file
+                const response = await fetch('/config.json');
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch config: ${response.status}`);
+                }
+                
+                const config = await response.json();
+                
+                // Display the full config
+                statusEl.innerHTML = `
+                    <div class="status success">✅ Configuration loaded successfully!</div>
+                    <h3>Full Configuration:</h3>
+                    <pre>${JSON.stringify(config, null, 2)}</pre>
+                `;
+                
+                // Check tab visibility settings
+                const features = config.features || {};
+                const tabSettings = {
+                    show_runs: features.show_runs,
+                    show_documents: features.show_documents,
+                    show_checkpoints: features.show_checkpoints
+                };
+                
+                resultsEl.innerHTML = `
+                    <h3>Tab Visibility Settings:</h3>
+                    <ul>
+                        <li><strong>Runs Tab:</strong> ${tabSettings.show_runs === false ? '❌ Hidden' : '✅ Visible (default)'}</li>
+                        <li><strong>Documents Tab:</strong> ${tabSettings.show_documents === false ? '❌ Hidden' : '✅ Visible (default)'}</li>
+                        <li><strong>Checkpoints Tab:</strong> ${tabSettings.show_checkpoints === false ? '❌ Hidden' : '✅ Visible (default)'}</li>
+                    </ul>
+                    
+                    <h3>Expected Behavior:</h3>
+                    <p>Based on the current configuration:</p>
+                    <ul>
+                        ${tabSettings.show_runs === false ? '<li>The <strong>Runs</strong> tab should NOT be visible in the UI</li>' : '<li>The <strong>Runs</strong> tab should be visible in the UI</li>'}
+                        ${tabSettings.show_documents === false ? '<li>The <strong>Documents</strong> tab should NOT be visible in the UI</li>' : '<li>The <strong>Documents</strong> tab should be visible in the UI</li>'}
+                        ${tabSettings.show_checkpoints === false ? '<li>The <strong>Checkpoints</strong> tab should NOT be visible in the UI</li>' : '<li>The <strong>Checkpoints</strong> tab should be visible in the UI</li>'}
+                    </ul>
+                `;
+                
+            } catch (error) {
+                statusEl.innerHTML = `
+                    <div class="status error">❌ Error loading configuration: ${error.message}</div>
+                `;
+                resultsEl.innerHTML = `
+                    <p>Unable to test tab visibility due to configuration loading error.</p>
+                `;
+            }
+        }
+        
+        // Run the test when page loads
+        window.addEventListener('load', testConfig);
+    </script>
+</body>
+</html>

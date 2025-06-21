@@ -723,3 +723,152 @@
   user-select: none;
   cursor: inherit !important;
 }
+
+/* Configuration tree styles */
+.configuration-tree {
+  max-height: 500px;
+  overflow-y: auto;
+  background-color: var(--bg-tertiary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.config-tree {
+  color: var(--text-primary);
+}
+
+.config-item {
+  margin: 2px 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+.config-key {
+  color: var(--text-secondary);
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.config-key-expand {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  user-select: none;
+}
+
+.config-key-expand:hover {
+  opacity: 0.8;
+}
+
+.config-key-expand svg {
+  flex-shrink: 0;
+}
+
+.config-nested {
+  margin-top: 4px;
+}
+
+.config-value {
+  word-break: break-word;
+}
+
+.config-value.string {
+  color: #ce9178;
+}
+
+.config-value.number {
+  color: #b5cea8;
+}
+
+.config-value.boolean {
+  color: #569cd6;
+  font-weight: 600;
+}
+
+.config-value.boolean.true {
+  color: #4ec9b0;
+}
+
+.config-value.boolean.false {
+  color: #f48771;
+}
+
+.config-value.null,
+.config-value.undefined {
+  color: #808080;
+  font-style: italic;
+}
+
+.config-value.array,
+.config-value.object {
+  color: var(--text-secondary);
+  font-style: italic;
+}
+
+/* Configuration source badges */
+.settings-status.runtime {
+  background-color: rgba(76, 201, 176, 0.1);
+  color: #4ec9b0;
+  border: 1px solid rgba(76, 201, 176, 0.3);
+}
+
+.settings-status.buildtime {
+  background-color: rgba(255, 152, 0, 0.1);
+  color: #ff9800;
+  border: 1px solid rgba(255, 152, 0, 0.3);
+}
+
+.settings-status.default {
+  background-color: rgba(128, 128, 128, 0.1);
+  color: #808080;
+  border: 1px solid rgba(128, 128, 128, 0.3);
+}
+
+/* Feature flags table */
+.feature-flags-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 0.5rem;
+}
+
+.feature-flags-table td {
+  padding: 0.75rem;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.feature-flags-table td:first-child {
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.feature-flags-table td:last-child {
+  text-align: right;
+}
+
+.feature-flags-table .config-value.boolean.true {
+  color: var(--success-color);
+}
+
+.feature-flags-table .config-value.boolean.false {
+  color: var(--error-color);
+}
+
+/* Spinning animation for refresh icon */
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}

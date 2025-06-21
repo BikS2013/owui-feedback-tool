@@ -8,3 +8,4 @@ dist/
 llm-config.yaml
 agent-config.yaml
 shutdown.lock
+config/configuration.json

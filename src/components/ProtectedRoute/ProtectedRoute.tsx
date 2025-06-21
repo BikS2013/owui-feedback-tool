@@ -15,7 +15,7 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children, 
   requireAuth = true 
 }) => {
-  const { isAuthenticated, loading, authStatus } = useAuth();
+  const { isAuthenticated, loading, authStatus, error } = useAuth();
   const location = useLocation();
 
   // Show loading state while checking auth
@@ -24,6 +24,18 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
       <div className="auth-loading">
         <div className="spinner"></div>
         <p>Checking authentication...</p>
+      </div>
+    );
+  }
+
+  // Show error if auth check failed
+  if (error) {
+    return (
+      <div className="auth-loading">
+        <div className="error-icon">⚠️</div>
+        <p>Unable to connect to authentication service</p>
+        <p className="error-detail">Please ensure the backend server is running on port 3001</p>
+        <button onClick={() => window.location.reload()}>Retry</button>
       </div>
     );
   }

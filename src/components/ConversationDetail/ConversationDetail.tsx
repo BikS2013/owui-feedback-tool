@@ -18,6 +18,7 @@ import {
 import { Conversation, QAPair } from '../../types/conversation';
 import { Message } from '../../types/feedback';
 import { NoLogoHeader } from '../NoLogoHeader/NoLogoHeader';
+import { EnvironmentConfigurationService } from '../../services/environment-config.service';
 import { PromptSelectorModal } from '../PromptSelectorModal/PromptSelectorModal';
 import { PromptResultsModal } from '../PromptResultsModal/PromptResultsModal';
 import { LangGraphChatView } from '../LangGraphChatView/LangGraphChatView';
@@ -124,6 +125,27 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
   } | null>(null);
   const [allRuns, setAllRuns] = useState<any[]>([]); // Store all runs for Q&A matching
   const downloadRef = useRef<HTMLDivElement>(null);
+  const [tabVisibility, setTabVisibility] = useState({
+    showRuns: true,
+    showDocuments: true,
+    showCheckpoints: true
+  });
+
+  // Load tab visibility configuration
+  useEffect(() => {
+    const configService = EnvironmentConfigurationService.getInstance();
+    configService.initialize().then(() => {
+      const visibility = configService.getTabVisibility();
+      setTabVisibility(visibility);
+      
+      // If current tab is hidden, switch to text tab
+      if ((activeTab === 'documents' && !visibility.showDocuments) ||
+          (activeTab === 'runs' && !visibility.showRuns) ||
+          (activeTab === 'checkpoints' && !visibility.showCheckpoints)) {
+        setActiveTab('text');
+      }
+    });
+  }, []);
 
   // Close menus when clicking outside
   useEffect(() => {
@@ -173,7 +195,7 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
     try {
       const apiUrl = await storageUtils.getApiUrl();
       const response = await fetch(
-        `${apiUrl}/agent/thread/${conversation.id}/documents?agentName=${encodeURIComponent(currentAgent)}`
+        `${apiUrl}/api/agent/thread/${conversation.id}/documents?agentName=${encodeURIComponent(currentAgent)}`
       );
       
       if (!response.ok) {
@@ -771,30 +793,36 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
       </button>
       {dataSource === 'agent' && (
         <>
-          <button
-            type="button"
-            className={`tab-button-header ${activeTab === 'documents' ? 'active' : ''}`}
-            onClick={() => setActiveTab('documents')}
-          >
-            {Files && <Files size={16} />}
-            <span>Documents</span>
-          </button>
-          <button
-            type="button"
-            className={`tab-button-header ${activeTab === 'runs' ? 'active' : ''}`}
-            onClick={() => setActiveTab('runs')}
-          >
-            {BarChart3 && <BarChart3 size={16} />}
-            <span>Runs</span>
-          </button>
-          <button
-            type="button"
-            className={`tab-button-header ${activeTab === 'checkpoints' ? 'active' : ''}`}
-            onClick={() => setActiveTab('checkpoints')}
-          >
-            {Code && <Code size={16} />}
-            <span>Checkpoints</span>
-          </button>
+          {tabVisibility.showDocuments && (
+            <button
+              type="button"
+              className={`tab-button-header ${activeTab === 'documents' ? 'active' : ''}`}
+              onClick={() => setActiveTab('documents')}
+            >
+              {Files && <Files size={16} />}
+              <span>Documents</span>
+            </button>
+          )}
+          {tabVisibility.showRuns && (
+            <button
+              type="button"
+              className={`tab-button-header ${activeTab === 'runs' ? 'active' : ''}`}
+              onClick={() => setActiveTab('runs')}
+            >
+              {BarChart3 && <BarChart3 size={16} />}
+              <span>Runs</span>
+            </button>
+          )}
+          {tabVisibility.showCheckpoints && (
+            <button
+              type="button"
+              className={`tab-button-header ${activeTab === 'checkpoints' ? 'active' : ''}`}
+              onClick={() => setActiveTab('checkpoints')}
+            >
+              {Code && <Code size={16} />}
+              <span>Checkpoints</span>
+            </button>
+          )}
         </>
       )}
       {dataSource !== 'agent' && (

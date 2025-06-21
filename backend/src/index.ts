@@ -10,6 +10,7 @@ import { githubRoutes } from './routes/github.routes.js';
 import { llmRoutes } from './routes/llm.routes.js';
 import { agentRoutes } from './routes/agent.routes.js';
 import { debugRoutes } from './routes/debug.routes.js';
+import configurationRoutes from './routes/configuration.routes.js';
 import { swaggerSpec } from './swagger.config.js';
 import { consoleController } from './utils/console-controller.js';
 import { databaseService } from './services/database.service.js';
@@ -168,6 +169,7 @@ app.use('/api/llm', requireAuth, llmRoutes);
 app.use('/api/agent', requireAuth, agentRoutes);
 app.use('/api/debug', debugRoutes); // Debug routes might be conditionally protected
 app.use('/api/assets', requireAuth, assetsRouter);
+app.use('/', configurationRoutes); // Configuration route - no auth required for initial config
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {

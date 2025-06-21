@@ -10,13 +10,18 @@ server {
     gzip_min_length 1024;
     gzip_types text/plain text/css text/xml text/javascript application/javascript application/xml+rss application/json;
 
-    # Serve runtime configuration
-    location /config.json {
-        default_type application/json;
+    # Serve dynamic config.json with API_BASE_URL from environment
+    location = /config.json {
+        add_header Content-Type application/json;
         add_header Cache-Control "no-cache, no-store, must-revalidate";
         add_header Pragma "no-cache";
         add_header Expires "0";
-        return 200 '{"apiUrl":"${API_URL}"}';
+        
+        return 200 '{
+            "api": {
+                "baseUrl": "${API_BASE_URL}"
+            }
+        }';
     }
 
     # Cache static assets

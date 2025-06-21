@@ -39,6 +39,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [lastAuthCheck, setLastAuthCheck] = useState<number>(0);
 
   const checkAuth = useCallback(async () => {
+    console.log('🔍 [AuthContext] checkAuth function called');
     // Don't set loading to true for background checks to avoid re-renders
     const isInitialCheck = authStatus === null;
     if (isInitialCheck) {
@@ -46,6 +47,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
     
     try {
+      console.log('📡 [AuthContext] Calling AuthService.checkAuthStatus()');
       const status = await AuthService.checkAuthStatus();
       
       // Only update state if authentication status has changed
@@ -130,6 +132,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
   // Check auth status on mount
   useEffect(() => {
+    console.log('🚀 [AuthContext] Mounting - initiating auth check');
     checkAuth();
     
     // Setup auth interceptor

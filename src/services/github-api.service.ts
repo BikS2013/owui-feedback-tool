@@ -22,7 +22,7 @@ export class GitHubApiService {
   }> {
     try {
       const apiUrl = await this.getApiBaseUrl();
-      const response = await fetch(`${apiUrl}/github/status`);
+      const response = await fetch(`${apiUrl}/api/github/status`);
       
       if (!response.ok) {
         const error = await response.json();
@@ -45,7 +45,7 @@ export class GitHubApiService {
     default_branch: string;
   }> {
     const apiUrl = await this.getApiBaseUrl();
-    const response = await fetch(`${apiUrl}/github/repository`);
+    const response = await fetch(`${apiUrl}/api/github/repository`);
     
     if (!response.ok) {
       const error = await response.json();
@@ -59,7 +59,7 @@ export class GitHubApiService {
   // Get tree structure
   static async getTree(path: string = ''): Promise<GitHubTree> {
     const apiUrl = await this.getApiBaseUrl();
-    const url = new URL(`${apiUrl}/github/tree`);
+    const url = new URL(`${apiUrl}/api/github/tree`);
     if (path) {
       url.searchParams.append('path', path);
     }
@@ -78,7 +78,7 @@ export class GitHubApiService {
   // Get files by folder
   static async getFiles(folder: string): Promise<GitHubFile[]> {
     const apiUrl = await this.getApiBaseUrl();
-    const url = new URL(`${apiUrl}/github/files`);
+    const url = new URL(`${apiUrl}/api/github/files`);
     url.searchParams.append('folder', folder);
     
     const response = await fetch(url.toString());
@@ -102,7 +102,7 @@ export class GitHubApiService {
     const apiUrl = await this.getApiBaseUrl();
     // Remove leading slash if present
     const cleanPath = path.startsWith('/') ? path.slice(1) : path;
-    const response = await fetch(`${apiUrl}/github/file/${cleanPath}`);
+    const response = await fetch(`${apiUrl}/api/github/file/${cleanPath}`);
     
     if (!response.ok) {
       const error = await response.json();
@@ -116,7 +116,7 @@ export class GitHubApiService {
   // Search files
   static async searchFiles(queryOrPath: string, extension?: string): Promise<GitHubFile[]> {
     const apiUrl = await this.getApiBaseUrl();
-    const url = new URL(`${apiUrl}/github/search`);
+    const url = new URL(`${apiUrl}/api/github/search`);
     
     // If queryOrPath looks like a path (contains / or is a known folder name), treat it as path
     if (queryOrPath && (queryOrPath.includes('/') || ['data', 'prompts'].includes(queryOrPath))) {
@@ -144,7 +144,7 @@ export class GitHubApiService {
   // Get files by extension
   static async getFilesByExtension(extension: string): Promise<GitHubFile[]> {
     const apiUrl = await this.getApiBaseUrl();
-    const response = await fetch(`${apiUrl}/github/files-by-extension/${extension}`);
+    const response = await fetch(`${apiUrl}/api/github/files-by-extension/${extension}`);
     
     if (!response.ok) {
       const error = await response.json();
@@ -158,7 +158,7 @@ export class GitHubApiService {
   // Get rate limit
   static async getRateLimit(): Promise<GitHubRateLimit> {
     const apiUrl = await this.getApiBaseUrl();
-    const response = await fetch(`${apiUrl}/github/rate-limit`);
+    const response = await fetch(`${apiUrl}/api/github/rate-limit`);
     
     if (!response.ok) {
       const error = await response.json();

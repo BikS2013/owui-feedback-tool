@@ -331,7 +331,7 @@ export function FeedbackProvider({ children }: FeedbackProviderProps) {
       
       const apiUrl = await storageUtils.getApiUrl();
       const limit = pageSize; // Use dynamic page size
-      let url = `${apiUrl}/agent/threads?agentName=${encodeURIComponent(agentName)}&page=${page}&limit=${limit}`;
+      let url = `${apiUrl}/api/agent/threads?agentName=${encodeURIComponent(agentName)}&page=${page}&limit=${limit}`;
       
       // Add date parameters if provided
       if (fromDate) {

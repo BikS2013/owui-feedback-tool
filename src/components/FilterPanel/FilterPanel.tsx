@@ -221,7 +221,7 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
   const fetchLLMConfigurations = async () => {
     try {
       const apiUrl = await storageUtils.getApiUrl();
-      const response = await fetch(`${apiUrl}/llm/configurations`);
+      const response = await fetch(`${apiUrl}/api/llm/configurations`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch LLM configurations');
@@ -302,7 +302,7 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
       }
       
       const apiUrl = await storageUtils.getApiUrl();
-      const response = await fetch(`${apiUrl}/llm/get-prompt`, {
+      const response = await fetch(`${apiUrl}/api/llm/get-prompt`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -371,7 +371,7 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
       
       // Call backend endpoint to convert natural language to filter
       const apiUrl = await storageUtils.getApiUrl();
-      const response = await fetch(`${apiUrl}/llm/convert-to-filter`, {
+      const response = await fetch(`${apiUrl}/api/llm/convert-to-filter`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

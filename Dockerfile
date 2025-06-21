@@ -50,11 +50,11 @@ COPY nginx.conf.template /etc/nginx/templates/default.conf.template
 # Copy the default feedback data file
 COPY public/feedback-history-export.json /usr/share/nginx/html/
 
-# Set default value for API_URL
-ENV API_URL=http://localhost:3001
+# Set default value for API_BASE_URL
+ENV API_BASE_URL=http://localhost:3001
 
 # Expose port 80
 EXPOSE 80
 
 # Use shell form to allow environment variable substitution
-CMD sh -c "envsubst '\$API_URL' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+CMD sh -c "envsubst '\$API_BASE_URL' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"

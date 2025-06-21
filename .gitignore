@@ -96,3 +96,8 @@ ehthumbs_vista.db
 
 
 test_data
+
+# Local configuration overrides
+# To use custom configuration, create public/config.local.json
+# and it will be ignored by git
+public/config.local.json

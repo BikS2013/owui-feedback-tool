@@ -65,24 +65,48 @@ export class AuthService {
    * Check authentication status
    */
   static async checkAuthStatus(): Promise<AuthStatus> {
-    const apiUrl = await storageUtils.getApiUrl();
+    // Use sync version to avoid waiting for config during initial load
+    const apiUrl = storageUtils.getApiUrlSync();
     const token = this.getAccessToken();
 
     try {
+      console.log('🔍 [AuthService] Checking auth status at:', `${apiUrl}/api/auth/status`);
+      
       const headers: HeadersInit = {};
       if (token) {
         headers['Authorization'] = `Bearer ${token}`;
       }
 
-      const response = await fetch(`${apiUrl}/auth/status`, { headers });
+      // Add timeout to prevent hanging
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+
+      const response = await fetch(`${apiUrl}/api/auth/status`, { 
+        headers,
+        signal: controller.signal,
+        credentials: 'include' // Include cookies for CORS
+      });
+      
+      clearTimeout(timeoutId);
       
       if (!response.ok) {
-        throw new Error('Auth status check failed');
+        console.error('❌ [AuthService] Auth status check failed with status:', response.status);
+        throw new Error(`Auth status check failed: ${response.status}`);
       }
 
-      return await response.json();
+      const data = await response.json();
+      console.log('✅ [AuthService] Auth status response:', data);
+      return data;
     } catch (error) {
-      console.error('Auth status check error:', error);
+      if (error.name === 'AbortError') {
+        console.error('⏱️ [AuthService] Auth status check timed out');
+        return {
+          enabled: false,
+          authenticated: false,
+          message: 'Authentication check timed out'
+        };
+      }
+      console.error('❌ [AuthService] Auth status check error:', error);
       return {
         enabled: false,
         authenticated: false,
@@ -97,7 +121,7 @@ export class AuthService {
   static async login(): Promise<LoginResponse> {
     const apiUrl = await storageUtils.getApiUrl();
     
-    const response = await fetch(`${apiUrl}/auth/login`);
+    const response = await fetch(`${apiUrl}/api/auth/login`);
     
     if (!response.ok) {
       throw new Error('Failed to initiate login');
@@ -126,7 +150,7 @@ export class AuthService {
       throw new Error('Invalid state - possible CSRF attack');
     }
 
-    const response = await fetch(`${apiUrl}/auth/callback?${queryParams.toString()}`);
+    const response = await fetch(`${apiUrl}/api/auth/callback?${queryParams.toString()}`);
     
     if (!response.ok) {
       const error = await response.json();
@@ -157,7 +181,7 @@ export class AuthService {
 
     try {
       const apiUrl = await storageUtils.getApiUrl();
-      const response = await fetch(`${apiUrl}/auth/refresh`, {
+      const response = await fetch(`${apiUrl}/api/auth/refresh`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
@@ -187,7 +211,7 @@ export class AuthService {
     const apiUrl = await storageUtils.getApiUrl();
     const idToken = this.getIdToken();
     
-    const url = new URL(`${apiUrl}/auth/logout`);
+    const url = new URL(`${apiUrl}/api/auth/logout`);
     if (idToken) {
       url.searchParams.append('id_token', idToken);
     }
@@ -235,7 +259,7 @@ export class AuthService {
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
       // Only add auth header to API calls
       const url = typeof input === 'string' ? input : input.toString();
-      const apiUrl = await storageUtils.getApiUrl();
+      const apiUrl = storageUtils.getApiUrlSync(); // Use sync version to avoid deadlock
       
       if (url.startsWith(apiUrl)) {
         init = this.addAuthHeader(init);

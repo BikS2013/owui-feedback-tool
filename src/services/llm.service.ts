@@ -62,7 +62,7 @@ class LLMService {
   ): Promise<LLMPromptExecutionResponse> {
     try {
       const apiUrl = await this.getApiUrl();
-      const response = await fetch(`${apiUrl}/llm/execute-prompt`, {
+      const response = await fetch(`${apiUrl}/api/llm/execute-prompt`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -92,7 +92,7 @@ class LLMService {
   async getExecutionStatus(requestId: string): Promise<LLMPromptExecutionStatus> {
     try {
       const apiUrl = await this.getApiUrl();
-      const response = await fetch(`${apiUrl}/llm/status/${requestId}`, {
+      const response = await fetch(`${apiUrl}/api/llm/status/${requestId}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -117,7 +117,7 @@ class LLMService {
   async getConfigurations(): Promise<LLMConfigurationsResponse> {
     try {
       const apiUrl = await this.getApiUrl();
-      const response = await fetch(`${apiUrl}/llm/configurations`, {
+      const response = await fetch(`${apiUrl}/api/llm/configurations`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -142,7 +142,7 @@ class LLMService {
   async testConfiguration(configurationName: string, prompt?: string): Promise<LLMTestResponse> {
     try {
       const apiUrl = await this.getApiUrl();
-      const response = await fetch(`${apiUrl}/llm/test`, {
+      const response = await fetch(`${apiUrl}/api/llm/test`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -189,7 +189,7 @@ class LLMService {
   ): Promise<LLMPromptParameterizedExecutionResponse> {
     try {
       const apiUrl = await this.getApiUrl();
-      const response = await fetch(`${apiUrl}/llm/execute-prompt-direct`, {
+      const response = await fetch(`${apiUrl}/api/llm/execute-prompt-direct`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

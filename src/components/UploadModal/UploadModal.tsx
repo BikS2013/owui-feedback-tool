@@ -4,6 +4,7 @@ import { X, Upload, Database } from 'lucide-react';
 import { useFeedbackStore } from '../../store/feedbackStore';
 import { useResizable } from '../../hooks/useResizable';
 import { storageUtils } from '../../utils/storageUtils';
+import { AuthService } from '../../services/auth.service';
 import './UploadModal.css';
 
 interface UploadModalProps {
@@ -120,25 +121,60 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
     setIsLoadingAgents(true);
     setError(null);
     try {
-      const apiUrl = await storageUtils.getApiUrl();
-      const url = `${apiUrl}/agent`;
+      const apiUrl = storageUtils.getApiUrlSync();
+      const url = `${apiUrl}/api/agent`;
       console.log('📡 Fetching from:', url);
-      const response = await fetch(url);
+      
+      // Get auth token if available
+      const token = AuthService.getAccessToken();
+      console.log('🔑 Auth token present:', !!token);
+      
+      const headers: HeadersInit = {
+        'Content-Type': 'application/json',
+      };
+      
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+      
+      console.log('📋 Request headers:', headers);
+      
+      // Try a simple fetch without timeout first
+      console.log('🚀 Starting fetch...');
+      const response = await fetch(url, {
+        method: 'GET',
+        credentials: 'include',
+        headers
+      });
+      
+      console.log('📥 Response status:', response.status);
       
       if (!response.ok) {
-        throw new Error('Failed to fetch agents');
+        const errorText = await response.text();
+        console.error('❌ Response error:', errorText);
+        throw new Error(`Failed to fetch agents: ${response.status}`);
       }
       
       const data = await response.json();
+      console.log('📦 Agent data received:', data);
+      
       if (data.success && data.agents) {
+        console.log(`✅ Loaded ${data.agents.length} agents`);
         setAgents(data.agents);
         if (data.agents.length > 0 && !selectedAgent) {
           setSelectedAgent(data.agents[0].name);
         }
+      } else {
+        console.warn('⚠️ No agents in response:', data);
       }
-    } catch (error) {
-      console.error('Error fetching agents:', error);
-      setError('Failed to load agents. Please check your connection.');
+    } catch (error: any) {
+      console.error('❌ Error fetching agents:', error);
+      if (error.name === 'AbortError') {
+        console.error('⏱️ Request timed out');
+        setError('Request timed out. Please check if the backend server is running.');
+      } else {
+        setError('Failed to load agents. Please check your connection.');
+      }
     } finally {
       setIsLoadingAgents(false);
     }

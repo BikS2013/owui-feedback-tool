@@ -30,26 +30,81 @@ npm run docker:compose:build  # Rebuild images
 
 ## Configuration
 
-### Environment Variables
-Configuration is managed through environment variables in the `.env` file:
+### Environment-Based Configuration Pattern
+The application implements a sophisticated environment-based configuration pattern that supports both build-time and runtime configuration:
 
-#### Client Port
+#### Configuration Sources (Priority Order)
+1. **Runtime Configuration** (`/public/config.json`)
+   - Loaded at application startup
+   - Can be modified without rebuilding the application
+   - Ideal for Docker deployments and environment-specific settings
+   
+2. **Build-time Configuration** (`.env` file)
+   - Environment variables prefixed with `VITE_`
+   - Compiled into the application at build time
+   - Used as fallback when runtime config is not available
+   
+3. **Default Configuration**
+   - Environment-specific defaults (development/staging/production)
+   - Used when neither runtime nor build-time configs are available
+
+#### Environment Variables (Build-time)
+Configuration can be managed through environment variables in the `.env` file:
+
+##### Client Port
 - `VITE_CLIENT_PORT`: The port for the Vite development server (default: 5173)
 - This is used when running `npm run dev`
 - If the port is already in use, the server will exit with an error
 
-#### API Endpoint
+##### API Endpoint
 - `VITE_API_URL`: The backend API endpoint
 - Must include the complete path (e.g., `http://localhost:3001/api`)
-- This value is read at build time and cannot be changed at runtime
-- The Settings modal shows the current configuration and allows testing the connection
+- Can be overridden by runtime configuration
 
-#### GitHub Integration
+##### GitHub Integration
 - `VITE_GITHUB_REPO`: GitHub repository in format `owner/repo`
 - `VITE_GITHUB_TOKEN`: Optional GitHub personal access token
   - Required for private repositories
   - Increases API rate limit from 60 to 5,000 requests/hour
   - Create at: https://github.com/settings/tokens
+- `VITE_GITHUB_DATA_FOLDER`: Data folder path (default: 'data')
+- `VITE_GITHUB_PROMPTS_FOLDER`: Prompts folder path (default: 'prompts')
+- `VITE_GITHUB_API_URL`: GitHub API base URL (default: 'https://api.github.com')
+
+#### Runtime Configuration (`config.json`)
+The application loads configuration from `/public/config.json` at startup. This file contains comprehensive environment-specific settings:
+
+```json
+{
+  "environment": "development",
+  "version": "1.0.0",
+  "features": {
+    "analytics": { "enabled": false, "providers": [], "debugMode": true },
+    "darkMode": { "enabled": true, "default": "auto" },
+    "betaFeatures": { "enabled": true, "allowedUsers": [] },
+    "debugging": { "enabled": true, "logLevel": "debug", "consoleOutput": true }
+  },
+  "ui": {
+    "displayMode": { "default": "magic", "allowedModes": ["magic", "engineering"] }
+  },
+  "api": {
+    "baseUrl": "http://localhost:3001",
+    "endpoints": { /* endpoint mappings */ }
+  },
+  "github": {
+    "repo": "owner/repository",
+    "dataFolder": "data",
+    "promptsFolder": "prompts"
+  }
+}
+```
+
+#### Configuration Service
+The `EnvironmentConfigurationService` manages all configuration loading and provides:
+- Automatic environment detection (development/staging/production)
+- Configuration source tracking (runtime/buildtime/default)
+- Type-safe access to all configuration values
+- Fallback to appropriate defaults
 
 ## Data Sources Terminology
 

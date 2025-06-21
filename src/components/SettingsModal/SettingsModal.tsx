@@ -1,15 +1,111 @@
 import { useState, useEffect } from 'react';
-import { X, Activity, Github, ChevronRight, ChevronDown, FileText, Folder, Monitor, Info } from 'lucide-react';
+import { X, Activity, Github, ChevronRight, ChevronDown, FileText, Folder, Monitor, Info, RefreshCw } from 'lucide-react';
 import { storageUtils, DisplayMode } from '../../utils/storageUtils';
 import { ApiService } from '../../services/api.service';
 import { GitHubApiService } from '../../services/github-api.service';
 import { buildFileTree, FileTreeNode } from '../../utils/githubUtils';
 import { useResizable } from '../../hooks/useResizable';
+import { EnvironmentConfigurationService } from '../../services/environment-config.service';
 import './SettingsModal.css';
 
 interface SettingsModalProps {
   isOpen: boolean;
   onClose: () => void;
+}
+
+// Configuration tree component
+function ConfigurationTree({ config, level = 0 }: { config: any; level?: number }) {
+  const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set(['root']));
+  
+  const toggleExpand = (key: string) => {
+    const newExpanded = new Set(expandedKeys);
+    if (newExpanded.has(key)) {
+      newExpanded.delete(key);
+    } else {
+      newExpanded.add(key);
+    }
+    setExpandedKeys(newExpanded);
+  };
+  
+  const renderValue = (value: any, key: string, path: string): JSX.Element => {
+    if (value === null) return <span className="config-value null">null</span>;
+    if (value === undefined) return <span className="config-value undefined">undefined</span>;
+    
+    const valueType = typeof value;
+    
+    if (valueType === 'string') {
+      return <span className="config-value string">"{value}"</span>;
+    }
+    
+    if (valueType === 'number') {
+      return <span className="config-value number">{value}</span>;
+    }
+    
+    if (valueType === 'boolean') {
+      return <span className={`config-value boolean ${value ? 'true' : 'false'}`}>{value.toString()}</span>;
+    }
+    
+    if (Array.isArray(value)) {
+      if (value.length === 0) {
+        return <span className="config-value array">[]</span>;
+      }
+      
+      const isExpanded = expandedKeys.has(path);
+      return (
+        <div>
+          <span className="config-key-expand" onClick={() => toggleExpand(path)}>
+            {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            <span className="config-value array">[{value.length} items]</span>
+          </span>
+          {isExpanded && (
+            <div className="config-nested" style={{ marginLeft: '20px' }}>
+              {value.map((item, index) => (
+                <div key={index} className="config-item">
+                  <span className="config-key">[{index}]:</span>
+                  {renderValue(item, `${key}[${index}]`, `${path}[${index}]`)}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+    
+    if (valueType === 'object') {
+      const keys = Object.keys(value);
+      if (keys.length === 0) {
+        return <span className="config-value object">{'{}'}</span>;
+      }
+      
+      const isExpanded = expandedKeys.has(path);
+      return (
+        <div>
+          <span className="config-key-expand" onClick={() => toggleExpand(path)}>
+            {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+            <span className="config-value object">{'{'}...{'}'}</span>
+          </span>
+          {isExpanded && (
+            <div className="config-nested" style={{ marginLeft: '20px' }}>
+              {keys.map(k => (
+                <div key={k} className="config-item">
+                  <span className="config-key">{k}:</span>
+                  {renderValue(value[k], k, `${path}.${k}`)}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+    
+    return <span className="config-value">{JSON.stringify(value)}</span>;
+  };
+  
+  return (
+    <div className="config-tree">
+      {renderValue(config, 'root', 'root')}
+    </div>
+  );
 }
 
 // Tree node component
@@ -50,14 +146,14 @@ function TreeNode({ node, level = 0 }: { node: FileTreeNode; level?: number }) {
   );
 }
 
-type TabType = 'api' | 'github' | 'display';
+type TabType = 'api' | 'github' | 'display' | 'configuration';
 
 const SETTINGS_TAB_KEY = 'settingsModalSelectedTab';
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>(() => {
     const saved = localStorage.getItem(SETTINGS_TAB_KEY);
-    return (saved === 'api' || saved === 'github' || saved === 'display') ? saved : 'api';
+    return (saved === 'api' || saved === 'github' || saved === 'display' || saved === 'configuration') ? saved : 'api';
   });
   const [isChecking, setIsChecking] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'success' | 'error' | null>(null);
@@ -66,7 +162,12 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [githubTree, setGitHubTree] = useState<FileTreeNode | null>(null);
   const [githubError, setGitHubError] = useState<string | null>(null);
   const [displayMode, setDisplayMode] = useState<DisplayMode>(storageUtils.getDisplayMode());
-  const [runtimeConfigStatus, setRuntimeConfigStatus] = useState<'loading' | 'runtime' | 'buildtime'>('loading');
+  const [runtimeConfigStatus, setRuntimeConfigStatus] = useState<'loading' | 'runtime' | 'buildtime' | 'default'>('loading');
+  const [environment, setEnvironment] = useState<string>('development');
+  const [fullConfiguration, setFullConfiguration] = useState<any>(null);
+  const [configSource, setConfigSource] = useState<'runtime' | 'buildtime' | 'default'>('default');
+  const [isRefreshingConfig, setIsRefreshingConfig] = useState(false);
+  const [configRefreshSuccess, setConfigRefreshSuccess] = useState(false);
   
   // Use resizable hook
   const {
@@ -90,19 +191,59 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [dataFolder, setDataFolder] = useState<string>('data');
   const [promptsFolder, setPromptsFolder] = useState<string>('prompts');
 
+  // Function to load configuration
+  const loadConfiguration = async (showSuccess = false) => {
+    try {
+      setIsRefreshingConfig(true);
+      setConfigRefreshSuccess(false);
+      const configService = EnvironmentConfigurationService.getInstance();
+      
+      // Force reload configuration from server
+      await configService.reload();
+      const config = await configService.initialize();
+      
+      console.log('[SettingsModal] Configuration loaded:', config);
+      console.log('[SettingsModal] Configuration source:', configService.getConfigSource());
+      
+      setApiUrl(storageUtils.getApiUrlSync());
+      setEnvironment(config.environment);
+      
+      // Determine config source
+      const source = configService.getConfigSource();
+      setRuntimeConfigStatus(source);
+      setConfigSource(source);
+      setFullConfiguration(config);
+      
+      if (showSuccess) {
+        setConfigRefreshSuccess(true);
+        // Hide success message after 3 seconds
+        setTimeout(() => setConfigRefreshSuccess(false), 3000);
+      }
+    } catch (error) {
+      console.error('Failed to load environment configuration:', error);
+      setRuntimeConfigStatus('default');
+      // Set default configuration even on error
+      setFullConfiguration({
+        environment: 'development',
+        version: '1.0.0',
+        timestamp: new Date().toISOString(),
+        features: {
+          show_documents: true,
+          show_runs: true,
+          show_checkpoints: true
+        }
+      });
+    } finally {
+      setIsRefreshingConfig(false);
+    }
+  };
+
   // Load the actual API URL asynchronously and check if it's from runtime config
   useEffect(() => {
-    storageUtils.getApiUrl().then(url => {
-      setApiUrl(url);
-      // Check if the URL matches the build-time value to determine the source
-      const buildTimeUrl = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      if (url !== buildTimeUrl) {
-        setRuntimeConfigStatus('runtime');
-      } else {
-        setRuntimeConfigStatus('buildtime');
-      }
-    });
-  }, []);
+    if (isOpen) {
+      loadConfiguration();
+    }
+  }, [isOpen]);
 
   // Save selected tab to localStorage
   useEffect(() => {
@@ -285,11 +426,29 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
               <Monitor size={16} />
               <span>Display</span>
             </button>
+            <button
+              type="button"
+              className={`settings-tab ${activeTab === 'configuration' ? 'active' : ''}`}
+              onClick={() => setActiveTab('configuration')}
+            >
+              <Info size={16} />
+              <span>Configuration</span>
+            </button>
           </div>
           
           <div className="settings-modal-content">
           {activeTab === 'api' && (
             <div className="settings-tab-panel">
+              <div className="settings-field">
+                <label>Environment</label>
+                <div className="settings-input readonly">
+                  {environment.charAt(0).toUpperCase() + environment.slice(1)}
+                </div>
+                <p className="settings-help">
+                  Application is running in {environment} mode
+                </p>
+              </div>
+              
               <div className="settings-field">
                 <label>API Base URL</label>
                 <div className="settings-input readonly">
@@ -309,21 +468,23 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                   <p>The API URL is determined by the following priority order:</p>
                   <ol>
                     <li>
-                      <strong>Runtime Configuration (Docker)</strong>
+                      <strong>Runtime Configuration</strong>
                       <code>/config.json endpoint</code>
                       {runtimeConfigStatus === 'runtime' && <span className="source-badge active">✓ ACTIVE</span>}
-                      {runtimeConfigStatus === 'buildtime' && <span className="source-badge">✗ NOT USED</span>}
+                      {(runtimeConfigStatus === 'buildtime' || runtimeConfigStatus === 'default') && <span className="source-badge">✗ NOT USED</span>}
                       {runtimeConfigStatus === 'loading' && <span className="source-badge">⏳ CHECKING...</span>}
                     </li>
                     <li>
                       <strong>Environment Variable (Build-time)</strong>
                       <code>VITE_API_URL={import.meta.env.VITE_API_URL || '<not set>'}</code>
-                      {runtimeConfigStatus === 'buildtime' && import.meta.env.VITE_API_URL && <span className="source-badge active">✓ ACTIVE</span>}
+                      {runtimeConfigStatus === 'buildtime' && <span className="source-badge active">✓ ACTIVE</span>}
+                      {(runtimeConfigStatus === 'runtime' || runtimeConfigStatus === 'default') && <span className="source-badge">✗ NOT USED</span>}
                     </li>
                     <li>
-                      <strong>Default Value (Fallback)</strong>
-                      <code>http://localhost:3001</code>
-                      {runtimeConfigStatus === 'buildtime' && !import.meta.env.VITE_API_URL && <span className="source-badge active">✓ ACTIVE</span>}
+                      <strong>Default Configuration</strong>
+                      <code>Environment-specific defaults</code>
+                      {runtimeConfigStatus === 'default' && <span className="source-badge active">✓ ACTIVE</span>}
+                      {(runtimeConfigStatus === 'runtime' || runtimeConfigStatus === 'buildtime') && <span className="source-badge">✗ NOT USED</span>}
                     </li>
                   </ol>
                   
@@ -491,6 +652,104 @@ docker run -p 3121:80 owui-feedback-ui</pre>
               
               <div className="settings-status info">
                 ℹ️ Display mode changes are applied immediately.
+              </div>
+            </div>
+          )}
+          
+          {activeTab === 'configuration' && (
+            <div className="settings-tab-panel">
+              <div className="settings-field">
+                <label>Configuration Source</label>
+                <div className={`settings-status ${configSource}`}>
+                  {configSource === 'runtime' && '🌐 Runtime Configuration (from config.json)'}
+                  {configSource === 'buildtime' && '🔨 Build-time Configuration (from .env)'}
+                  {configSource === 'default' && '📋 Default Configuration'}
+                </div>
+              </div>
+              
+              <button
+                type="button"
+                className="settings-button primary"
+                onClick={() => loadConfiguration(true)}
+                disabled={isRefreshingConfig}
+                style={{ marginBottom: '20px' }}
+              >
+                <RefreshCw size={16} className={isRefreshingConfig ? 'spin' : ''} />
+                {isRefreshingConfig ? 'Refreshing...' : 'Refresh Configuration'}
+              </button>
+              
+              {configRefreshSuccess && (
+                <div className="settings-status success" style={{ marginBottom: '20px' }}>
+                  ✓ Configuration refreshed successfully
+                </div>
+              )}
+              
+              <div className="settings-field">
+                <label>Environment</label>
+                <div className="settings-status info">
+                  {environment.charAt(0).toUpperCase() + environment.slice(1)}
+                </div>
+              </div>
+              
+              {fullConfiguration?.features && (
+                <div className="settings-field">
+                  <label>Feature Flags</label>
+                  <div className="settings-info-box">
+                    <div className="settings-info-content">
+                      <table className="feature-flags-table">
+                        <tbody>
+                          <tr>
+                            <td>Show Documents</td>
+                            <td>
+                              {fullConfiguration.features.show_documents === undefined ? (
+                                <span className="config-value undefined">undefined</span>
+                              ) : (
+                                <span className={`config-value boolean ${fullConfiguration.features.show_documents ? 'true' : 'false'}`}>
+                                  {fullConfiguration.features.show_documents ? '✓ Enabled' : '✗ Disabled'}
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Show Runs</td>
+                            <td>
+                              {fullConfiguration.features.show_runs === undefined ? (
+                                <span className="config-value undefined">undefined</span>
+                              ) : (
+                                <span className={`config-value boolean ${fullConfiguration.features.show_runs ? 'true' : 'false'}`}>
+                                  {fullConfiguration.features.show_runs ? '✓ Enabled' : '✗ Disabled'}
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                          <tr>
+                            <td>Show Checkpoints</td>
+                            <td>
+                              {fullConfiguration.features.show_checkpoints === undefined ? (
+                                <span className="config-value undefined">undefined</span>
+                              ) : (
+                                <span className={`config-value boolean ${fullConfiguration.features.show_checkpoints ? 'true' : 'false'}`}>
+                                  {fullConfiguration.features.show_checkpoints ? '✓ Enabled' : '✗ Disabled'}
+                                </span>
+                              )}
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              <div className="settings-field">
+                <label>Full Configuration</label>
+                <div className="configuration-tree">
+                  {fullConfiguration ? (
+                    <ConfigurationTree config={fullConfiguration} />
+                  ) : (
+                    <div className="settings-status">Loading configuration...</div>
+                  )}
+                </div>
               </div>
             </div>
           )}

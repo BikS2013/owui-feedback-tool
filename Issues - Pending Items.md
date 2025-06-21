@@ -2,6 +2,99 @@
 
 ## Pending Items
 
+## Completed Items
+
+### Configuration Simplification (Completed: 2025-01-23)
+**Date Added:** 2025-01-23
+**Status:** Completed
+**Description:** Simplified the configuration system to only include the required fields as specified by the user.
+
+**Changes Made:**
+1. **Removed all configuration fields except**:
+   - `environment` (development/staging/production)
+   - `version` (application version)
+   - `timestamp` (ISO 8601 timestamp)
+   - `features` object containing only:
+     - `show_documents`
+     - `show_runs`
+     - `show_checkpoints`
+
+2. **Removed base_api_url**:
+   - As requested by user, this is provided through other means (Docker env vars, .env file)
+   - Not included in configuration.json
+
+3. **Updated all related files**:
+   - TypeScript interfaces (frontend and backend)
+   - Configuration service
+   - Configuration routes
+   - Settings Modal
+   - Documentation
+
+**Benefits:**
+- Cleaner, simpler configuration structure
+- Only contains settings that need runtime modification
+- API URL managed separately through existing mechanisms
+- Easier to understand and maintain
+
+### Feature Flags Environment Variables Documentation (Completed: 2025-01-23)
+**Date Added:** 2025-01-23
+**Status:** Completed
+**Description:** The feature flags (SHOW_DOCUMENTS, SHOW_RUNS, SHOW_CHECKPOINTS) are used in the backend configuration route but were not documented in the .env.example file.
+
+**Actions Taken:**
+1. Added the missing environment variables to `/backend/.env.example` with documentation
+2. These variables control the visibility of tabs in the UI when viewing agent conversations
+3. Default value is true for all flags if not specified
+4. Fixed backend configuration route to properly merge environment variables as fallback
+5. Updated configuration route path to correctly locate config.json file
+6. Verified environment variables (SHOW_DOCUMENTS=false, etc.) are now properly displayed in Settings Modal
+
+**Implementation Details:**
+- Runtime configuration via `/public/config.json` (highest priority)
+- Environment variables as fallback (when config.json doesn't specify these flags)
+- Configuration source tracking shows "env" when values come from environment variables
+- Settings Modal now correctly displays false values from .env file instead of undefined
+
+### Configuration Management Alignment (Completed: 2025-01-21)
+**Date Added:** 2025-01-21
+**Status:** Completed
+**Description:** Aligned the app's configuration management with the guidelines from configuration-management-in-react-apps.md
+
+**Changes Made:**
+1. **Nginx Dynamic Configuration:**
+   - Created `nginx.conf.template` to serve dynamic config.json from environment variables
+   - Updated to use `API_BASE_URL` environment variable
+   - config.json now served dynamically with only API base URL
+
+2. **Docker Configuration:**
+   - Updated Dockerfile to use `API_BASE_URL` instead of `API_URL`
+   - Environment variable substitution working properly
+   - Removed static config.json file from build
+
+3. **API-Based Configuration:**
+   - Added `fetchConfigurationFromAPI` method to EnvironmentConfigurationService
+   - App now fetches full configuration from `/api/configuration` endpoint
+   - Created backend configuration route to serve environment-specific settings
+
+4. **Backend Configuration Endpoint:**
+   - Created `/api/configuration` route in backend
+   - Returns full configuration based on environment variables
+   - No authentication required for initial configuration fetch
+   - Supports all configuration sections (features, UI, API, security, etc.)
+
+5. **Configuration Flow:**
+   - Step 1: Fetch minimal config.json from nginx (API base URL only)
+   - Step 2: Use API base URL to fetch full configuration from backend
+   - Step 3: Fall back to build-time config if API unavailable
+   - Step 4: Use environment defaults as last resort
+
+**Benefits:**
+- No configuration embedded in container images
+- Runtime configuration without rebuilds
+- Environment-specific settings from backend
+- Clean separation of concerns
+- Follows best practices for containerized React apps
+
 ### NBG OAuth Authentication - Bypass When Disabled (Completed: 2025-06-21)
 **Date Added:** 2025-06-21
 **Status:** Completed
@@ -147,6 +240,45 @@
 - Monitor connection pool statistics during usage
 
 ## Completed Items (Most Recent First)
+
+### Client App Configuration Pattern Implementation (Completed: 2025-01-21)
+**Date Added:** 2025-01-21
+**Status:** Completed
+**Description:** Implemented the client app configuration pattern for environment parameters according to guidelines from BikS2013/ClaudeGuide.
+
+**Implementation Details:**
+1. **Created Configuration Infrastructure:**
+   - `src/types/environment-config.ts` - Type definitions for environment configuration
+   - `src/services/environment-config.service.ts` - Service to manage configuration loading
+   - `public/config.json` - Default runtime configuration file
+
+2. **Configuration Sources (Priority Order):**
+   - Runtime Configuration (config.json) - Highest priority
+   - Build-time Configuration (.env variables) - Fallback
+   - Default Configuration - Environment-specific defaults
+
+3. **Enhanced Components:**
+   - Updated `configLoader.ts` to use EnvironmentConfigurationService
+   - Enhanced `storageUtils.ts` with async methods for configuration access
+   - Updated `SettingsModal` to show environment and configuration source
+   - Added synchronous fallback methods for backward compatibility
+
+4. **Key Features:**
+   - Automatic environment detection (development/staging/production)
+   - Configuration source tracking (runtime/buildtime/default)
+   - Type-safe access to all configuration values
+   - Comprehensive configuration including features, UI, API, GitHub, security, monitoring
+   - Support for environment-specific feature toggles
+
+5. **Documentation:**
+   - Updated CLAUDE.md with detailed configuration pattern documentation
+   - Added .gitignore entry for local config overrides (config.local.json)
+
+**Benefits:**
+- Applications can run in different environments without code changes
+- Runtime configuration changes without rebuilding
+- Clear visibility of configuration source in Settings modal
+- Type-safe configuration access throughout the application
 
 ### Fixed Server Crash When Changing NBG_OAUTH_ENABLED (Completed: 2025-06-21)
 **Date Added:** 2025-06-21

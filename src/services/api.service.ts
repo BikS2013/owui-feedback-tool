@@ -22,7 +22,7 @@ export class ApiService {
 
   static async exportConversationPDF(conversation: any, qaPairs: any[], metadata?: any): Promise<Blob> {
     const apiUrl = await this.getApiBaseUrl();
-    const response = await fetch(`${apiUrl}/export/conversation`, {
+    const response = await fetch(`${apiUrl}/api/export/conversation`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -48,7 +48,7 @@ export class ApiService {
     metadata?: any
   ): Promise<Blob> {
     const apiUrl = await this.getApiBaseUrl();
-    const response = await fetch(`${apiUrl}/export/qa-pair`, {
+    const response = await fetch(`${apiUrl}/api/export/qa-pair`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -114,7 +114,7 @@ export class ApiService {
     };
   }> {
     const apiUrl = await this.getApiBaseUrl();
-    const response = await fetch(`${apiUrl}/agent/thread/${threadId}/runs?agentName=${encodeURIComponent(agentName)}&page=${page}&limit=${limit}`);
+    const response = await fetch(`${apiUrl}/api/agent/thread/${threadId}/runs?agentName=${encodeURIComponent(agentName)}&page=${page}&limit=${limit}`);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch thread runs: ${response.statusText}`);
@@ -145,7 +145,7 @@ export class ApiService {
     };
   }> {
     const apiUrl = await this.getApiBaseUrl();
-    const response = await fetch(`${apiUrl}/agent/thread/${threadId}/checkpoints?agentName=${encodeURIComponent(agentName)}&page=${page}&limit=${limit}`);
+    const response = await fetch(`${apiUrl}/api/agent/thread/${threadId}/checkpoints?agentName=${encodeURIComponent(agentName)}&page=${page}&limit=${limit}`);
     
     if (!response.ok) {
       throw new Error(`Failed to fetch thread checkpoints: ${response.statusText}`);
