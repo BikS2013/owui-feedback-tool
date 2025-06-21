@@ -49,7 +49,8 @@ export class ClientConfigService {
       this.config = JSON.parse(content);
       console.log('✅ Loaded client configuration from GitHub asset:', assetKey);
     } catch (error) {
-      throw new Error(`Failed to load client configuration from GitHub: ${error}`);
+      const errorMsg = error instanceof Error ? error.message : String(error);
+      throw new Error(`Failed to load client configuration from GitHub asset '${assetKey}': ${errorMsg}`);
     }
 
     this.initialized = true;

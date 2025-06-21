@@ -46,7 +46,14 @@ router.get('/configuration', async (req: Request, res: Response) => {
     res.json(completeConfig);
   } catch (error) {
     console.error('Error fetching configuration:', error);
-    res.status(500).json({ error: 'Failed to fetch configuration' });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to fetch configuration';
+    res.status(500).json({ 
+      error: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? {
+        clientSettings: process.env.CLIENT_SETTINGS || 'Not configured',
+        stack: error instanceof Error ? error.stack : undefined
+      } : undefined
+    });
   }
 });
 
@@ -59,7 +66,14 @@ router.post('/configuration/reload', async (req: Request, res: Response) => {
     res.json({ success: true, message: 'Configuration reloaded successfully' });
   } catch (error) {
     console.error('Error reloading configuration:', error);
-    res.status(500).json({ error: 'Failed to reload configuration' });
+    const errorMessage = error instanceof Error ? error.message : 'Failed to reload configuration';
+    res.status(500).json({ 
+      error: errorMessage,
+      details: process.env.NODE_ENV === 'development' ? {
+        clientSettings: process.env.CLIENT_SETTINGS || 'Not configured',
+        stack: error instanceof Error ? error.stack : undefined
+      } : undefined
+    });
   }
 });
 

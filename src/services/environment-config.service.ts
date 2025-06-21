@@ -51,27 +51,10 @@ export class EnvironmentConfigurationService {
     console.log(`[EnvironmentConfig] Detected environment: ${this.detectedEnvironment}`);
     
     // Step 2: Try to fetch configuration from API
-    try {
-      const apiConfig = await this.fetchConfigurationFromAPI();
-      if (apiConfig) {
-        this.configSource = 'runtime';
-        console.log('[EnvironmentConfig] Loaded runtime configuration from API');
-        return apiConfig;
-      }
-    } catch (error) {
-      console.warn('[EnvironmentConfig] Failed to fetch runtime configuration:', error);
-    }
-    
-    // Step 3: Fallback to build-time configuration
-    const buildTimeConfig = this.getBuildTimeConfiguration();
-    if (buildTimeConfig) {
-      this.configSource = 'buildtime';
-      console.log('[EnvironmentConfig] Using build-time configuration');
-      return buildTimeConfig;
-    }
-    
-    // No configuration available
-    throw new Error('No configuration available. Please ensure the backend is running and CLIENT_SETTINGS is configured.');
+    const apiConfig = await this.fetchConfigurationFromAPI();
+    this.configSource = 'runtime';
+    console.log('[EnvironmentConfig] Loaded runtime configuration from API');
+    return apiConfig;
   }
   
   private detectEnvironment(): string {
@@ -112,7 +95,9 @@ export class EnvironmentConfigurationService {
       });
       
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        const errorMessage = errorData.error || `HTTP error! status: ${response.status}`;
+        throw new Error(errorMessage);
       }
       
       const config = await response.json();
@@ -120,7 +105,7 @@ export class EnvironmentConfigurationService {
       return config;
     } catch (error) {
       console.error('[EnvironmentConfig] Error fetching configuration from API:', error);
-      return null;
+      throw error;
     }
   }
   
