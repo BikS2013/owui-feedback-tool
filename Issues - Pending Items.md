@@ -87,6 +87,44 @@
 
 **Recommendation:** Remove `executeDirectPromptService.ts` file as it appears to be obsolete code.
 
+### App Refreshes When Switching Focus (Enhanced: 2025-06-21)
+**Date Added:** 2025-06-21
+**Status:** Enhanced - Optimized
+**Description:** The app was refreshing/re-rendering when switching focus to another app and returning back.
+
+**Root Cause:** 
+- AuthContext was checking authentication status on every window focus event
+- This caused unnecessary re-renders even though data wasn't reloading
+
+**Solution Implemented (Two-Part Fix):**
+
+**Part 1 - Rate Limiting:**
+1. Added `lastAuthCheck` timestamp tracking to AuthContext
+2. Modified focus event handler to only check auth if 5+ minutes have passed
+3. Prevents frequent auth checks while maintaining security
+
+**Part 2 - Smart State Updates:**
+1. Modified `checkAuth` to only update state when authentication actually changes
+2. Skips state updates (and re-renders) if auth status remains the same
+3. Only triggers re-renders when:
+   - Initial auth check on app load
+   - User becomes authenticated
+   - User becomes unauthenticated
+4. Added console logging to track auth checks and state updates
+
+**Changes:**
+- `src/contexts/AuthContext.tsx`:
+  - Added conditional state updates based on auth status changes
+  - Removed loading state updates for background checks
+  - Added error handling that only updates state when necessary
+  - Added debug logging for auth check behavior
+
+**Benefits:**
+- No unnecessary re-renders when auth status unchanged
+- Background auth checks are now "silent" unless user logs out
+- Maintains security while maximizing performance
+- Better user experience with stable UI state
+
 ### Azure PostgreSQL Connection Timeouts
 **Issue**: Database connections to Azure PostgreSQL are timing out with "Connection terminated due to connection timeout" errors
 **Impact**: Unable to fetch thread data from agent databases

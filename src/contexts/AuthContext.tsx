@@ -36,29 +36,63 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [lastAuthCheck, setLastAuthCheck] = useState<number>(0);
 
   const checkAuth = useCallback(async () => {
-    setLoading(true);
-    setError(null);
+    // Don't set loading to true for background checks to avoid re-renders
+    const isInitialCheck = authStatus === null;
+    if (isInitialCheck) {
+      setLoading(true);
+    }
     
     try {
       const status = await AuthService.checkAuthStatus();
-      setAuthStatus(status);
       
-      if (status.authenticated && status.user) {
-        setUser(status.user);
+      // Only update state if authentication status has changed
+      const wasAuthenticated = authStatus?.authenticated;
+      const isAuthenticated = status.authenticated;
+      
+      console.log('🔐 [AuthContext] Auth check:', {
+        wasAuthenticated,
+        isAuthenticated,
+        isInitialCheck,
+        willUpdateState: isInitialCheck || wasAuthenticated !== isAuthenticated
+      });
+      
+      // Only trigger re-render if:
+      // 1. This is the initial check (authStatus was null)
+      // 2. User went from authenticated to unauthenticated
+      // 3. User went from unauthenticated to authenticated
+      if (isInitialCheck || wasAuthenticated !== isAuthenticated) {
+        console.log('🔄 [AuthContext] Updating auth state - will trigger re-render');
+        setAuthStatus(status);
+        setError(null);
+        
+        if (status.authenticated && status.user) {
+          setUser(status.user);
+        } else {
+          setUser(null);
+        }
       } else {
-        setUser(null);
+        console.log('✅ [AuthContext] Auth status unchanged - skipping state update');
       }
+      
+      // Always update last auth check timestamp
+      setLastAuthCheck(Date.now());
     } catch (err) {
       console.error('Auth check failed:', err);
-      setError('Failed to check authentication status');
-      setAuthStatus(null);
-      setUser(null);
+      // Only update state if user was previously authenticated
+      if (authStatus?.authenticated) {
+        setError('Failed to check authentication status');
+        setAuthStatus(null);
+        setUser(null);
+      }
     } finally {
-      setLoading(false);
+      if (isInitialCheck) {
+        setLoading(false);
+      }
     }
-  }, []);
+  }, [authStatus]);
 
   const login = useCallback(async () => {
     setError(null);
@@ -102,15 +136,22 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     AuthService.setupInterceptor();
   }, [checkAuth]);
 
-  // Check auth status when window gains focus
+  // Check auth status when window gains focus (but only if 5 minutes have passed)
   useEffect(() => {
     const handleFocus = () => {
-      checkAuth();
+      const now = Date.now();
+      const fiveMinutesInMs = 5 * 60 * 1000;
+      
+      // Only check auth if more than 5 minutes have passed since last check
+      if (now - lastAuthCheck > fiveMinutesInMs) {
+        console.log('Checking auth status on focus (5+ minutes since last check)');
+        checkAuth();
+      }
     };
 
     window.addEventListener('focus', handleFocus);
     return () => window.removeEventListener('focus', handleFocus);
-  }, [checkAuth]);
+  }, [checkAuth, lastAuthCheck]);
 
   const isAuthenticated = Boolean(authStatus?.authenticated && user);
 
