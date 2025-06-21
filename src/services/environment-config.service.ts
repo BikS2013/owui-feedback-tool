@@ -209,6 +209,14 @@ export class EnvironmentConfigurationService {
   getFeature(feature: keyof FeatureConfiguration): boolean {
     return this.config?.features?.[feature] ?? true;
   }
+  
+  getTabVisibility(): { showDocuments: boolean; showRuns: boolean; showCheckpoints: boolean } {
+    return {
+      showDocuments: this.config?.features?.show_documents ?? true,
+      showRuns: this.config?.features?.show_runs ?? true,
+      showCheckpoints: this.config?.features?.show_checkpoints ?? true
+    };
+  }
 }
 
 // Create a singleton instance

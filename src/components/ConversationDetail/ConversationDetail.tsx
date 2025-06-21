@@ -133,18 +133,43 @@ export function ConversationDetail({ conversation, qaPairs }: ConversationDetail
 
   // Load tab visibility configuration
   useEffect(() => {
-    const configService = EnvironmentConfigurationService.getInstance();
-    configService.initialize().then(() => {
-      const visibility = configService.getTabVisibility();
-      setTabVisibility(visibility);
-      
-      // If current tab is hidden, switch to text tab
-      if ((activeTab === 'documents' && !visibility.showDocuments) ||
-          (activeTab === 'runs' && !visibility.showRuns) ||
-          (activeTab === 'checkpoints' && !visibility.showCheckpoints)) {
-        setActiveTab('text');
+    const loadTabVisibility = async () => {
+      try {
+        const configService = EnvironmentConfigurationService.getInstance();
+        // Make sure config is initialized
+        await configService.initialize();
+        const visibility = configService.getTabVisibility();
+        console.log('[ConversationDetail] Tab visibility from config:', visibility);
+        setTabVisibility(visibility);
+        
+        // If current tab is hidden, switch to text tab
+        if ((activeTab === 'documents' && !visibility.showDocuments) ||
+            (activeTab === 'runs' && !visibility.showRuns) ||
+            (activeTab === 'checkpoints' && !visibility.showCheckpoints)) {
+          setActiveTab('text');
+        }
+      } catch (error) {
+        console.log('[ConversationDetail] Error loading config:', error);
+        // Config might not be initialized yet, use defaults
+        setTabVisibility({
+          showDocuments: true,
+          showRuns: true,
+          showCheckpoints: true
+        });
       }
-    });
+    };
+    
+    loadTabVisibility();
+    
+    // Re-check visibility on window focus (in case config was updated)
+    const handleFocus = () => {
+      loadTabVisibility();
+    };
+    
+    window.addEventListener('focus', handleFocus);
+    return () => {
+      window.removeEventListener('focus', handleFocus);
+    };
   }, []);
 
   // Close menus when clicking outside
