@@ -1,47 +1,11 @@
 import { EnvironmentConfiguration, FeatureConfiguration } from '../types/environment-config';
 
-// Default configurations for each environment
-const ENVIRONMENT_DEFAULTS: Record<string, EnvironmentConfiguration> = {
-  development: {
-    environment: 'development',
-    version: '1.0.0',
-    timestamp: new Date().toISOString(),
-    features: {
-      show_documents: true,
-      show_runs: true,
-      show_checkpoints: true
-    }
-  },
-  
-  staging: {
-    environment: 'staging',
-    version: '1.0.0',
-    timestamp: new Date().toISOString(),
-    features: {
-      show_documents: true,
-      show_runs: true,
-      show_checkpoints: true
-    }
-  },
-  
-  production: {
-    environment: 'production',
-    version: '1.0.0',
-    timestamp: new Date().toISOString(),
-    features: {
-      show_documents: true,
-      show_runs: true,
-      show_checkpoints: true
-    }
-  }
-};
-
 export class EnvironmentConfigurationService {
   private static instance: EnvironmentConfigurationService;
   private config: EnvironmentConfiguration | null = null;
   private fetchPromise: Promise<EnvironmentConfiguration> | null = null;
   private detectedEnvironment: string | null = null;
-  private configSource: 'runtime' | 'buildtime' | 'default' = 'default';
+  private configSource: 'runtime' | 'buildtime' | null = null;
 
   private constructor() {}
 
@@ -75,7 +39,7 @@ export class EnvironmentConfigurationService {
     this.config = null;
     this.fetchPromise = null;
     this.detectedEnvironment = null;
-    this.configSource = 'default';
+    this.configSource = null;
     console.log('[EnvironmentConfig] Configuration cache cleared for reload');
   }
 
@@ -106,10 +70,8 @@ export class EnvironmentConfigurationService {
       return buildTimeConfig;
     }
     
-    // Step 4: Use environment defaults
-    this.configSource = 'default';
-    console.log('[EnvironmentConfig] Using default configuration');
-    return ENVIRONMENT_DEFAULTS[this.detectedEnvironment];
+    // No configuration available
+    throw new Error('No configuration available. Please ensure the backend is running and CLIENT_SETTINGS is configured.');
   }
   
   private detectEnvironment(): string {
@@ -173,14 +135,22 @@ export class EnvironmentConfigurationService {
       return null;
     }
     
+    if (!this.detectedEnvironment) {
+      throw new Error('Environment detection failed');
+    }
+    
+    if (!import.meta.env.VITE_APP_VERSION) {
+      throw new Error('VITE_APP_VERSION not configured');
+    }
+    
     return {
-      environment: (this.detectedEnvironment || 'development') as 'development' | 'staging' | 'production',
-      version: import.meta.env.VITE_APP_VERSION || '1.0.0',
+      environment: this.detectedEnvironment as 'development' | 'staging' | 'production',
+      version: import.meta.env.VITE_APP_VERSION,
       timestamp: new Date().toISOString(),
       features: {
-        show_documents: import.meta.env.VITE_SHOW_DOCUMENTS !== 'false',
-        show_runs: import.meta.env.VITE_SHOW_RUNS !== 'false',
-        show_checkpoints: import.meta.env.VITE_SHOW_CHECKPOINTS !== 'false'
+        show_documents: import.meta.env.VITE_SHOW_DOCUMENTS === 'true',
+        show_runs: import.meta.env.VITE_SHOW_RUNS === 'true',
+        show_checkpoints: import.meta.env.VITE_SHOW_CHECKPOINTS === 'true'
       }
     };
   }
@@ -192,29 +162,51 @@ export class EnvironmentConfigurationService {
     return this.config;
   }
   
-  getConfigSource(): 'runtime' | 'buildtime' | 'default' {
+  getConfigSource(): 'runtime' | 'buildtime' {
+    if (this.configSource === 'default') {
+      throw new Error('Configuration not properly loaded');
+    }
     return this.configSource;
   }
   
   // Simplified getters
   getEnvironment(): string {
-    return this.config?.environment || 'development';
+    if (!this.config?.environment) {
+      throw new Error('Environment not available in configuration');
+    }
+    return this.config.environment;
   }
   
   getVersion(): string {
-    return this.config?.version || '1.0.0';
+    if (!this.config?.version) {
+      throw new Error('Version not available in configuration');
+    }
+    return this.config.version;
   }
   
   
   getFeature(feature: keyof FeatureConfiguration): boolean {
-    return this.config?.features?.[feature] ?? true;
+    if (!this.config?.features || this.config.features[feature] === undefined) {
+      throw new Error(`Feature '${feature}' not available in configuration`);
+    }
+    return this.config.features[feature];
   }
   
   getTabVisibility(): { showDocuments: boolean; showRuns: boolean; showCheckpoints: boolean } {
+    if (!this.config?.features) {
+      throw new Error('Features configuration not available');
+    }
+    
+    if (this.config.features.show_documents === undefined || 
+        this.config.features.show_runs === undefined || 
+        this.config.features.show_checkpoints === undefined) {
+      throw new Error('Tab visibility configuration is incomplete');
+    }
+    
     return {
-      showDocuments: this.config?.features?.show_documents ?? true,
-      showRuns: this.config?.features?.show_runs ?? true,
-      showCheckpoints: this.config?.features?.show_checkpoints ?? true
+      showDocuments: this.config.features.show_documents,
+      showRuns: this.config.features.show_runs,
+      showCheckpoints: this.config.features.show_checkpoints
     };
   }
 }

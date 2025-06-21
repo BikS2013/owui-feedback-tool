@@ -162,10 +162,11 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [githubTree, setGitHubTree] = useState<FileTreeNode | null>(null);
   const [githubError, setGitHubError] = useState<string | null>(null);
   const [displayMode, setDisplayMode] = useState<DisplayMode>(storageUtils.getDisplayMode());
-  const [runtimeConfigStatus, setRuntimeConfigStatus] = useState<'loading' | 'runtime' | 'buildtime' | 'default'>('loading');
-  const [environment, setEnvironment] = useState<string>('development');
+  const [runtimeConfigStatus, setRuntimeConfigStatus] = useState<'loading' | 'runtime' | 'buildtime' | 'error'>('loading');
+  const [environment, setEnvironment] = useState<string>('');
   const [fullConfiguration, setFullConfiguration] = useState<any>(null);
-  const [configSource, setConfigSource] = useState<'runtime' | 'buildtime' | 'default'>('default');
+  const [configSource, setConfigSource] = useState<'runtime' | 'buildtime' | 'error'>('error');
+  const [configError, setConfigError] = useState<string | null>(null);
   const [isRefreshingConfig, setIsRefreshingConfig] = useState(false);
   const [configRefreshSuccess, setConfigRefreshSuccess] = useState(false);
   
@@ -196,6 +197,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     try {
       setIsRefreshingConfig(true);
       setConfigRefreshSuccess(false);
+      setConfigError(null);
       const configService = EnvironmentConfigurationService.getInstance();
       
       // Force reload configuration from server
@@ -221,18 +223,10 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       }
     } catch (error) {
       console.error('Failed to load environment configuration:', error);
-      setRuntimeConfigStatus('default');
-      // Set default configuration even on error
-      setFullConfiguration({
-        environment: 'development',
-        version: '1.0.0',
-        timestamp: new Date().toISOString(),
-        features: {
-          show_documents: true,
-          show_runs: true,
-          show_checkpoints: true
-        }
-      });
+      setRuntimeConfigStatus('error');
+      setConfigSource('error');
+      setConfigError(error instanceof Error ? error.message : 'Failed to load configuration');
+      setFullConfiguration(null);
     } finally {
       setIsRefreshingConfig(false);
     }
@@ -663,7 +657,7 @@ docker run -p 3121:80 owui-feedback-ui</pre>
                 <div className={`settings-status ${configSource}`}>
                   {configSource === 'runtime' && '🌐 Runtime Configuration (from config.json)'}
                   {configSource === 'buildtime' && '🔨 Build-time Configuration (from .env)'}
-                  {configSource === 'default' && '📋 Default Configuration'}
+                  {configSource === 'error' && '❌ Configuration Error'}
                 </div>
               </div>
               
@@ -684,12 +678,20 @@ docker run -p 3121:80 owui-feedback-ui</pre>
                 </div>
               )}
               
-              <div className="settings-field">
-                <label>Environment</label>
-                <div className="settings-status info">
-                  {environment.charAt(0).toUpperCase() + environment.slice(1)}
+              {configError && (
+                <div className="settings-status error" style={{ marginBottom: '20px' }}>
+                  ✗ {configError}
                 </div>
-              </div>
+              )}
+              
+              {environment && (
+                <div className="settings-field">
+                  <label>Environment</label>
+                  <div className="settings-status info">
+                    {environment.charAt(0).toUpperCase() + environment.slice(1)}
+                  </div>
+                </div>
+              )}
               
               {fullConfiguration?.features && (
                 <div className="settings-field">

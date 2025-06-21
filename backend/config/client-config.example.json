@@ -1,0 +1,10 @@
+{
+  "environment": "production",
+  "version": "1.0.0", 
+  "timestamp": "2025-01-23T10:00:00Z",
+  "features": {
+    "show_documents": true,
+    "show_runs": false,
+    "show_checkpoints": false
+  }
+}

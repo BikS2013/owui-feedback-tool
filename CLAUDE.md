@@ -2,6 +2,17 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## Configuration Settings Policy
+
+**IMPORTANT**: You must never create fallback solutions for configuration settings. In every case a configuration setting is not provided, you must raise the appropriate exception. You must never substitute the missing config value with a default or a fallback value.
+
+This applies to:
+- Client configuration settings
+- Environment variables
+- Any configuration loaded from external sources
+
+When a configuration is missing, throw an explicit error instead of providing defaults.
+
 ## Common Commands
 
 ### Development

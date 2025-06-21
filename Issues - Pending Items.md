@@ -4,6 +4,42 @@
 
 ## Completed Items
 
+### Client Configuration via Configuration-Service-Pattern (Completed: 2025-01-23)
+**Date Added:** 2025-01-23
+**Status:** Completed
+**Description:** Implemented the configuration-service-pattern to fetch client configuration from the GitHub configuration repository.
+
+**Changes Made:**
+1. **Created ClientConfigService:**
+   - New service at `/backend/src/services/clientConfigService.ts`
+   - Follows the standard configuration-service-pattern
+   - Loads configuration from GitHub asset repository using `CLIENT_SETTINGS` environment variable
+   - Falls back to local `configuration.json` if GitHub unavailable
+   - Provides reload functionality
+
+2. **Updated Configuration Route:**
+   - Modified `/configuration` endpoint to use ClientConfigService
+   - Added `/configuration/reload` POST endpoint
+   - Configuration sources priority:
+     1. Environment variables (highest - can override)
+     2. GitHub configuration repository 
+     3. Local configuration.json (fallback)
+   
+3. **Environment Configuration:**
+   - Added `CLIENT_SETTINGS=settings/client-config.json` to `.env`
+   - Updated `.env.example` with documentation
+
+4. **Tab Visibility Implementation:**
+   - Added `getTabVisibility()` method to frontend EnvironmentConfigurationService
+   - ConversationDetail component now properly hides tabs based on configuration
+   - Tabs refresh on window focus to reflect configuration changes
+
+**Benefits:**
+- Centralized configuration management in GitHub repository
+- No need to rebuild/redeploy for configuration changes
+- Environment variables can still override for specific deployments
+- Consistent with other configuration patterns in the application
+
 ### Configuration Simplification (Completed: 2025-01-23)
 **Date Added:** 2025-01-23
 **Status:** Completed
@@ -874,6 +910,41 @@
 - Default tab remains 'api' as before
 - All LLM-related functionality has been cleanly removed
 - No orphaned imports or unused variables remain
+
+### Configuration Policy - No Defaults or Fallbacks (Completed: 2025-01-23)
+**Date Added:** 2025-01-23  
+**Status:** Completed  
+**Description:** Implemented strict configuration policy: No default or fallback values allowed. All configuration must come from explicit sources.
+
+**Policy as specified by user:**
+- "You must never create fallback solutions for configuration settings"
+- "In every case a configuration setting is not provided you must raise the appropriate exception"
+- "Never substitute the missing config value with a default or a fallback value"
+
+**Changes Made:**
+1. **Updated CLAUDE.md:**
+   - Added explicit policy documentation
+   - Configuration must come from explicit sources only
+   - Missing configuration should throw errors, not provide defaults
+
+2. **Backend ClientConfigService:**
+   - Removed ALL fallback logic
+   - Throws explicit errors when configuration is missing
+   - No default values anywhere in the service
+
+3. **Frontend EnvironmentConfigurationService:**
+   - Removed all default values from getter methods
+   - Removed `|| 'default'` fallback patterns
+   - Removed `?? true` fallback patterns  
+   - All getters now throw errors when configuration is missing
+   - Updated type definitions to remove 'default' as a config source option
+   - Build-time configuration now requires explicit environment variables
+
+**Benefits:**
+- Explicit configuration requirements
+- Early detection of misconfiguration
+- No hidden defaults that can cause confusion
+- Clear error messages when configuration is missing
 
 ### Backend NPM Vulnerabilities Fixed (Completed: 2025-01-08)
 **Requirements**:

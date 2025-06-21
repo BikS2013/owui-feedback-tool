@@ -13,4 +13,71 @@ Of course during the development time, the `API_BASE_URL` is provided by the .en
 2. After the client app has access to the API's base URL, it will make a call to get from the API the full configuration settings, which will not include the API's base URL, given that this parameter is already defined and agreed. 
 Again all the parameters provided this way are primarily runtime parameters. which means that during development time parameters can also be provided by the .env file. In case that during development time there are both API_BASE_URL/config.json and .env based configuration, the .env based configuration will take precedence.
 
-So when the client app starts, and after the API's base URL is defined, the client app must make a call to the API to get the full configuration settings. 
+So when the client app starts, and after the API's base URL is defined, the client app must make a call to the API to get the full configuration settings.
+
+## Implementation Details
+
+### Backend Configuration Service
+
+The backend now implements a `ClientConfigService` that follows the configuration-service-pattern to load client configuration from a GitHub repository:
+
+1. **Environment Variable Setup:**
+   ```
+   CLIENT_SETTINGS=settings/client-config.json
+   ```
+
+2. **Configuration Structure:**
+   ```json
+   {
+     "environment": "production",
+     "version": "1.0.0",
+     "timestamp": "2025-01-23T10:00:00Z",
+     "features": {
+       "show_documents": true,
+       "show_runs": false,
+       "show_checkpoints": false
+     }
+   }
+   ```
+
+3. **Service Features:**
+   - Loads configuration from GitHub using `GitHubAssetService`
+   - Falls back to local `configuration.json` if GitHub unavailable
+   - Supports database caching for better performance
+   - Provides reload functionality without server restart
+
+### Configuration Priority
+
+1. **Environment Variables** (highest priority)
+   - Can override any configuration value
+   - Example: `SHOW_DOCUMENTS=false` overrides GitHub config
+
+2. **GitHub Configuration Repository**
+   - Primary source for configuration
+   - No rebuild/redeploy needed for changes
+   - Centralized management across environments
+
+3. **Local configuration.json** (fallback)
+   - Used when GitHub is unavailable
+   - Located at `/backend/config/configuration.json`
+
+### API Endpoints
+
+- **GET /configuration** - Returns merged configuration from all sources
+- **POST /configuration/reload** - Reloads configuration from GitHub
+
+### Frontend Integration
+
+The frontend's `EnvironmentConfigurationService`:
+- Fetches configuration from backend on startup
+- Provides `getTabVisibility()` method for UI components
+- Handles configuration source tracking
+- Falls back gracefully when backend unavailable
+
+### Benefits
+
+- **No Embedded Configuration:** Configuration not baked into container images
+- **Runtime Updates:** Change configuration without redeployment
+- **Centralized Management:** Single source of truth in GitHub
+- **Environment Flexibility:** Override with env vars when needed
+- **Performance:** Database caching reduces GitHub API calls 
