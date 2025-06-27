@@ -4,7 +4,6 @@ import { createPromptHelpers, PromptServiceConfig } from './config/promptFileSer
 // This will ONLY load from the configuration repository - no local fallback
 const executeDirectConfig: PromptServiceConfig = {
   envVarName: 'EXECUTE_DIRECT',
-  defaultAssetPath: 'prompts/execute-direct.prompt.txt',
   promptKey: 'execute-direct'
 };
 

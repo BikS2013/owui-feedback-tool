@@ -4,7 +4,6 @@ import { createPromptHelpers, PromptServiceConfig } from './config/promptFileSer
 // This will ONLY load from the configuration repository - no local fallback
 const filterWithoutSampleConfig: PromptServiceConfig = {
   envVarName: 'FILTER_WITHOUT_SAMPLE',
-  defaultAssetPath: 'prompts/filter-without-sample.prompt.txt',
   promptKey: 'filter-without-sample'
 };
 

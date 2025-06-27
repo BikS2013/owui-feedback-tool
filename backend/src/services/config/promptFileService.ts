@@ -20,15 +20,25 @@ export function createPromptFileService(promptKey: string, assetPath: string) {
 // Helper to create prompt services
 export function createPromptHelpers(config: {
   envVarName: string;
-  defaultAssetPath: string;
   promptKey: string;
 }) {
-  const assetPath = process.env[config.envVarName] || config.defaultAssetPath;
-  const promptService = createPromptFileService(config.promptKey, assetPath);
+  // Lazy initialization - defer environment variable check until first use
+  let promptService: ReturnType<typeof createPromptFileService> | null = null;
+  
+  const getPromptService = () => {
+    if (!promptService) {
+      const assetPath = process.env[config.envVarName];
+      if (!assetPath) {
+        throw new Error(`Environment variable ${config.envVarName} is required for prompt ${config.promptKey}. No default asset path is allowed per configuration policy.`);
+      }
+      promptService = createPromptFileService(config.promptKey, assetPath);
+    }
+    return promptService;
+  };
   
   return {
     getPromptContent: async (): Promise<string> => {
-      const service = promptService();
+      const service = getPromptService()();
       const content = await service.getConfig('content');
       if (!content) {
         throw new Error(`Prompt content not found for ${config.promptKey}`);
@@ -37,7 +47,7 @@ export function createPromptHelpers(config: {
     },
     
     preparePrompt: async (replacements: Record<string, string>): Promise<string> => {
-      const service = promptService();
+      const service = getPromptService()();
       const content = await service.getConfig('content');
       if (!content) {
         throw new Error(`Prompt content not found for ${config.promptKey}`);
@@ -52,7 +62,7 @@ export function createPromptHelpers(config: {
     },
     
     reloadPrompt: async (): Promise<void> => {
-      const service = promptService();
+      const service = getPromptService()();
       await service.reload();
     }
   };
@@ -61,6 +71,5 @@ export function createPromptHelpers(config: {
 // Re-export the type for compatibility
 export interface PromptServiceConfig {
   envVarName: string;
-  defaultAssetPath: string;
   promptKey: string;
 }

@@ -37,14 +37,6 @@ export {
   getExtendedLLMConfigService 
 } from './llmConfigService.js';
 
-// Re-export prompt configuration service
-export { 
-  getPromptConfigService, 
-  getPromptTemplates, 
-  getPromptTemplate, 
-  getPromptTemplatesByCategory 
-} from './promptConfigService.js';
-
 // Re-export prompt file service for individual prompt files
 export { 
   createPromptFileService, 
@@ -80,14 +72,12 @@ export async function refreshAllConfigurations(): Promise<void> {
     const { getClientConfigService } = await import('./clientConfigService.js');
     const { getAgentConfigService } = await import('./agentConfigService.js');
     const { getLLMConfigService } = await import('./llmConfigService.js');
-    const { getPromptConfigService } = await import('./promptConfigService.js');
     
     const services = [
       getEnvironmentSettingsService(),
       getClientConfigService(),
       getAgentConfigService(),
-      getLLMConfigService(),
-      getPromptConfigService()
+      getLLMConfigService()
     ];
     
     await Promise.all(services.map(service => service.reload()));
