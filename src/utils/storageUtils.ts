@@ -1,6 +1,4 @@
 import { loadRuntimeConfig } from './configLoader';
-import { EnvironmentConfigurationService } from '../services/environment-config.service';
-import { EnvironmentConfiguration } from '../types/environment-config';
 
 const DEFAULT_DATA_FOLDER = 'data';
 const DEFAULT_PROMPTS_FOLDER = 'prompts';
@@ -12,9 +10,6 @@ const DISPLAY_MODE_CHANGE_EVENT = 'displayModeChange';
 
 // Cache the runtime config promise to avoid multiple fetches
 let configPromise: Promise<string> | null = null;
-let envConfigPromise: Promise<EnvironmentConfiguration> | null = null;
-
-const configService = EnvironmentConfigurationService.getInstance();
 
 export const storageUtils = {
   async getApiUrl(): Promise<string> {

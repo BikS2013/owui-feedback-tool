@@ -52,9 +52,14 @@ export class EnvironmentConfigurationService {
     
     // Step 2: Try to fetch configuration from API
     const apiConfig = await this.fetchConfigurationFromAPI();
-    this.configSource = 'runtime';
-    console.log('[EnvironmentConfig] Loaded runtime configuration from API');
-    return apiConfig;
+    if (apiConfig) {
+      this.configSource = 'runtime';
+      console.log('[EnvironmentConfig] Loaded runtime configuration from API');
+      return apiConfig;
+    }
+    
+    // If no API config, throw error as we expect configuration to be available
+    throw new Error('No configuration available from API');
   }
   
   private detectEnvironment(): string {
@@ -109,6 +114,7 @@ export class EnvironmentConfigurationService {
     }
   }
   
+  // @ts-ignore - Keeping for potential future use
   private getBuildTimeConfiguration(): EnvironmentConfiguration | null {
     // Return build-time configuration if any feature flags are set
     const hasFeatureFlags = 
@@ -148,7 +154,7 @@ export class EnvironmentConfigurationService {
   }
   
   getConfigSource(): 'runtime' | 'buildtime' {
-    if (this.configSource === 'default') {
+    if (!this.configSource) {
       throw new Error('Configuration not properly loaded');
     }
     return this.configSource;

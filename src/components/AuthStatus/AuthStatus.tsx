@@ -3,7 +3,7 @@
  */
 
 import React, { useState } from 'react';
-import { LogOut, User, ChevronDown } from 'lucide-react';
+import { LogOut, ChevronDown } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext';
 import './AuthStatus.css';
 

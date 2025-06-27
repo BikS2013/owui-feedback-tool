@@ -14,7 +14,7 @@ interface SettingsModalProps {
 }
 
 // Configuration tree component
-function ConfigurationTree({ config, level = 0 }: { config: any; level?: number }) {
+function ConfigurationTree({ config }: { config: any }) {
   const [expandedKeys, setExpandedKeys] = useState<Set<string>>(new Set(['root']));
   
   const toggleExpand = (key: string) => {
@@ -27,7 +27,7 @@ function ConfigurationTree({ config, level = 0 }: { config: any; level?: number 
     setExpandedKeys(newExpanded);
   };
   
-  const renderValue = (value: any, key: string, path: string): JSX.Element => {
+  const renderValue = (value: any, key: string, path: string): React.ReactElement => {
     if (value === null) return <span className="config-value null">null</span>;
     if (value === undefined) return <span className="config-value undefined">undefined</span>;
     
@@ -465,19 +465,19 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                       <strong>Runtime Configuration</strong>
                       <code>/config.json endpoint</code>
                       {runtimeConfigStatus === 'runtime' && <span className="source-badge active">✓ ACTIVE</span>}
-                      {(runtimeConfigStatus === 'buildtime' || runtimeConfigStatus === 'default') && <span className="source-badge">✗ NOT USED</span>}
+                      {(runtimeConfigStatus === 'buildtime' || runtimeConfigStatus === 'error') && <span className="source-badge">✗ NOT USED</span>}
                       {runtimeConfigStatus === 'loading' && <span className="source-badge">⏳ CHECKING...</span>}
                     </li>
                     <li>
                       <strong>Environment Variable (Build-time)</strong>
                       <code>VITE_API_URL={import.meta.env.VITE_API_URL || '<not set>'}</code>
                       {runtimeConfigStatus === 'buildtime' && <span className="source-badge active">✓ ACTIVE</span>}
-                      {(runtimeConfigStatus === 'runtime' || runtimeConfigStatus === 'default') && <span className="source-badge">✗ NOT USED</span>}
+                      {(runtimeConfigStatus === 'runtime' || runtimeConfigStatus === 'error') && <span className="source-badge">✗ NOT USED</span>}
                     </li>
                     <li>
                       <strong>Default Configuration</strong>
                       <code>Environment-specific defaults</code>
-                      {runtimeConfigStatus === 'default' && <span className="source-badge active">✓ ACTIVE</span>}
+                      {runtimeConfigStatus === 'error' && <span className="source-badge active">⚠️ FALLBACK</span>}
                       {(runtimeConfigStatus === 'runtime' || runtimeConfigStatus === 'buildtime') && <span className="source-badge">✗ NOT USED</span>}
                     </li>
                   </ol>

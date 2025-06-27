@@ -98,7 +98,7 @@ export class AuthService {
       console.log('✅ [AuthService] Auth status response:', data);
       return data;
     } catch (error) {
-      if (error.name === 'AbortError') {
+      if (error instanceof Error && error.name === 'AbortError') {
         console.error('⏱️ [AuthService] Auth status check timed out');
         return {
           enabled: false,

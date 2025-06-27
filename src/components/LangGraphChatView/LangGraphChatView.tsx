@@ -98,7 +98,7 @@ export function LangGraphChatView({ thread, showSourceView = false, runs = [] }:
     return matchedPairs;
   };
 
-  const matchedMessages = runs.length > 0 ? matchMessagesWithRuns() : messages.map(msg => ({ message: msg }));
+  const matchedMessages: { message: LangGraphMessage; run?: any; runIndex?: number }[] = runs.length > 0 ? matchMessagesWithRuns() : messages.map(msg => ({ message: msg }));
 
   // Helper function to format duration
   const formatDuration = (startTime: string, endTime: string): string => {
