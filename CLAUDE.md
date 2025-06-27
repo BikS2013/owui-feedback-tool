@@ -186,9 +186,6 @@ Production builds go to `dist/` directory. Docker image serves via nginx on port
 ### Agent Integration Specification
 - The file "AGENT-INTEGRATION.md" located in the backend folder, must be used as the "source of truth" regarding the agent integration to the app including the agent database access, the agent data used by the backend, etc. Every new design decision regarding this topic must be registered there. All questions related to the functionality or the technical design in this area must be retrieved from this file.
 
-### Configuration Management Specification
-- The document "configuration-repo.md" contains registered details regarding the configuration management of the app. Any decision made regarding this topic must be registered there and any information needed regarding the topic must be retrieved from this file.
-
 ## Backend Module Guidelines
 - There is a backend module which is hosted in the backend folder. 
 - Always maintain a clear separation between the frontend and the backend

@@ -16,6 +16,8 @@
     "docker:compose:build": "docker-compose build"
   },
   "dependencies": {
+    "@biks2013/config-service": "^1.0.1",
+    "@biks2013/github-asset-client": "^1.0.1",
     "@types/react-router-dom": "^5.3.3",
     "@types/uuid": "^10.0.0",
     "chart.js": "^4.4.9",

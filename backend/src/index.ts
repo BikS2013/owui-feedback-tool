@@ -14,10 +14,7 @@ import configurationRoutes from './routes/configuration.routes.js';
 import { swaggerSpec } from './swagger.config.js';
 import { consoleController } from './utils/console-controller.js';
 import { databaseService } from './services/database.service.js';
-import assetsRouter from './routes/assets.js';
-import { getGitHubAssetService } from './services/githubAssetService.js';
-import { getAssetDatabaseService } from './services/assetDatabaseService.js';
-import { loadEnvironmentSettings } from './services/environmentSettingsService.js';
+import { initializeConfigurationServices } from './services/config/index.js';
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
@@ -168,7 +165,6 @@ app.use('/api/github', requireAuth, githubRoutes);
 app.use('/api/llm', requireAuth, llmRoutes);
 app.use('/api/agent', requireAuth, agentRoutes);
 app.use('/api/debug', debugRoutes); // Debug routes might be conditionally protected
-app.use('/api/assets', requireAuth, assetsRouter);
 app.use('/', configurationRoutes); // Configuration route - no auth required for initial config
 
 // Error handling middleware
@@ -198,8 +194,8 @@ async function startServer() {
       }
     }
     
-    // Load environment settings from configuration repository (if available)
-    await loadEnvironmentSettings();
+    // Initialize all configuration services
+    await initializeConfigurationServices();
     
     // Re-read PORT and HOST in case they were loaded from settings
     PORT = process.env.PORT || 3001;
@@ -264,17 +260,6 @@ async function startServer() {
       console.log(`   • GET  http://${HOST}:${PORT}/api/agent/:name`);
       console.log(`   • GET  http://${HOST}:${PORT}/api/agent/threads?agentName=xxx`);
       console.log(`   • POST http://${HOST}:${PORT}/api/agent/reload`);
-      console.log('   ── Assets (Protected) ──');
-      console.log(`   • GET  http://${HOST}:${PORT}/api/assets/:key`);
-      console.log(`   • GET  http://${HOST}:${PORT}/api/assets`);
-      console.log(`   • POST http://${HOST}:${PORT}/api/assets/cache/clear`);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('📦 Asset Services Configuration:');
-      
-      // Initialize asset services to report their configuration status
-      getGitHubAssetService();
-      getAssetDatabaseService();
-      
       console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
     });
 

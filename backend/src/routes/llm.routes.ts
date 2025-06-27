@@ -1,7 +1,6 @@
 import { Router, Request, Response } from 'express';
-import { LLMPromptExecutionRequest, LLMPromptExecutionResponse, LLMTestRequest } from '../types/llm.types.js';
-import { v4 as uuidv4 } from 'uuid';
-import { getLLMConfigService } from '../services/llm-config.service.js';
+import { LLMTestRequest } from '../types/llm.types.js';
+import { getExtendedLLMConfigService, getLLMConfigurations, getLLMProvider, getDefaultLLMProvider } from '../services/config/index.js';
 import { GitHubService } from '../services/github.service.js';
 import { PromptLoader } from '../utils/prompt-loader.js';
 import { prepareFilterWithSamplePrompt } from '../services/filterWithSamplePromptService.js';
@@ -9,208 +8,15 @@ import { prepareFilterWithoutSamplePrompt } from '../services/filterWithoutSampl
 
 const router = Router();
 
-/**
- * @swagger
- * /api/llm/execute-prompt:
- *   post:
- *     summary: Execute a prompt from GitHub against a conversation using an LLM
- *     tags: [LLM]
- *     requestBody:
- *       required: true
- *       content:
- *         application/json:
- *           schema:
- *             type: object
- *             required:
- *               - llmConfiguration
- *               - promptFilePath
- *               - conversation
- *             properties:
- *               llmConfiguration:
- *                 type: string
- *                 description: The name of the LLM configuration to use
- *                 example: "gpt-4"
- *               promptFilePath:
- *                 type: string
- *                 description: The full path of the prompt file in the GitHub repository
- *                 example: "prompts/analysis/conversation-summary.md"
- *               conversation:
- *                 type: object
- *                 description: The complete conversation JSON
- *                 properties:
- *                   id:
- *                     type: string
- *                   title:
- *                     type: string
- *                   createdAt:
- *                     type: string
- *                     format: date-time
- *                   messages:
- *                     type: array
- *                     items:
- *                       type: object
- *                       properties:
- *                         role:
- *                           type: string
- *                           enum: [user, assistant]
- *                         content:
- *                           type: string
- *                         timestamp:
- *                           type: string
- *                           format: date-time
- *     responses:
- *       200:
- *         description: Prompt execution request accepted
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: "Prompt execution request accepted"
- *                 requestId:
- *                   type: string
- *                   format: uuid
- *                   example: "123e4567-e89b-12d3-a456-426614174000"
- *       400:
- *         description: Invalid request
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 error:
- *                   type: string
- *                   example: "Missing required fields"
- *       500:
- *         description: Server error
- */
-router.post('/execute-prompt', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { llmConfiguration, promptFilePath, conversation } = req.body as LLMPromptExecutionRequest;
-    
-    // Validate required fields
-    if (!llmConfiguration || !promptFilePath || !conversation) {
-      res.status(400).json({
-        success: false,
-        error: 'Missing required fields: llmConfiguration, promptFilePath, and conversation are required'
-      });
-      return;
-    }
-    
-    // Validate conversation structure
-    if (!conversation.id || !conversation.title || !conversation.messages || !Array.isArray(conversation.messages)) {
-      res.status(400).json({
-        success: false,
-        error: 'Invalid conversation structure'
-      });
-      return;
-    }
-    
-    // Generate a request ID for tracking
-    const requestId = uuidv4();
-    
-    // Log the request details
-    console.log('📨 LLM Prompt Execution Request:');
-    console.log(`   • Request ID: ${requestId}`);
-    console.log(`   • LLM Configuration: ${llmConfiguration}`);
-    console.log(`   • Prompt File: ${promptFilePath}`);
-    console.log(`   • Conversation: ${conversation.title} (${conversation.messages.length} messages)`);
-    
-    // TODO: In the future, this will:
-    // 1. Fetch the prompt file from GitHub using the GitHub service
-    // 2. Process the prompt with the conversation context
-    // 3. Send to the configured LLM
-    // 4. Return the result
-    
-    // For now, return acknowledgment
-    const response: LLMPromptExecutionResponse = {
-      success: true,
-      message: 'Prompt execution request accepted',
-      requestId
-    };
-    
-    res.json(response);
-  } catch (error: any) {
-    console.error('Error in execute-prompt endpoint:', error);
-    res.status(500).json({
-      success: false,
-      error: 'Internal server error',
-      message: error.message
-    });
+// Helper function to get configuration by name
+async function getConfigurationByName(name: string): Promise<any> {
+  const config = await getLLMConfigurations();
+  if (!config || !config.configurations) {
+    return null;
   }
-});
+  return config.configurations.find(c => c.name === name);
+}
 
-/**
- * @swagger
- * /api/llm/status/{requestId}:
- *   get:
- *     summary: Get the status of a prompt execution request
- *     tags: [LLM]
- *     parameters:
- *       - in: path
- *         name: requestId
- *         required: true
- *         schema:
- *           type: string
- *           format: uuid
- *         description: The request ID returned from execute-prompt
- *     responses:
- *       200:
- *         description: Request status
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 requestId:
- *                   type: string
- *                 status:
- *                   type: string
- *                   enum: [pending, processing, completed, failed]
- *                 result:
- *                   type: string
- *                   description: The LLM response (when completed)
- *                 error:
- *                   type: string
- *                   description: Error message (when failed)
- *                 createdAt:
- *                   type: string
- *                   format: date-time
- *                 updatedAt:
- *                   type: string
- *                   format: date-time
- *       404:
- *         description: Request not found
- */
-router.get('/status/:requestId', async (req: Request, res: Response): Promise<void> => {
-  try {
-    const { requestId } = req.params;
-    
-    // TODO: Implement actual status tracking
-    // For now, return a mock response
-    res.json({
-      requestId,
-      status: 'pending',
-      message: 'Status tracking not yet implemented',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString()
-    });
-  } catch (error: any) {
-    console.error('Error in status endpoint:', error);
-    res.status(500).json({
-      error: 'Internal server error',
-      message: error.message
-    });
-  }
-});
 
 /**
  * @swagger
@@ -248,19 +54,28 @@ router.get('/status/:requestId', async (req: Request, res: Response): Promise<vo
  */
 router.get('/configurations', async (req: Request, res: Response): Promise<void> => {
   try {
-    const llmConfigService = getLLMConfigService();
-    const configurations = await llmConfigService.getConfigurations();
-    const defaultConfiguration = await llmConfigService.getDefaultConfigurationName();
+    console.log('🔍 Fetching LLM configurations...');
+    const config = await getLLMConfigurations();
+    
+    console.log('📋 LLM Config loaded:', JSON.stringify(config, null, 2));
+    
+    if (!config) {
+      console.log('⚠️  No LLM configuration found');
+      res.json({
+        configurations: [],
+        defaultConfiguration: null
+      });
+      return;
+    }
+    
+    // Return the complete configuration as-is
+    const configurations = config.configurations || config.llmProviders || [];
+    
+    console.log(`✅ Returning ${configurations.length} LLM configurations`);
     
     res.json({
-      configurations: configurations.map(config => ({
-        name: config.name,
-        provider: config.provider,
-        model: config.model,
-        description: config.description,
-        enabled: config.enabled !== false
-      })),
-      defaultConfiguration
+      configurations,
+      defaultConfiguration: config.defaultConfiguration || config.defaultProvider || null
     });
   } catch (error: any) {
     console.error('Error fetching configurations:', error);
@@ -332,10 +147,18 @@ router.post('/test', async (req: Request, res: Response): Promise<void> => {
       return;
     }
     
-    // Check if configuration exists
-    const llmConfigService = getLLMConfigService();
-    const config = await llmConfigService.getConfiguration(configurationName);
-    if (!config) {
+    // Get all configurations and find the requested one
+    const config = await getLLMConfigurations();
+    if (!config || !config.configurations) {
+      res.status(500).json({
+        success: false,
+        error: 'LLM configurations not available'
+      });
+      return;
+    }
+    
+    const provider = config.configurations.find(c => c.name === configurationName);
+    if (!provider) {
       res.status(404).json({
         success: false,
         error: `Configuration '${configurationName}' not found`
@@ -344,15 +167,51 @@ router.post('/test', async (req: Request, res: Response): Promise<void> => {
     }
     
     console.log(`🧪 Testing LLM configuration: ${configurationName}`);
-    const result = await llmConfigService.testConfiguration(configurationName, prompt);
+    console.log('📋 Provider config:', JSON.stringify(provider, null, 2));
     
-    res.json({
-      success: result.success,
-      configuration: configurationName,
-      response: result.response,
-      error: result.error,
-      duration: result.duration
-    });
+    try {
+      // Create the chat model
+      const model = await getExtendedLLMConfigService().createChatModel(configurationName);
+      
+      // Use the provided prompt or a default test prompt
+      const testPrompt = prompt || "Hello! Please respond with 'Test successful' to confirm you're working.";
+      
+      // Execute the test
+      const startTime = Date.now();
+      const response = await model.invoke(testPrompt);
+      const duration = Date.now() - startTime;
+      
+      // Extract the response content
+      let result: string;
+      if (typeof response.content === 'string') {
+        result = response.content;
+      } else if (Array.isArray(response.content)) {
+        result = response.content.map((item: any) => 
+          typeof item === 'string' ? item : item.text || ''
+        ).join('');
+      } else {
+        result = String(response.content);
+      }
+      
+      console.log(`✅ LLM test completed in ${duration}ms`);
+      
+      res.json({
+        success: true,
+        configuration: configurationName,
+        response: result,
+        error: null,
+        duration
+      });
+    } catch (error: any) {
+      console.error(`❌ LLM test failed:`, error);
+      res.json({
+        success: false,
+        configuration: configurationName,
+        response: null,
+        error: error.message,
+        duration: 0
+      });
+    }
   } catch (error: any) {
     console.error('Error testing LLM:', error);
     res.status(500).json({
@@ -386,13 +245,15 @@ router.post('/test', async (req: Request, res: Response): Promise<void> => {
  */
 router.post('/reload', async (req: Request, res: Response): Promise<void> => {
   try {
-    await getLLMConfigService().reloadConfigurations();
-    const configurations = await getLLMConfigService().getConfigurations();
+    const llmService = getExtendedLLMConfigService();
+    await llmService.reload();
+    llmService.clearModelCache(); // Clear cache after reload
+    const config = await getLLMConfigurations();
     
     res.json({
       success: true,
       message: 'Configurations reloaded successfully',
-      configurationsLoaded: configurations.length
+      configurationsLoaded: config?.configurations?.length || config?.llmProviders?.length || 0
     });
   } catch (error: any) {
     console.error('Error reloading configurations:', error);
@@ -471,8 +332,8 @@ router.post('/execute-prompt-direct', async (req: Request, res: Response): Promi
     }
     
     // Check if configuration exists and is enabled
-    const config = await getLLMConfigService().getConfiguration(llmConfiguration);
-    if (!config) {
+    const provider = await getConfigurationByName(llmConfiguration);
+    if (!provider) {
       res.status(404).json({
         success: false,
         error: `Configuration '${llmConfiguration}' not found`
@@ -480,7 +341,7 @@ router.post('/execute-prompt-direct', async (req: Request, res: Response): Promi
       return;
     }
     
-    if (config.enabled === false) {
+    if (provider.enabled === false) {
       res.status(400).json({
         success: false,
         error: `Configuration '${llmConfiguration}' is disabled`
@@ -497,7 +358,7 @@ router.post('/execute-prompt-direct', async (req: Request, res: Response): Promi
     const processedPrompt = PromptLoader.replacePlaceholders(promptText, parameterValues as Record<string, string>);
     
     // Create the chat model
-    const model = await getLLMConfigService().createChatModel(llmConfiguration);
+    const model = await getExtendedLLMConfigService().createChatModel(llmConfiguration);
     
     // Execute the prompt
     const startTime = Date.now();
@@ -619,10 +480,6 @@ router.post('/execute-prompt-direct', async (req: Request, res: Response): Promi
  *                   description: The type of response generated
  *                   enum: [filter, render, both, json, unknown]
  *                   example: "both"
- *                 filterCode:
- *                   type: string
- *                   description: Generated JavaScript filter code (legacy - same as filterScript)
- *                   example: "function filterThreads(threads) { return threads.filter(thread => { return thread.created_at > '2024-01-01'; }); }"
  *                 filterScript:
  *                   type: string
  *                   description: Generated JavaScript filter function
@@ -702,8 +559,8 @@ router.post('/get-prompt', async (req: Request, res: Response): Promise<void> =>
     }
     
     // Check if configuration exists
-    const config = await getLLMConfigService().getConfiguration(llmConfiguration);
-    if (!config) {
+    const provider = await getConfigurationByName(llmConfiguration);
+    if (!provider) {
       res.status(404).json({
         success: false,
         error: `Configuration '${llmConfiguration}' not found`
@@ -762,8 +619,8 @@ router.post('/convert-to-filter', async (req: Request, res: Response): Promise<v
     }
     
     // Check if configuration exists and is enabled
-    const config = await getLLMConfigService().getConfiguration(llmConfiguration);
-    if (!config) {
+    const provider = await getConfigurationByName(llmConfiguration);
+    if (!provider) {
       res.status(404).json({
         success: false,
         error: `Configuration '${llmConfiguration}' not found`
@@ -771,7 +628,7 @@ router.post('/convert-to-filter', async (req: Request, res: Response): Promise<v
       return;
     }
     
-    if (config.enabled === false) {
+    if (provider.enabled === false) {
       res.status(400).json({
         success: false,
         error: `Configuration '${llmConfiguration}' is disabled`
@@ -801,7 +658,7 @@ router.post('/convert-to-filter', async (req: Request, res: Response): Promise<v
     }
     
     // Create the chat model
-    const model = await getLLMConfigService().createChatModel(llmConfiguration);
+    const model = await getExtendedLLMConfigService().createChatModel(llmConfiguration);
     
     // Execute the prompt
     const startTime = Date.now();

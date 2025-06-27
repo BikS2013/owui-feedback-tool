@@ -23,32 +23,6 @@ export interface Message {
   model?: string;
 }
 
-export interface LLMPromptExecutionRequest {
-  // The name of the LLM configuration to use (e.g., "gpt-4", "claude-3", etc.)
-  llmConfiguration: string;
-  
-  // The full path of the prompt file in the GitHub repository
-  promptFilePath: string;
-  
-  // The complete conversation JSON
-  conversation: Conversation;
-}
-
-export interface LLMPromptExecutionResponse {
-  success: boolean;
-  message: string;
-  requestId?: string;
-  error?: string;
-}
-
-export interface LLMPromptExecutionStatus {
-  requestId: string;
-  status: 'pending' | 'processing' | 'completed' | 'failed';
-  result?: string;
-  error?: string;
-  createdAt: Date;
-  updatedAt: Date;
-}
 
 // LLM Configuration Types
 export type LLMProvider = 'openai' | 'anthropic' | 'google' | 'azure-openai' | 'litellm' | 'ollama';

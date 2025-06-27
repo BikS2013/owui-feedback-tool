@@ -14,6 +14,9 @@
     "lint:fix": "eslint src/**/*.ts --fix"
   },
   "dependencies": {
+    "@biks2013/asset-database": "^1.0.1",
+    "@biks2013/config-service": "^1.0.1",
+    "@biks2013/github-asset-client": "^1.0.1",
     "@langchain/anthropic": "^0.3.21",
     "@langchain/community": "^0.3.45",
     "@langchain/google-genai": "^0.2.10",

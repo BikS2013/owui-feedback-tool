@@ -2,7 +2,109 @@
 
 ## Pending Items
 
+### Direct process.env Access in Backend Code
+**Date Added:** 2025-06-27
+**Status:** Refactoring Required
+**Description:** Multiple backend files still use direct `process.env` access instead of the new configuration service pattern.
+
+**Files needing refactoring:**
+- `src/index.ts` - Uses dotenv and direct process.env access
+- `src/services/database.service.ts`
+- `src/services/github.service.ts`
+- `src/services/githubAssetService.ts`
+- `src/services/assetDatabaseService.ts`
+- `src/middleware/nbg-auth.config.ts`
+- `src/middleware/token-validator.ts`
+- `src/swagger.config.ts`
+- `src/utils/console-controller.ts`
+- `src/routes/debug.routes.ts`
+
+**Recommendation:** Update these files to use the appropriate configuration service instead of direct environment variable access.
+
 ## Completed Items
+
+### Migration to Configuration-Service-Pattern (Completed: 2025-06-27)
+**Date Added:** 2025-06-27
+**Status:** Completed
+**Description:** Replaced the local configuration-repo pattern with the configuration-service-pattern from BikS2013/configuration-management.
+
+**Changes Made:**
+1. **Implemented @biks2013/config-service pattern:**
+   - Created new configuration services in `/backend/src/services/config/`
+   - Uses GitHub as primary source with PostgreSQL as fallback
+   - Implements lazy initialization for environment variable timing
+   - Factory pattern for creating singleton services
+
+2. **Created Configuration Services:**
+   - `environmentSettingsService.ts` - Loads environment variables from GitHub
+   - `clientConfigService.ts` - Frontend configuration served via API
+   - `agentConfigService.ts` - Agent configurations
+   - `llmConfigService.ts` - LLM provider settings
+   - `promptConfigService.ts` - Prompt templates
+   - `promptFileService.ts` - Individual prompt files
+   - `config-factory.ts` - Factory pattern implementation
+   - `config-clients.ts` - Lazy-initialized GitHub and database clients
+
+3. **Updated Routes and Services:**
+   - Configuration route now uses new client config service
+   - Debug routes use new environment settings service
+   - Agent service uses new agent config service
+   - LLM routes use new LLM config service
+   - All prompt services use new prompt file service
+
+4. **Removed Old Files:**
+   - `/backend/env-settings.example`
+   - `/backend/config/configuration.template.json`
+   - `/backend/config/client-config.example.json`
+   - `/backend/config/README.md`
+   - `/backend/src/types/environment-configuration.ts`
+   - `/backend/test_scripts/test-env-settings-debug.sh`
+   - `/backend/src/services/assetDatabaseService.ts` - Removed as unused
+   - `/backend/src/services/githubAssetService.ts` - Removed along with assets endpoints
+   - `/backend/src/routes/assets.ts` - Removed assets API endpoints
+
+**Benefits:**
+- Centralized configuration in GitHub repository
+- Automatic caching to PostgreSQL database
+- No need to rebuild/redeploy for configuration changes
+- Type-safe configuration access
+- Follows established patterns from configuration management repository
+- Cleaner separation between configuration management and general asset serving
+
+### LLM Execution Service Implementation (Completed: 2025-06-27)
+**Date Added:** 2025-06-27
+**Status:** Completed
+**Description:** Implemented LLM execution service using LangChain to communicate with various LLM providers.
+
+**Changes Made:**
+1. **Created LLMExecutionService** (`/backend/src/services/llmExecutionService.ts`):
+   - Singleton service for managing LLM model creation and caching
+   - Supports multiple providers: OpenAI, Azure OpenAI, Anthropic, Google
+   - Automatically reads API keys from environment variables if not in config
+   - Implements model caching to avoid recreating models for repeated requests
+
+2. **Supported LLM Providers:**
+   - **OpenAI**: Uses `OPENAI_API_KEY` environment variable
+   - **Azure OpenAI**: Uses `AZURE_OPENAI_API_KEY`, `AZURE_OPENAI_API_ENDPOINT`, `AZURE_OPENAI_API_VERSION`
+   - **Anthropic**: Uses `ANTHROPIC_API_KEY` environment variable
+   - **Google**: Uses `GOOGLE_API_KEY` or `GOOGLE_GENERATIVE_AI_API_KEY` environment variables
+
+3. **Updated LLM Routes:**
+   - `/api/llm/test` endpoint now executes actual LLM calls instead of returning mock responses
+   - `/api/llm/execute-prompt-direct` endpoint fully functional for direct prompt execution
+   - `/api/llm/convert-to-filter` endpoint ready for natural language to filter conversion
+   - Model cache is cleared when configurations are reloaded
+
+4. **Configuration Updates:**
+   - Extended `llmConfigService` with `createChatModel` method
+   - Fixed configuration structure to support both legacy `llmProviders` and new `configurations` array
+   - Updated `getConfigurationByName` helper to find configurations from the actual YAML structure
+
+**Benefits:**
+- Real LLM execution capability for all configured providers
+- Efficient model caching to improve performance
+- Flexible configuration with environment variable fallbacks
+- Support for provider-specific configurations (Azure endpoints, Google output tokens, etc.)
 
 ### Client Configuration via Configuration-Service-Pattern (Completed: 2025-01-23)
 **Date Added:** 2025-01-23

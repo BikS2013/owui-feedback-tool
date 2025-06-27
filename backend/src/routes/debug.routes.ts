@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { reloadEnvironmentSettings } from '../services/environmentSettingsService.js';
+import { getEnvironmentSettingsService, refreshAllConfigurations } from '../services/config/index.js';
 
 const router = Router();
 
@@ -130,16 +130,16 @@ router.post('/env/reload', async (req: any, res: any) => {
   }
   
   try {
-    await reloadEnvironmentSettings();
+    await refreshAllConfigurations();
     res.json({ 
       success: true, 
-      message: 'Environment settings reloaded successfully',
+      message: 'All configurations reloaded successfully',
       timestamp: new Date().toISOString()
     });
   } catch (error: any) {
-    console.error('Failed to reload environment settings:', error);
+    console.error('Failed to reload configurations:', error);
     res.status(500).json({ 
-      error: 'Failed to reload environment settings',
+      error: 'Failed to reload configurations',
       message: error.message
     });
   }
@@ -164,7 +164,6 @@ router.get('/env/test-load', async (req: any, res: any) => {
   }
   
   try {
-    const { getEnvironmentSettingsService } = await import('../services/environmentSettingsService.js');
     const service = getEnvironmentSettingsService();
     
     // Try to get all settings

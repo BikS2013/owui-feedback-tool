@@ -1,4 +1,4 @@
-import { createPromptHelpers, PromptServiceConfig } from './promptConfigService.js';
+import { createPromptHelpers, PromptServiceConfig } from './config/promptFileService.js';
 
 // Configuration for the execute-direct prompt
 // This will ONLY load from the configuration repository - no local fallback

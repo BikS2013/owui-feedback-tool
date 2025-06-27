@@ -1,4 +1,4 @@
-import { createPromptHelpers, PromptServiceConfig } from './promptConfigService.js';
+import { createPromptHelpers, PromptServiceConfig } from './config/promptFileService.js';
 
 // Configuration for the filter-with-sample prompt
 // This will ONLY load from the configuration repository - no local fallback

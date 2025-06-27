@@ -1,18 +1,27 @@
 import { Agent } from '../types/agent.types.js';
-import { getAllAgents, getAgentByName, reloadAgentConfig } from './agentConfigService.js';
+import { getAgentConfigurations, getAgentConfiguration, getAgentConfigService } from './config/index.js';
 
 export class AgentService {
   public async getAgents(): Promise<Agent[]> {
-    return await getAllAgents();
+    const config = await getAgentConfigurations();
+    if (!config || !config.agents) {
+      throw new Error('Agent configuration not available');
+    }
+    return config.agents as Agent[];
   }
 
   public async getAgentByName(name: string): Promise<Agent | undefined> {
-    return await getAgentByName(name);
+    const config = await getAgentConfigurations();
+    if (!config || !config.agents) {
+      throw new Error('Agent configuration not available');
+    }
+    return config.agents.find(agent => agent.name === name) as Agent | undefined;
   }
 
   public async reloadAgents(): Promise<void> {
     console.log('🔄 Reloading agent configuration...');
-    await reloadAgentConfig();
+    const service = getAgentConfigService();
+    await service.reload();
   }
 }
 
