@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { Zap, Sparkles } from 'lucide-react';
-import { GitHubApiService } from '../../services/github-api.service';
-import { GitHubFile } from '../../types/github';
+import { userPromptsService, UserPrompt } from '../../services/userPrompts.service';
 import { parsePromptParameters } from '../../utils/promptParser';
 import { llmService } from '../../services/llm.service';
 import { LLMConfiguration } from '../../types/llm';
@@ -16,10 +15,6 @@ interface PromptSelectorModalProps {
   qaPair?: any; // Add proper type when Q&A modal is implemented
 }
 
-interface PromptFile {
-  name: string;
-  path: string;
-}
 
 type ParameterSource = 'conversation' | 'qa' | 'current-date' | 'current-datetime' | 'custom-text';
 
@@ -38,8 +33,8 @@ interface PromptConfiguration {
 const STORAGE_KEY = 'promptSelectorConfiguration';
 
 export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen, onClose, conversation, qaPair }) => {
-  const [promptFiles, setPromptFiles] = useState<PromptFile[]>([]);
-  const [selectedFile, setSelectedFile] = useState<string>('');
+  const [userPrompts, setUserPrompts] = useState<UserPrompt[]>([]);
+  const [selectedPromptId, setSelectedPromptId] = useState<string>('');
   const [promptContent, setPromptContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
@@ -61,7 +56,7 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
 
   useEffect(() => {
     if (isOpen) {
-      loadPromptFiles();
+      loadUserPrompts();
       loadSavedConfiguration();
       loadLLMConfigurations();
     }
@@ -85,9 +80,9 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
   
   // Save configuration to local storage whenever it changes
   useEffect(() => {
-    if (selectedFile || promptContent || parameterConfigs.length > 0) {
+    if (selectedPromptId || promptContent || parameterConfigs.length > 0) {
       const config: PromptConfiguration = {
-        selectedFile,
+        selectedFile: selectedPromptId,
         promptContent,
         parameters: parameterConfigs
       };
@@ -97,7 +92,7 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
         console.error('Failed to save prompt configuration:', error);
       }
     }
-  }, [selectedFile, promptContent, parameterConfigs]);
+  }, [selectedPromptId, promptContent, parameterConfigs]);
 
   const loadSavedConfiguration = () => {
     try {
@@ -105,9 +100,9 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
       if (saved) {
         const config: PromptConfiguration = JSON.parse(saved);
         if (config.selectedFile) {
-          setSelectedFile(config.selectedFile);
-          // Load the file content if it exists
-          handleFileSelect(config.selectedFile);
+          setSelectedPromptId(config.selectedFile);
+          // Load the prompt content if it exists
+          handlePromptSelect(config.selectedFile);
         }
         if (config.parameters) {
           setParameterConfigs(config.parameters);
@@ -279,110 +274,39 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
     }
   };
 
-  const loadPromptFiles = async () => {
+  const loadUserPrompts = async () => {
     setIsLoading(true);
     setError('');
     try {
-      // Get the prompts folder from backend configuration
-      let promptsFolder = 'prompts'; // Default
-      try {
-        const status = await GitHubApiService.checkStatus();
-        if (status.connected && status.promptsFolder) {
-          promptsFolder = status.promptsFolder;
-        }
-      } catch (e) {
-        console.warn('Could not get prompts folder from backend, using default:', e);
-      }
-      console.log('Loading files from prompts folder:', promptsFolder);
+      console.log('Loading user prompts from backend...');
       
-      let files: GitHubFile[] = [];
-      try {
-        // First try the standard contents API
-        files = await GitHubApiService.getFiles(promptsFolder);
-        console.log('Raw files received from GitHub Contents API:', files);
-        console.log('Total files count:', files.length);
-        
-        // If we get a large number of files, warn about potential truncation
-        if (files.length >= 100) {
-          console.warn('Large directory detected. Trying tree API for complete listing...');
-          // Try the tree API as a fallback - search for files in the prompts folder
-          const searchResults = await GitHubApiService.searchFiles(promptsFolder, 'md');
-          console.log('Files from search API:', searchResults.length);
-          files = searchResults;
-        }
-      } catch (contentsError) {
-        console.error('Contents API failed, trying search with folder path:', contentsError);
-        try {
-          // If contents API fails, try searching in the prompts folder
-          const searchResults = await GitHubApiService.searchFiles(promptsFolder, 'md');
-          files = searchResults;
-        } catch (searchError) {
-          console.error('Search API also failed:', searchError);
-          files = [];
-        }
-      }
+      const prompts = await userPromptsService.listPrompts();
+      console.log('Loaded user prompts:', prompts);
       
-      // Check for truncation in the response
-      const fileTypes = files.map(f => `${f.name} (${f.type})`);
-      console.log('All files:', fileTypes);
+      // Sort prompts alphabetically by name
+      const sortedPrompts = [...prompts].sort((a, b) => a.name.localeCompare(b.name));
       
-      const promptFilesList = files
-        .filter(file => {
-          const isFile = file.type === 'file';
-          const hasValidExtension = file.name.toLowerCase().endsWith('.txt') || 
-                                    file.name.toLowerCase().endsWith('.md') ||
-                                    file.name.toLowerCase().endsWith('.markdown');
-          
-          if (!isFile || file.name.startsWith('.')) {
-            console.log(`Skipping ${file.name}: isFile=${isFile}, hidden=${file.name.startsWith('.')}`);
-            return false;
-          }
-          
-          if (!hasValidExtension) {
-            console.log(`Skipping ${file.name}: invalid extension (not .txt or .md)`);
-            return false;
-          }
-          
-          return true;
-        })
-        .map(file => ({
-          name: file.name,
-          path: file.path
-        }))
-        .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically
-      
-      console.log('Filtered prompt files:', promptFilesList);
-      console.log('Filtered count:', promptFilesList.length);
-      
-      // Also log any other file types found in the directory
-      const otherFiles = files
-        .filter(f => {
-          if (f.type !== 'file') return false;
-          const name = f.name.toLowerCase();
-          return !name.endsWith('.txt') && !name.endsWith('.md') && !name.endsWith('.markdown');
-        })
-        .map(f => f.name);
-      if (otherFiles.length > 0) {
-        console.log('Other file types in prompts folder (not shown):', otherFiles);
-      }
-      
-      setPromptFiles(promptFilesList);
+      setUserPrompts(sortedPrompts);
     } catch (err) {
-      console.error('Error loading prompt files:', err);
-      setError('Failed to load prompt files: ' + (err instanceof Error ? err.message : 'Unknown error'));
+      console.error('Error loading user prompts:', err);
+      setError('Failed to load user prompts: ' + (err instanceof Error ? err.message : 'Unknown error'));
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleFileSelect = async (filePath: string) => {
-    setSelectedFile(filePath);
+  const handlePromptSelect = async (promptId: string) => {
+    setSelectedPromptId(promptId);
     setIsLoading(true);
     setError('');
     try {
-      const fileData = await GitHubApiService.getFileContent(filePath);
-      const content = fileData.content;
-      setPromptContent(content);
+      const prompt = await userPromptsService.getPrompt(promptId);
+      if (prompt && prompt.content) {
+        setPromptContent(prompt.content);
+      } else {
+        setError('Failed to load prompt content: Not Found');
+        setPromptContent('');
+      }
     } catch (err) {
       setError('Failed to load prompt content: ' + (err instanceof Error ? err.message : 'Unknown error'));
       setPromptContent('');
@@ -516,15 +440,15 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
                 <div className="prompt-header-row">
                   <label className="prompt-select-label">Select Prompt</label>
                   <select 
-                    value={selectedFile} 
-                    onChange={(e) => handleFileSelect(e.target.value)}
+                    value={selectedPromptId} 
+                    onChange={(e) => handlePromptSelect(e.target.value)}
                     disabled={isLoading}
                     className="prompt-file-dropdown"
                   >
                     <option value="">-- Select a prompt file --</option>
-                    {promptFiles.map(file => (
-                      <option key={file.path} value={file.path}>
-                        {file.name}
+                    {userPrompts.map(prompt => (
+                      <option key={prompt.id} value={prompt.id}>
+                        {prompt.name}
                       </option>
                     ))}
                   </select>

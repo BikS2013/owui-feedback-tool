@@ -11,6 +11,7 @@ import { llmRoutes } from './routes/llm.routes.js';
 import { agentRoutes } from './routes/agent.routes.js';
 import { debugRoutes } from './routes/debug.routes.js';
 import configurationRoutes from './routes/configuration.routes.js';
+import { userPromptsRoutes } from './routes/userPrompts.routes.js';
 import { swaggerSpec } from './swagger.config.js';
 import { consoleController } from './utils/console-controller.js';
 import { databaseService } from './services/database.service.js';
@@ -164,6 +165,7 @@ app.use('/api/export', requireAuth, exportRoutes);
 app.use('/api/github', requireAuth, githubRoutes);
 app.use('/api/llm', requireAuth, llmRoutes);
 app.use('/api/agent', requireAuth, agentRoutes);
+app.use('/api/user-prompts', requireAuth, userPromptsRoutes);
 app.use('/api/debug', debugRoutes); // Debug routes might be conditionally protected
 app.use('/', configurationRoutes); // Configuration route - no auth required for initial config
 
@@ -201,67 +203,99 @@ async function startServer() {
     PORT = process.env.PORT || 3001;
     HOST = process.env.HOST || 'localhost';
     
-    const server = app.listen(PORT, () => {
-      console.log('\n🚀 Server is running!');
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log(`📡 Port: ${PORT}`);
-      console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`🗄️  Database Verbose Logging: ${process.env.DATABASE_VERBOSE === 'true' ? '✅ Enabled' : '❌ Disabled'}`);
-      
-      // Display NBG OAuth status
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🔐 NBG OAuth Configuration:');
-      if (isAuthEnabled()) {
-        console.log('   ✅ Authentication ENABLED');
-        console.log(`   • Issuer: ${process.env.NBG_OAUTH_ISSUER || 'Not configured'}`);
-        console.log(`   • Client ID: ${process.env.NBG_CLIENT_ID ? '***' + process.env.NBG_CLIENT_ID.slice(-4) : 'Not configured'}`);
-        console.log(`   • Scopes: ${process.env.NBG_OAUTH_SCOPES || 'openid profile email'}`);
-      } else {
-        console.log('   ❌ Authentication DISABLED (Development mode)');
+    // Function to attempt server start with retry
+    const attemptServerStart = async (retries = 5, delay = 1000): Promise<any> => {
+      for (let i = 0; i < retries; i++) {
+        try {
+          return await new Promise((resolve, reject) => {
+            const server = app.listen(PORT, () => {
+              resolve(server);
+            }).on('error', (error: any) => {
+              if (error.code === 'EADDRINUSE' && i < retries - 1) {
+                console.log(`⚠️  Port ${PORT} is still in use, retrying in ${delay}ms... (attempt ${i + 1}/${retries})`);
+                setTimeout(() => {
+                  server.close();
+                  reject(error);
+                }, delay);
+              } else {
+                reject(error);
+              }
+            });
+          });
+        } catch (error) {
+          if (i === retries - 1) throw error;
+          await new Promise(resolve => setTimeout(resolve, delay));
+        }
       }
-      
-      // Display CORS configuration
-      const allowedOrigins = getAllowedOrigins();
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🔒 CORS Configuration:');
-      if (allowedOrigins === '*') {
-        console.log('   ⚠️  All origins allowed (wildcard)');
-      } else if (Array.isArray(allowedOrigins)) {
-        console.log('   Allowed origins:');
-        allowedOrigins.forEach(origin => console.log(`   • ${origin}`));
-      }
-      
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('📚 API Documentation:');
-      console.log(`   👉 http://${HOST}:${PORT}/api-docs`);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-      console.log('🔗 Available endpoints:');
-      console.log(`   • GET  http://${HOST}:${PORT}/health`);
-      console.log('   ── Authentication ──');
-      console.log(`   • GET  http://${HOST}:${PORT}/api/auth/status`);
-      console.log(`   • GET  http://${HOST}:${PORT}/api/auth/login`);
-      console.log(`   • GET  http://${HOST}:${PORT}/api/auth/logout`);
-      console.log(`   • POST http://${HOST}:${PORT}/api/auth/refresh`);
-      console.log('   ── Export (Protected) ──');
-      console.log(`   • POST http://${HOST}:${PORT}/api/export/conversation`);
-      console.log(`   • POST http://${HOST}:${PORT}/api/export/qa-pair`);
-      console.log('   ── GitHub (Protected) ──');
-      console.log(`   • GET  http://${HOST}:${PORT}/api/github/status`);
-      console.log(`   • GET  http://${HOST}:${PORT}/api/github/tree`);
-      console.log(`   • GET  http://${HOST}:${PORT}/api/github/files`);
-      console.log('   ── LLM (Protected) ──');
-      console.log(`   • POST http://${HOST}:${PORT}/api/llm/execute-prompt`);
-      console.log(`   • GET  http://${HOST}:${PORT}/api/llm/status/:requestId`);
-      console.log(`   • GET  http://${HOST}:${PORT}/api/llm/configurations`);
-      console.log(`   • POST http://${HOST}:${PORT}/api/llm/test`);
-      console.log(`   • POST http://${HOST}:${PORT}/api/llm/reload`);
-      console.log('   ── Agent (Protected) ──');
-      console.log(`   • GET  http://${HOST}:${PORT}/api/agent`);
-      console.log(`   • GET  http://${HOST}:${PORT}/api/agent/:name`);
-      console.log(`   • GET  http://${HOST}:${PORT}/api/agent/threads?agentName=xxx`);
-      console.log(`   • POST http://${HOST}:${PORT}/api/agent/reload`);
-      console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
-    });
+    };
+    
+    const server = await attemptServerStart();
+    
+    console.log('\n🚀 Server is running!');
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log(`📡 Port: ${PORT}`);
+    console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+    console.log(`🗄️  Database Verbose Logging: ${process.env.DATABASE_VERBOSE === 'true' ? '✅ Enabled' : '❌ Disabled'}`);
+    
+    // Display NBG OAuth status
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔐 NBG OAuth Configuration:');
+    if (isAuthEnabled()) {
+      console.log('   ✅ Authentication ENABLED');
+      console.log(`   • Issuer: ${process.env.NBG_OAUTH_ISSUER || 'Not configured'}`);
+      console.log(`   • Client ID: ${process.env.NBG_CLIENT_ID ? '***' + process.env.NBG_CLIENT_ID.slice(-4) : 'Not configured'}`);
+      console.log(`   • Scopes: ${process.env.NBG_OAUTH_SCOPES || 'openid profile email'}`);
+    } else {
+      console.log('   ❌ Authentication DISABLED (Development mode)');
+    }
+    
+    // Display CORS configuration
+    const allowedOrigins = getAllowedOrigins();
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔒 CORS Configuration:');
+    if (allowedOrigins === '*') {
+      console.log('   ⚠️  All origins allowed (wildcard)');
+    } else if (Array.isArray(allowedOrigins)) {
+      console.log('   Allowed origins:');
+      allowedOrigins.forEach(origin => console.log(`   • ${origin}`));
+    }
+    
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('📚 API Documentation:');
+    console.log(`   👉 http://${HOST}:${PORT}/api-docs`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🔗 Available endpoints:');
+    console.log(`   • GET  http://${HOST}:${PORT}/health`);
+    console.log('   ── Authentication ──');
+    console.log(`   • GET  http://${HOST}:${PORT}/api/auth/status`);
+    console.log(`   • GET  http://${HOST}:${PORT}/api/auth/login`);
+    console.log(`   • GET  http://${HOST}:${PORT}/api/auth/logout`);
+    console.log(`   • POST http://${HOST}:${PORT}/api/auth/refresh`);
+    console.log('   ── Export (Protected) ──');
+    console.log(`   • POST http://${HOST}:${PORT}/api/export/conversation`);
+    console.log(`   • POST http://${HOST}:${PORT}/api/export/qa-pair`);
+    console.log('   ── GitHub (Protected) ──');
+    console.log(`   • GET  http://${HOST}:${PORT}/api/github/status`);
+    console.log(`   • GET  http://${HOST}:${PORT}/api/github/tree`);
+    console.log(`   • GET  http://${HOST}:${PORT}/api/github/files`);
+    console.log('   ── LLM (Protected) ──');
+    console.log(`   • POST http://${HOST}:${PORT}/api/llm/execute-prompt`);
+    console.log(`   • GET  http://${HOST}:${PORT}/api/llm/status/:requestId`);
+    console.log(`   • GET  http://${HOST}:${PORT}/api/llm/configurations`);
+    console.log(`   • POST http://${HOST}:${PORT}/api/llm/test`);
+    console.log(`   • POST http://${HOST}:${PORT}/api/llm/reload`);
+    console.log('   ── Agent (Protected) ──');
+    console.log(`   • GET  http://${HOST}:${PORT}/api/agent`);
+    console.log(`   • GET  http://${HOST}:${PORT}/api/agent/:name`);
+    console.log(`   • GET  http://${HOST}:${PORT}/api/agent/threads?agentName=xxx`);
+    console.log(`   • POST http://${HOST}:${PORT}/api/agent/reload`);
+    console.log('   ── User Prompts (Protected) ──');
+    console.log(`   • GET  http://${HOST}:${PORT}/api/user-prompts`);
+    console.log(`   • GET  http://${HOST}:${PORT}/api/user-prompts/:promptId`);
+    console.log(`   • POST http://${HOST}:${PORT}/api/user-prompts`);
+    console.log(`   • PUT  http://${HOST}:${PORT}/api/user-prompts/:promptId`);
+    console.log(`   • DELETE http://${HOST}:${PORT}/api/user-prompts/:promptId`);
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
     // Track active connections for proper cleanup
     const connections = new Set<any>();

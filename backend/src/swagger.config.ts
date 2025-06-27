@@ -37,6 +37,10 @@ const options: swaggerJsdoc.Options = {
       {
         name: 'Agents',
         description: 'Agent management and database access endpoints'
+      },
+      {
+        name: 'User Prompts',
+        description: 'User prompt management endpoints'
       }
     ],
     components: {

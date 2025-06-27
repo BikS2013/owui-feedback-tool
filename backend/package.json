@@ -21,6 +21,7 @@
     "@langchain/community": "^0.3.45",
     "@langchain/google-genai": "^0.2.10",
     "@langchain/openai": "^0.5.12",
+    "@octokit/rest": "^22.0.0",
     "@types/pg": "^8.15.4",
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
