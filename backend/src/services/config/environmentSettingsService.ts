@@ -5,12 +5,18 @@ interface EnvironmentSettings {
 }
 
 export const getEnvironmentSettingsService = createLazyConfigService<EnvironmentSettings>(
-  () => ({
-    sources: [
-      createGitHubSource(process.env.ENVIRONMENT_SETTINGS_ASSET_KEY || 'settings/environment.env'),
-      createDatabaseSource('environment-settings', 'configuration')
-    ],
-  parser: async (content: string) => {
+  () => {
+    const assetKey = process.env.ENVIRONMENT_SETTINGS_ASSET_KEY;
+    if (!assetKey) {
+      throw new Error('ENVIRONMENT_SETTINGS_ASSET_KEY is required to load environment settings');
+    }
+    
+    return {
+      sources: [
+        createGitHubSource(assetKey),
+        createDatabaseSource('environment-settings', 'configuration')
+      ],
+      parser: async (content: string) => {
     const settings: EnvironmentSettings = {};
     const lines = content.split('\n');
     
@@ -26,9 +32,10 @@ export const getEnvironmentSettingsService = createLazyConfigService<Environment
     }
     
     return settings;
-    },
-    verbose: process.env.CONFIG_VERBOSE === 'true'
-  }),
+      },
+      verbose: process.env.CONFIG_VERBOSE === 'true'
+    };
+  },
   (service, data) => {
     // Process parsed configuration
     service.configs.set('content', data);

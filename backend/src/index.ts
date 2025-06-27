@@ -1,6 +1,6 @@
-import dotenv from 'dotenv';
-// Load environment variables before any other imports
-dotenv.config();
+// Initialize environment first - this loads .env and configuration settings
+import { envInitialized } from './init-env.js';
+await envInitialized;
 
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
