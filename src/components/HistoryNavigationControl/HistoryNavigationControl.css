@@ -1,0 +1,302 @@
+.history-navigation-control {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.history-navigation-control button {
+  padding: 4px 8px;
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-color);
+  color: var(--text-primary);
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 28px;
+}
+
+.history-navigation-control .history-nav-btn {
+  width: 28px;
+  padding: 4px;
+}
+
+
+.history-navigation-control .history-list-btn {
+  width: 28px;
+  padding: 4px;
+}
+
+.history-navigation-control button:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
+}
+
+.history-navigation-control button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* History List Dropdown */
+.history-list-container {
+  position: relative;
+}
+
+.history-list-dropdown {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  margin-top: 4px;
+  min-width: 300px;
+  max-width: 400px;
+  background: var(--bg-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  overflow: hidden;
+}
+
+/* Magic mode - shift dropdown 20px to the left */
+.history-navigation-control.magic .history-list-dropdown {
+  right: 20px;
+}
+
+.history-list-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.history-list-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-header-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.history-count {
+  background: var(--bg-tertiary);
+  color: var(--text-secondary);
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+}
+
+.history-list-items {
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.history-list-item {
+  padding: 10px 16px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+  border-bottom: 1px solid var(--border-light);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.history-list-item:last-child {
+  border-bottom: none;
+}
+
+.history-list-item:hover {
+  background: var(--bg-hover);
+}
+
+.history-list-item.current {
+  background: var(--bg-accent);
+}
+
+.history-item-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.history-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.current-indicator {
+  color: var(--accent-green);
+  font-size: 8px;
+  flex-shrink: 0;
+}
+
+.history-delete-btn {
+  padding: 4px;
+  background: transparent;
+  border: none;
+  color: var(--text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 3px;
+  opacity: 0;
+  transition: all 0.15s ease;
+}
+
+.history-list-item:hover .history-delete-btn {
+  opacity: 1;
+}
+
+.history-delete-btn:hover {
+  background: rgba(239, 68, 68, 0.1);
+  color: var(--accent-red);
+}
+
+.history-delete-btn:active {
+  transform: scale(0.95);
+}
+
+/* Header action buttons */
+.history-copy-btn,
+.history-clear-all-btn {
+  padding: 4px 8px;
+  background: transparent;
+  border: 1px solid var(--border-color);
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-size: 12px;
+  transition: all 0.15s ease;
+  position: relative;
+  gap: 4px;
+}
+
+.history-copy-btn:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--accent-primary);
+  color: var(--accent-primary);
+}
+
+.history-clear-all-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: var(--accent-red);
+  color: var(--accent-red);
+}
+
+.history-copy-btn:disabled,
+.history-clear-all-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.history-copy-btn:active:not(:disabled),
+.history-clear-all-btn:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+.copied-text {
+  font-size: 11px;
+  color: var(--accent-green);
+  animation: fadeIn 0.2s ease-in;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Engineering mode styling */
+.history-navigation-control.engineering {
+  background: var(--bg-primary);
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.history-navigation-control.engineering button {
+  background: var(--bg-primary);
+  border-radius: 3px;
+}
+
+.history-navigation-control.engineering button:hover:not(:disabled) {
+  background: var(--bg-secondary);
+}
+
+/* Magic mode styling */
+.history-navigation-control.magic button {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+}
+
+.history-navigation-control.magic button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--text-primary);
+}
+
+
+/* Magic mode - use same styling as engineering mode for the dropdown */
+/* The navigation buttons keep their transparent magic mode style */
+
+/* Dark theme adjustments */
+.dark .history-navigation-control button {
+  background: var(--bg-secondary);
+  border-color: var(--border-color);
+}
+
+.dark .history-navigation-control button:hover:not(:disabled) {
+  background: var(--bg-hover);
+  border-color: var(--border-hover);
+}
+
+.dark .history-navigation-control.magic button {
+  background: transparent;
+  border: none;
+}
+
+.dark .history-navigation-control.magic button:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.dark .history-list-dropdown {
+  background: var(--bg-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+/* Scrollbar styling for history list */
+.history-list-items::-webkit-scrollbar {
+  width: 6px;
+}
+
+.history-list-items::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.history-list-items::-webkit-scrollbar-thumb {
+  background: var(--border-color);
+  border-radius: 3px;
+}
+
+.history-list-items::-webkit-scrollbar-thumb:hover {
+  background: var(--border-hover);
+}
+

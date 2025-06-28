@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
-import { X, Activity, ChevronRight, ChevronDown, Monitor, Info, RefreshCw } from 'lucide-react';
-import { storageUtils, DisplayMode } from '../../utils/storageUtils';
+import { X, Activity, ChevronRight, ChevronDown, Info, RefreshCw } from 'lucide-react';
+import { storageUtils } from '../../utils/storageUtils';
 import { ApiService } from '../../services/api.service';
 import { useResizable } from '../../hooks/useResizable';
 import { EnvironmentConfigurationService } from '../../services/environment-config.service';
@@ -107,18 +107,17 @@ function ConfigurationTree({ config }: { config: any }) {
 }
 
 
-type TabType = 'api' | 'display' | 'configuration';
+type TabType = 'api' | 'configuration';
 
 const SETTINGS_TAB_KEY = 'settingsModalSelectedTab';
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>(() => {
     const saved = localStorage.getItem(SETTINGS_TAB_KEY);
-    return (saved === 'api' || saved === 'display' || saved === 'configuration') ? saved : 'api';
+    return (saved === 'api' || saved === 'configuration') ? saved : 'api';
   });
   const [isChecking, setIsChecking] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'success' | 'error' | null>(null);
-  const [displayMode, setDisplayMode] = useState<DisplayMode>(storageUtils.getDisplayMode());
   const [runtimeConfigStatus, setRuntimeConfigStatus] = useState<'loading' | 'runtime' | 'buildtime' | 'error'>('loading');
   const [environment, setEnvironment] = useState<string>('');
   const [fullConfiguration, setFullConfiguration] = useState<any>(null);
@@ -237,11 +236,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   };
   
   
-  const handleDisplayModeChange = (mode: DisplayMode) => {
-    setDisplayMode(mode);
-    storageUtils.setDisplayMode(mode);
-    // Mode change will be reflected immediately without reload
-  };
 
   if (!isOpen) return null;
 
@@ -288,14 +282,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             >
               <Activity size={16} />
               <span>API Settings</span>
-            </button>
-            <button
-              type="button"
-              className={`settings-tab ${activeTab === 'display' ? 'active' : ''}`}
-              onClick={() => setActiveTab('display')}
-            >
-              <Monitor size={16} />
-              <span>Display</span>
             </button>
             <button
               type="button"
@@ -417,47 +403,6 @@ docker run -p 3121:80 owui-feedback-ui</pre>
             </div>
           )}
 
-          
-          {activeTab === 'display' && (
-            <div className="settings-tab-panel">
-              <div className="settings-field">
-                <label>Display Mode</label>
-                <div className="settings-mode-options">
-                  <label className="settings-radio-option">
-                    <input
-                      type="radio"
-                      name="displayMode"
-                      value="engineering"
-                      checked={displayMode === 'engineering'}
-                      onChange={() => handleDisplayModeChange('engineering')}
-                    />
-                    <div className="settings-radio-content">
-                      <strong>Engineering Mode</strong>
-                      <p>Full access to all technical features including prompt editing, script generation, and detailed filter controls.</p>
-                    </div>
-                  </label>
-                  <label className="settings-radio-option">
-                    <input
-                      type="radio"
-                      name="displayMode"
-                      value="magic"
-                      checked={displayMode === 'magic'}
-                      onChange={() => handleDisplayModeChange('magic')}
-                    />
-                    <div className="settings-radio-content">
-                      <strong>Magic Mode</strong>
-                      <p>Simplified interface with streamlined controls. Natural language filters show only Apply button, scripts and prompts are hidden.</p>
-                    </div>
-                  </label>
-                </div>
-              </div>
-              
-              <div className="settings-status info">
-                ℹ️ Display mode changes are applied immediately.
-              </div>
-            </div>
-          )}
-          
           {activeTab === 'configuration' && (
             <div className="settings-tab-panel">
               <div className="settings-field">

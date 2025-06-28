@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react';
-import { X, MessageSquare, Sparkles, Copy, Calendar, Bot, Star, ChevronUp, ChevronDown } from 'lucide-react';
+import { X, MessageSquare, Sparkles, Copy, Calendar, Bot, Star, Wand2, Code } from 'lucide-react';
 import { FilterOptions, Conversation } from '../../types/conversation';
 import { useFeedbackStore } from '../../store/feedbackStore';
 import { format } from 'date-fns';
 import { storageUtils } from '../../utils/storageUtils';
 import { useResizable } from '../../hooks/useResizable';
+import { HistoryNavigationControl } from '../HistoryNavigationControl/HistoryNavigationControl';
 import './FilterPanel.css';
 
 interface LLMConfiguration {
@@ -216,6 +217,19 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
     setQueryHistory([]);
     setHistoryIndex(-1);
     localStorage.removeItem(QUERY_HISTORY_KEY);
+  };
+
+  const deleteQueryFromHistory = (indexToDelete: number) => {
+    const newHistory = queryHistory.filter((_, index) => index !== indexToDelete);
+    setQueryHistory(newHistory);
+    
+    // Adjust the current index if needed
+    if (indexToDelete <= historyIndex) {
+      setHistoryIndex(Math.max(-1, historyIndex - 1));
+    }
+    
+    // Update localStorage
+    localStorage.setItem(QUERY_HISTORY_KEY, JSON.stringify(newHistory));
   };
 
   const fetchLLMConfigurations = async () => {
@@ -615,9 +629,23 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
           {displayMode === 'magic' && filters.naturalLanguageQuery && (
             <span className="active-filter-badge-header">Active Natural Language Filter</span>
           )}
-          <button className="close-btn" onClick={onClose}>
-            <X size={20} />
-          </button>
+          <div className="header-controls">
+            <button
+              className={`display-mode-toggle ${displayMode}`}
+              onClick={() => {
+                const newMode = displayMode === 'engineering' ? 'magic' : 'engineering';
+                setDisplayMode(newMode);
+                storageUtils.setDisplayMode(newMode);
+              }}
+              title={`Switch to ${displayMode === 'engineering' ? 'magic' : 'engineering'} mode`}
+            >
+              {displayMode === 'engineering' ? <Wand2 size={16} /> : <Code size={16} />}
+              <span>{displayMode === 'engineering' ? 'Magic' : 'Engineering'}</span>
+            </button>
+            <button className="close-btn" onClick={onClose}>
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         <div className="filter-tabs">
@@ -782,32 +810,20 @@ export function FilterPanel({ filters, onFiltersChange, isOpen, onClose, current
                       )}
                     </select>
                   </div>
-                  {displayMode === 'magic' && (
-                    <div className="history-controls">
-                      <button
-                        onClick={navigateHistoryUp}
-                        disabled={queryHistory.length === 0 || historyIndex >= queryHistory.length - 1}
-                        title="Previous query (⌥↑)"
-                      >
-                        <ChevronUp size={16} />
-                      </button>
-                      <button
-                        onClick={navigateHistoryDown}
-                        disabled={historyIndex < 0}
-                        title="Next query (⌥↓)"
-                      >
-                        <ChevronDown size={16} />
-                      </button>
-                      <button
-                        className="clear-history-btn"
-                        onClick={clearHistory}
-                        disabled={queryHistory.length === 0}
-                        title="Clear history"
-                      >
-                        C
-                      </button>
-                    </div>
-                  )}
+                  <HistoryNavigationControl
+                    queryHistory={queryHistory}
+                    historyIndex={historyIndex}
+                    onNavigateUp={navigateHistoryUp}
+                    onNavigateDown={navigateHistoryDown}
+                    onClearHistory={clearHistory}
+                    onSelectQuery={(query) => {
+                      setNaturalQuery(query);
+                      setHistoryIndex(queryHistory.indexOf(query));
+                    }}
+                    onDeleteQuery={deleteQueryFromHistory}
+                    displayMode={displayMode}
+                    className="history-controls"
+                  />
                 </div>
                 
                 <div className="natural-query-input">
