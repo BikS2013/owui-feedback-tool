@@ -1,8 +1,7 @@
 import { githubClient } from './config/config-clients.js';
 
 interface UserPrompt {
-  id: string;
-  name: string;
+  name: string;  // This is now the full filename with extension
   description?: string;
   content: string;
   category?: string;
@@ -66,15 +65,13 @@ export class UserPromptService {
           for (const file of response.data) {
             console.log(`      🔸 ${file.type}: ${file.name}`);
             if (file.type === 'file' && (file.name.endsWith('.txt') || file.name.endsWith('.md'))) {
-              const id = file.name.replace(/\.(txt|md)$/, '');
               prompts.push({
-                id,
-                name: file.name,
+                name: file.name,  // Use full filename with extension
                 content: '', // Content loaded on demand
                 createdAt: file.created_at,
                 updatedAt: file.updated_at
               });
-              console.log(`      ✅ Added prompt: ${file.name} (id: ${id})`);
+              console.log(`      ✅ Added prompt: ${file.name}`);
             } else if (file.type === 'file') {
               console.log(`      ⏭️  Skipping non-prompt file: ${file.name}`);
             }
@@ -104,47 +101,44 @@ export class UserPromptService {
   }
 
   /**
-   * Get a specific user prompt by ID
+   * Get a specific user prompt by filename
    */
-  async getPrompt(promptId: string): Promise<UserPrompt | null> {
+  async getPrompt(filename: string): Promise<UserPrompt | null> {
     try {
-      console.log(`📄 Getting user prompt: ${promptId}`);
+      console.log(`📄 Getting user prompt: ${filename}`);
       console.log(`   🔍 Looking in folder: ${this.promptsFolder}`);
       
       const client = githubClient();
       
-      // Try with .txt extension first, then .md
-      const extensions = ['.txt', '.md'];
-      console.log(`   📝 Will try extensions: ${extensions.join(', ')}`);
+      // Use the full filename as provided
+      const path = `${this.promptsFolder}/${filename}`;
+      console.log(`   🔍 Trying path: ${path}`);
+      console.log(`   🌐 Using GitHubAssetClient.getAsset()`);
       
-      for (const ext of extensions) {
-        try {
-          const path = `${this.promptsFolder}/${promptId}${ext}`;
-          console.log(`   🔍 Trying path: ${path}`);
-          console.log(`   🌐 Using GitHubAssetClient.getAsset()`);
-          const content = await client.getAsset(path);
-          
-          if (content) {
-            console.log(`   ✅ Found prompt at: ${path}`);
-            console.log(`   📏 Content length: ${content.length} characters`);
-            return {
-              id: promptId,
-              name: `${promptId}${ext}`,
-              content: content,
-              description: this.extractDescription(content)
-            };
-          }
-        } catch (error: any) {
-          console.log(`   ❌ Not found at: ${this.promptsFolder}/${promptId}${ext}`);
-          console.log(`      Error: ${error.message || error}`);
-          // Continue to next extension
+      try {
+        const result = await client.getAsset(path);
+        
+        // Handle both string and object responses
+        const content = typeof result === 'string' ? result : result?.content || '';
+        
+        if (content) {
+          console.log(`   ✅ Found prompt at: ${path}`);
+          console.log(`   📏 Content length: ${content.length} characters`);
+          return {
+            name: filename,
+            content: content,
+            description: this.extractDescription(content)
+          };
         }
+      } catch (error: any) {
+        console.log(`   ❌ Not found at: ${path}`);
+        console.log(`      Error: ${error.message || error}`);
       }
       
-      console.log(`   ⚠️  Prompt not found with any extension`);
+      console.log(`   ⚠️  Prompt not found: ${filename}`);
       return null;
     } catch (error: any) {
-      console.error(`Failed to get user prompt ${promptId}:`, error);
+      console.error(`Failed to get user prompt ${filename}:`, error);
       throw new Error(`Failed to get user prompt: ${error.message}`);
     }
   }
@@ -152,14 +146,13 @@ export class UserPromptService {
   /**
    * Create a new user prompt
    */
-  async createPrompt(promptId: string, content: string, extension: string = '.txt'): Promise<UserPrompt> {
+  async createPrompt(filename: string, content: string): Promise<UserPrompt> {
     try {
-      console.log(`📝 Creating user prompt: ${promptId}`);
+      console.log(`📝 Creating user prompt: ${filename}`);
       console.log(`   📁 Folder: ${this.promptsFolder}`);
-      console.log(`   📄 Extension: ${extension}`);
       
       const client = githubClient();
-      const path = `${this.promptsFolder}/${promptId}${extension}`;
+      const path = `${this.promptsFolder}/${filename}`;
       console.log(`   📍 Full path: ${path}`);
       console.log(`   🌐 Using GitHubAssetClient.saveAsset()`);
       
@@ -167,14 +160,13 @@ export class UserPromptService {
       console.log(`   ✅ Successfully created prompt at: ${path}`);
       
       return {
-        id: promptId,
-        name: `${promptId}${extension}`,
+        name: filename,
         content: content,
         description: this.extractDescription(content),
         createdAt: new Date().toISOString()
       };
     } catch (error: any) {
-      console.error(`   ❌ Failed to create user prompt ${promptId}:`, error);
+      console.error(`   ❌ Failed to create user prompt ${filename}:`, error);
       throw new Error(`Failed to create user prompt: ${error.message}`);
     }
   }
@@ -182,21 +174,21 @@ export class UserPromptService {
   /**
    * Update an existing user prompt
    */
-  async updatePrompt(promptId: string, content: string): Promise<UserPrompt> {
+  async updatePrompt(filename: string, content: string): Promise<UserPrompt> {
     try {
-      console.log(`✏️  Updating user prompt: ${promptId}`);
+      console.log(`✏️  Updating user prompt: ${filename}`);
       
       const client = githubClient();
       
-      // Find existing file with extension
-      console.log(`   🔍 Finding existing prompt...`);
-      const existing = await this.getPrompt(promptId);
+      // Verify the file exists first
+      console.log(`   🔍 Verifying prompt exists...`);
+      const existing = await this.getPrompt(filename);
       if (!existing) {
-        console.log(`   ❌ Prompt ${promptId} not found`);
-        throw new Error(`Prompt ${promptId} not found`);
+        console.log(`   ❌ Prompt ${filename} not found`);
+        throw new Error(`Prompt ${filename} not found`);
       }
       
-      const path = `${this.promptsFolder}/${existing.name}`;
+      const path = `${this.promptsFolder}/${filename}`;
       console.log(`   📍 Updating at path: ${path}`);
       console.log(`   🌐 Using GitHubAssetClient.saveAsset()`);
       
@@ -204,14 +196,13 @@ export class UserPromptService {
       console.log(`   ✅ Successfully updated prompt at: ${path}`);
       
       return {
-        id: promptId,
-        name: existing.name,
+        name: filename,
         content: content,
         description: this.extractDescription(content),
         updatedAt: new Date().toISOString()
       };
     } catch (error: any) {
-      console.error(`   ❌ Failed to update user prompt ${promptId}:`, error);
+      console.error(`   ❌ Failed to update user prompt ${filename}:`, error);
       throw new Error(`Failed to update user prompt: ${error.message}`);
     }
   }
@@ -219,28 +210,28 @@ export class UserPromptService {
   /**
    * Delete a user prompt
    */
-  async deletePrompt(promptId: string): Promise<void> {
+  async deletePrompt(filename: string): Promise<void> {
     try {
-      console.log(`🗑️  Deleting user prompt: ${promptId}`);
+      console.log(`🗑️  Deleting user prompt: ${filename}`);
       
       const client = githubClient();
       
-      // Find existing file with extension
-      console.log(`   🔍 Finding existing prompt...`);
-      const existing = await this.getPrompt(promptId);
+      // Verify the file exists first
+      console.log(`   🔍 Verifying prompt exists...`);
+      const existing = await this.getPrompt(filename);
       if (!existing) {
-        console.log(`   ❌ Prompt ${promptId} not found`);
-        throw new Error(`Prompt ${promptId} not found`);
+        console.log(`   ❌ Prompt ${filename} not found`);
+        throw new Error(`Prompt ${filename} not found`);
       }
       
-      const path = `${this.promptsFolder}/${existing.name}`;
+      const path = `${this.promptsFolder}/${filename}`;
       console.log(`   📍 Deleting from path: ${path}`);
       console.log(`   🌐 Using GitHubAssetClient.deleteAsset()`);
       
       await client.deleteAsset(path);
       console.log(`   ✅ Successfully deleted prompt at: ${path}`);
     } catch (error: any) {
-      console.error(`   ❌ Failed to delete user prompt ${promptId}:`, error);
+      console.error(`   ❌ Failed to delete user prompt ${filename}:`, error);
       throw new Error(`Failed to delete user prompt: ${error.message}`);
     }
   }
@@ -248,7 +239,11 @@ export class UserPromptService {
   /**
    * Extract description from prompt content (first line or comment)
    */
-  private extractDescription(content: string): string {
+  private extractDescription(content: string | undefined): string {
+    if (!content || typeof content !== 'string') {
+      return 'No description';
+    }
+    
     const lines = content.split('\n');
     for (const line of lines) {
       const trimmed = line.trim();
@@ -271,31 +266,31 @@ export const userPromptService = {
     return _userPromptService.listPrompts();
   },
   
-  getPrompt: async (promptId: string) => {
+  getPrompt: async (filename: string) => {
     if (!_userPromptService) {
       _userPromptService = new UserPromptService();
     }
-    return _userPromptService.getPrompt(promptId);
+    return _userPromptService.getPrompt(filename);
   },
   
-  createPrompt: async (promptId: string, content: string, extension: string = '.txt') => {
+  createPrompt: async (filename: string, content: string) => {
     if (!_userPromptService) {
       _userPromptService = new UserPromptService();
     }
-    return _userPromptService.createPrompt(promptId, content, extension);
+    return _userPromptService.createPrompt(filename, content);
   },
   
-  updatePrompt: async (promptId: string, content: string) => {
+  updatePrompt: async (filename: string, content: string) => {
     if (!_userPromptService) {
       _userPromptService = new UserPromptService();
     }
-    return _userPromptService.updatePrompt(promptId, content);
+    return _userPromptService.updatePrompt(filename, content);
   },
   
-  deletePrompt: async (promptId: string) => {
+  deletePrompt: async (filename: string) => {
     if (!_userPromptService) {
       _userPromptService = new UserPromptService();
     }
-    return _userPromptService.deletePrompt(promptId);
+    return _userPromptService.deletePrompt(filename);
   }
 };

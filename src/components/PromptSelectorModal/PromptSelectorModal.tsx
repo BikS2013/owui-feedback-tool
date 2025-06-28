@@ -34,7 +34,7 @@ const STORAGE_KEY = 'promptSelectorConfiguration';
 
 export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen, onClose, conversation, qaPair }) => {
   const [userPrompts, setUserPrompts] = useState<UserPrompt[]>([]);
-  const [selectedPromptId, setSelectedPromptId] = useState<string>('');
+  const [selectedFilename, setSelectedFilename] = useState<string>('');
   const [promptContent, setPromptContent] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
@@ -80,9 +80,9 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
   
   // Save configuration to local storage whenever it changes
   useEffect(() => {
-    if (selectedPromptId || promptContent || parameterConfigs.length > 0) {
+    if (selectedFilename || promptContent || parameterConfigs.length > 0) {
       const config: PromptConfiguration = {
-        selectedFile: selectedPromptId,
+        selectedFile: selectedFilename,
         promptContent,
         parameters: parameterConfigs
       };
@@ -92,7 +92,7 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
         console.error('Failed to save prompt configuration:', error);
       }
     }
-  }, [selectedPromptId, promptContent, parameterConfigs]);
+  }, [selectedFilename, promptContent, parameterConfigs]);
 
   const loadSavedConfiguration = () => {
     try {
@@ -100,7 +100,7 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
       if (saved) {
         const config: PromptConfiguration = JSON.parse(saved);
         if (config.selectedFile) {
-          setSelectedPromptId(config.selectedFile);
+          setSelectedFilename(config.selectedFile);
           // Load the prompt content if it exists
           handlePromptSelect(config.selectedFile);
         }
@@ -295,12 +295,12 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
     }
   };
 
-  const handlePromptSelect = async (promptId: string) => {
-    setSelectedPromptId(promptId);
+  const handlePromptSelect = async (filename: string) => {
+    setSelectedFilename(filename);
     setIsLoading(true);
     setError('');
     try {
-      const prompt = await userPromptsService.getPrompt(promptId);
+      const prompt = await userPromptsService.getPrompt(filename);
       if (prompt && prompt.content) {
         setPromptContent(prompt.content);
       } else {
@@ -440,14 +440,14 @@ export const PromptSelectorModal: React.FC<PromptSelectorModalProps> = ({ isOpen
                 <div className="prompt-header-row">
                   <label className="prompt-select-label">Select Prompt</label>
                   <select 
-                    value={selectedPromptId} 
+                    value={selectedFilename} 
                     onChange={(e) => handlePromptSelect(e.target.value)}
                     disabled={isLoading}
                     className="prompt-file-dropdown"
                   >
                     <option value="">-- Select a prompt file --</option>
                     {userPrompts.map(prompt => (
-                      <option key={prompt.id} value={prompt.id}>
+                      <option key={prompt.name} value={prompt.name}>
                         {prompt.name}
                       </option>
                     ))}

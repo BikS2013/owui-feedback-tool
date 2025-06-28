@@ -1,8 +1,7 @@
 import { storageUtils } from '../utils/storageUtils';
 
 export interface UserPrompt {
-  id: string;
-  name: string;
+  name: string;  // This is now the primary identifier (filename with extension)
   description?: string;
   content?: string;
   createdAt?: string;
@@ -54,12 +53,12 @@ class UserPromptsService {
   }
 
   /**
-   * Get a specific user prompt by ID
+   * Get a specific user prompt by filename
    */
-  async getPrompt(promptId: string): Promise<UserPrompt | null> {
+  async getPrompt(filename: string): Promise<UserPrompt | null> {
     try {
       const apiUrl = await this.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/user-prompts/${promptId}`, {
+      const response = await fetch(`${apiUrl}/api/user-prompts/${encodeURIComponent(filename)}`, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
@@ -78,7 +77,7 @@ class UserPromptsService {
       const data: SinglePromptResponse = await response.json();
       return data.prompt;
     } catch (error) {
-      console.error(`Failed to get prompt ${promptId}:`, error);
+      console.error(`Failed to get prompt ${filename}:`, error);
       throw error;
     }
   }
@@ -86,7 +85,7 @@ class UserPromptsService {
   /**
    * Create a new user prompt
    */
-  async createPrompt(promptId: string, content: string, extension: string = '.txt'): Promise<UserPrompt> {
+  async createPrompt(filename: string, content: string): Promise<UserPrompt> {
     try {
       const apiUrl = await this.getApiUrl();
       const response = await fetch(`${apiUrl}/api/user-prompts`, {
@@ -95,9 +94,8 @@ class UserPromptsService {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          promptId,
-          content,
-          extension
+          filename,
+          content
         }),
       });
 
@@ -117,10 +115,10 @@ class UserPromptsService {
   /**
    * Update an existing user prompt
    */
-  async updatePrompt(promptId: string, content: string): Promise<UserPrompt> {
+  async updatePrompt(filename: string, content: string): Promise<UserPrompt> {
     try {
       const apiUrl = await this.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/user-prompts/${promptId}`, {
+      const response = await fetch(`${apiUrl}/api/user-prompts/${encodeURIComponent(filename)}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
@@ -138,7 +136,7 @@ class UserPromptsService {
       const data: SinglePromptResponse = await response.json();
       return data.prompt;
     } catch (error) {
-      console.error(`Failed to update prompt ${promptId}:`, error);
+      console.error(`Failed to update prompt ${filename}:`, error);
       throw error;
     }
   }
@@ -146,10 +144,10 @@ class UserPromptsService {
   /**
    * Delete a user prompt
    */
-  async deletePrompt(promptId: string): Promise<void> {
+  async deletePrompt(filename: string): Promise<void> {
     try {
       const apiUrl = await this.getApiUrl();
-      const response = await fetch(`${apiUrl}/api/user-prompts/${promptId}`, {
+      const response = await fetch(`${apiUrl}/api/user-prompts/${encodeURIComponent(filename)}`, {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -161,7 +159,7 @@ class UserPromptsService {
         throw new Error(error.error || `HTTP error! status: ${response.status}`);
       }
     } catch (error) {
-      console.error(`Failed to delete prompt ${promptId}:`, error);
+      console.error(`Failed to delete prompt ${filename}:`, error);
       throw error;
     }
   }

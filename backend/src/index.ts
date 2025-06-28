@@ -337,7 +337,7 @@ async function startServer() {
         process.exit(0);
       });
 
-      // Force close after 2 seconds
+      // Force close after 500ms for faster restarts
       setTimeout(() => {
         console.error('❌ Could not close connections in time, forcefully shutting down');
         // Remove shutdown lock
@@ -349,7 +349,7 @@ async function startServer() {
           // Ignore errors removing lock file
         }
         process.exit(1);
-      }, 2000);
+      }, 500);
     };
 
     // Listen for termination signals
