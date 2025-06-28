@@ -55,7 +55,10 @@ export function createPromptHelpers(config: {
       
       let processedContent = content;
       for (const [key, value] of Object.entries(replacements)) {
+        // First try to replace double curly braces {{key}}
         processedContent = processedContent.replace(new RegExp(`{{${key}}}`, 'g'), value);
+        // Then try to replace single curly braces {key}
+        processedContent = processedContent.replace(new RegExp(`{${key}}`, 'g'), value);
       }
       
       return processedContent;

@@ -1,9 +1,7 @@
 import { useState, useEffect } from 'react';
-import { X, Activity, Github, ChevronRight, ChevronDown, FileText, Folder, Monitor, Info, RefreshCw } from 'lucide-react';
+import { X, Activity, ChevronRight, ChevronDown, Monitor, Info, RefreshCw } from 'lucide-react';
 import { storageUtils, DisplayMode } from '../../utils/storageUtils';
 import { ApiService } from '../../services/api.service';
-import { GitHubApiService } from '../../services/github-api.service';
-import { buildFileTree, FileTreeNode } from '../../utils/githubUtils';
 import { useResizable } from '../../hooks/useResizable';
 import { EnvironmentConfigurationService } from '../../services/environment-config.service';
 import './SettingsModal.css';
@@ -108,59 +106,18 @@ function ConfigurationTree({ config }: { config: any }) {
   );
 }
 
-// Tree node component
-function TreeNode({ node, level = 0 }: { node: FileTreeNode; level?: number }) {
-  const [isExpanded, setIsExpanded] = useState(level < 2); // Expand first 2 levels by default
-  
-  const handleToggle = () => {
-    if (node.type === 'dir' && node.children) {
-      setIsExpanded(!isExpanded);
-    }
-  };
-  
-  return (
-    <div className="tree-node">
-      <div 
-        className={`tree-node-content ${node.type}`} 
-        style={{ paddingLeft: `${level * 20}px` }}
-        onClick={handleToggle}
-      >
-        {node.type === 'dir' && node.children && (
-          <span className="tree-node-chevron">
-            {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
-          </span>
-        )}
-        <span className="tree-node-icon">
-          {node.type === 'dir' ? <Folder size={14} /> : <FileText size={14} />}
-        </span>
-        <span className="tree-node-name">{node.name}</span>
-      </div>
-      {node.type === 'dir' && node.children && isExpanded && (
-        <div className="tree-node-children">
-          {node.children.map((child, index) => (
-            <TreeNode key={`${child.path}-${index}`} node={child} level={level + 1} />
-          ))}
-        </div>
-      )}
-    </div>
-  );
-}
 
-type TabType = 'api' | 'github' | 'display' | 'configuration';
+type TabType = 'api' | 'display' | 'configuration';
 
 const SETTINGS_TAB_KEY = 'settingsModalSelectedTab';
 
 export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<TabType>(() => {
     const saved = localStorage.getItem(SETTINGS_TAB_KEY);
-    return (saved === 'api' || saved === 'github' || saved === 'display' || saved === 'configuration') ? saved : 'api';
+    return (saved === 'api' || saved === 'display' || saved === 'configuration') ? saved : 'api';
   });
   const [isChecking, setIsChecking] = useState(false);
   const [connectionStatus, setConnectionStatus] = useState<'success' | 'error' | null>(null);
-  const [isCheckingGitHub, setIsCheckingGitHub] = useState(false);
-  const [githubStatus, setGitHubStatus] = useState<'success' | 'error' | null>(null);
-  const [githubTree, setGitHubTree] = useState<FileTreeNode | null>(null);
-  const [githubError, setGitHubError] = useState<string | null>(null);
   const [displayMode, setDisplayMode] = useState<DisplayMode>(storageUtils.getDisplayMode());
   const [runtimeConfigStatus, setRuntimeConfigStatus] = useState<'loading' | 'runtime' | 'buildtime' | 'error'>('loading');
   const [environment, setEnvironment] = useState<string>('');
@@ -188,9 +145,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   
   // Get configuration from environment variables
   const [apiUrl, setApiUrl] = useState<string>(storageUtils.getApiUrlSync());
-  const [backendGitHubRepo, setBackendGitHubRepo] = useState<string>('Checking...');
-  const [dataFolder, setDataFolder] = useState<string>('data');
-  const [promptsFolder, setPromptsFolder] = useState<string>('prompts');
 
   // Function to load configuration
   const loadConfiguration = async (showSuccess = false) => {
@@ -248,28 +202,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     if (isOpen) {
       // Reset status when modal opens
       setConnectionStatus(null);
-      setGitHubStatus(null);
-      setGitHubTree(null);
-      setGitHubError(null);
-      
-      // Check GitHub backend configuration
-      GitHubApiService.checkStatus()
-        .then(status => {
-          if (status.connected && status.repository) {
-            setBackendGitHubRepo(status.repository);
-            if (status.dataFolder) {
-              setDataFolder(status.dataFolder);
-            }
-            if (status.promptsFolder) {
-              setPromptsFolder(status.promptsFolder);
-            }
-          } else {
-            setBackendGitHubRepo('Not configured in backend');
-          }
-        })
-        .catch(() => {
-          setBackendGitHubRepo('Not configured in backend');
-        });
     }
   }, [isOpen]);
 
@@ -304,53 +236,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
     }
   };
   
-  const handleTestGitHub = async () => {
-    if (backendGitHubRepo === 'Not configured in backend' || backendGitHubRepo === 'Checking...') {
-      setGitHubError('Please configure GITHUB_REPO in backend .env file');
-      return;
-    }
-    
-    setIsCheckingGitHub(true);
-    setGitHubStatus(null);
-    setGitHubTree(null);
-    setGitHubError(null);
-    
-    try {
-      // First, try to get repository info
-      const repoInfo = await GitHubApiService.getRepository();
-      console.log('Repository found:', repoInfo.full_name);
-      setBackendGitHubRepo(repoInfo.full_name);
-      
-      // Then get the full tree
-      const tree = await GitHubApiService.getTree();
-      console.log(`Found ${tree.tree.length} items in repository`);
-      
-      // Convert tree items to file nodes for building the tree
-      const fileNodes = tree.tree.map(item => ({
-        name: item.path.split('/').pop() || item.path,
-        path: item.path,
-        type: item.type === 'tree' ? 'dir' as const : 'file' as const,
-        size: item.size || 0,
-        sha: item.sha,
-        url: item.url,
-        html_url: '',
-        git_url: '',
-        download_url: null,
-        _links: { self: '', git: '', html: '' }
-      }));
-      
-      // Build the tree structure
-      const treeStructure = buildFileTree(fileNodes);
-      setGitHubTree(treeStructure);
-      setGitHubStatus('success');
-    } catch (error: any) {
-      setGitHubStatus('error');
-      setGitHubError(error.message || 'Failed to connect to GitHub repository');
-      console.error('GitHub test failed:', error);
-    } finally {
-      setIsCheckingGitHub(false);
-    }
-  };
   
   const handleDisplayModeChange = (mode: DisplayMode) => {
     setDisplayMode(mode);
@@ -403,14 +288,6 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
             >
               <Activity size={16} />
               <span>API Settings</span>
-            </button>
-            <button
-              type="button"
-              className={`settings-tab ${activeTab === 'github' ? 'active' : ''}`}
-              onClick={() => setActiveTab('github')}
-            >
-              <Github size={16} />
-              <span>GitHub Settings</span>
             </button>
             <button
               type="button"
@@ -540,75 +417,6 @@ docker run -p 3121:80 owui-feedback-ui</pre>
             </div>
           )}
 
-          {activeTab === 'github' && (
-            <div className="settings-tab-panel">
-              <div className="settings-field">
-                <label>Repository</label>
-                <div className="settings-input readonly">
-                  <Github size={16} />
-                  {backendGitHubRepo}
-                </div>
-                <p className="settings-help">
-                  Configured on backend server (GITHUB_REPO)
-                </p>
-              </div>
-
-              <div className="settings-field">
-                <label>Data Folder</label>
-                <div className="settings-input readonly">
-                  <Folder size={16} />
-                  {dataFolder}
-                </div>
-                <p className="settings-help">
-                  Default folder for data files
-                </p>
-              </div>
-
-              <div className="settings-field">
-                <label>Prompts Folder</label>
-                <div className="settings-input readonly">
-                  <Folder size={16} />
-                  {promptsFolder}
-                </div>
-                <p className="settings-help">
-                  Default folder for prompt files
-                </p>
-              </div>
-
-              {githubError && (
-                <div className="settings-status error">
-                  ✗ {githubError}
-                </div>
-              )}
-
-              {githubStatus === 'success' && (
-                <div className="settings-status success">
-                  ✓ Successfully connected to GitHub repository
-                </div>
-              )}
-              
-              <button
-                type="button"
-                className="settings-button primary"
-                onClick={handleTestGitHub}
-                disabled={isCheckingGitHub || backendGitHubRepo === 'Not configured in backend'}
-              >
-                <Github size={16} />
-                {isCheckingGitHub ? 'Loading Repository...' : 'Test GitHub Access'}
-              </button>
-
-              {githubTree && (
-                <div className="github-tree-container">
-                  <h4>Repository Structure</h4>
-                  <div className="github-tree">
-                    {githubTree.children?.map((child, index) => (
-                      <TreeNode key={`${child.path}-${index}`} node={child} />
-                    ))}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
           
           {activeTab === 'display' && (
             <div className="settings-tab-panel">

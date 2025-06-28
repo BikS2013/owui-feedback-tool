@@ -258,9 +258,9 @@ export function ConversationList({
         isOpen={isFilterPanelOpen}
         onClose={() => setIsFilterPanelOpen(false)}
         currentThread={currentThread}
+        sampleData={filterPanelSampleData}
         conversations={conversations}
         containerRef={displayMode === 'magic' ? document.querySelector('.conversation-list-wrapper') as HTMLElement : undefined}
-        sampleData={filterPanelSampleData}
       />
       <SettingsModal isOpen={showSettings} onClose={() => setShowSettings(false)} />
     </>

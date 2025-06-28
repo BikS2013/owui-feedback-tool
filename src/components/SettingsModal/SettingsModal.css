@@ -508,101 +508,11 @@
   border: 1px solid rgba(51, 153, 255, 0.2);
 }
 
-/* GitHub specific styles */
-.settings-input.readonly svg {
-  margin-right: 8px;
-  opacity: 0.6;
-}
-
-.token-indicator {
-  color: var(--accent-green);
-  font-weight: 500;
-}
-
-/* GitHub tree styles */
-.github-tree-container {
-  margin-top: 24px;
-  border: 1px solid var(--border-color);
-  border-radius: 8px;
-  background-color: var(--bg-card);
-  overflow: hidden;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-}
-
-.github-tree-container h4 {
-  margin: 0;
-  padding: 14px 20px;
-  font-size: 14px;
-  font-weight: 600;
-  color: var(--text-primary);
-  background-color: var(--bg-tertiary);
-  border-bottom: 1px solid var(--border-color);
-}
-
-.github-tree {
-  max-height: 400px;
-  overflow-y: auto;
-  padding: 12px 0;
-  background-color: var(--bg-secondary);
-}
-
-/* Tree node styles */
-.tree-node-content {
-  display: flex;
-  align-items: center;
-  padding: 4px 8px;
-  cursor: pointer;
-  font-size: 13px;
-  color: var(--text-primary);
-  transition: background-color 0.2s;
-  user-select: none;
-}
-
-.tree-node-content.dir {
-  font-weight: 500;
-}
-
-.tree-node-content:hover {
-  background-color: var(--bg-tertiary);
-}
-
-.tree-node-chevron {
-  display: inline-flex;
-  align-items: center;
-  margin-right: 4px;
-  color: var(--text-secondary);
-}
-
-.tree-node-icon {
-  display: inline-flex;
-  align-items: center;
-  margin-right: 6px;
-  color: var(--text-secondary);
-}
-
-.tree-node-content.file .tree-node-icon {
-  color: var(--accent-blue);
-}
-
-.tree-node-name {
-  flex: 1;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.tree-node-children {
-  margin-left: 8px;
-}
 
 
 /* Light theme adjustments */
 [data-theme="light"] .settings-tab:hover {
   background-color: rgba(0, 0, 0, 0.03);
-}
-
-[data-theme="light"] .tree-node-content:hover {
-  background-color: var(--bg-tertiary);
 }
 
 /* Light theme button hover styles */
