@@ -7,7 +7,12 @@ export class AgentService {
     if (!config || !config.agents) {
       throw new Error('Agent configuration not available');
     }
-    return config.agents as Agent[];
+    // Map configuration agents to Agent type
+    return config.agents.map(agent => ({
+      name: agent.name,
+      url: agent.url || agent.endpoint || '',
+      database_connection_string: agent.database_connection_string || ''
+    }));
   }
 
   public async getAgentByName(name: string): Promise<Agent | undefined> {
@@ -15,7 +20,14 @@ export class AgentService {
     if (!config || !config.agents) {
       throw new Error('Agent configuration not available');
     }
-    return config.agents.find(agent => agent.name === name) as Agent | undefined;
+    const agent = config.agents.find(agent => agent.name === name);
+    if (!agent) return undefined;
+    
+    return {
+      name: agent.name,
+      url: agent.url || agent.endpoint || '',
+      database_connection_string: agent.database_connection_string || ''
+    };
   }
 
   public async reloadAgents(): Promise<void> {

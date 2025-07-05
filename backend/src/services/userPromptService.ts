@@ -1,4 +1,5 @@
 import { githubClient } from './config/config-clients.js';
+import { Octokit } from '@octokit/rest';
 
 interface UserPrompt {
   name: string;  // This is now the full filename with extension
@@ -68,8 +69,8 @@ export class UserPromptService {
               prompts.push({
                 name: file.name,  // Use full filename with extension
                 content: '', // Content loaded on demand
-                createdAt: file.created_at,
-                updatedAt: file.updated_at
+                createdAt: new Date().toISOString(), // GitHub API doesn't provide these for directory listings
+                updatedAt: new Date().toISOString()
               });
               console.log(`      ✅ Added prompt: ${file.name}`);
             } else if (file.type === 'file') {
@@ -151,12 +152,24 @@ export class UserPromptService {
       console.log(`📝 Creating user prompt: ${filename}`);
       console.log(`   📁 Folder: ${this.promptsFolder}`);
       
-      const client = githubClient();
+      const [owner, repo] = process.env.GITHUB_REPO!.split('/');
       const path = `${this.promptsFolder}/${filename}`;
       console.log(`   📍 Full path: ${path}`);
-      console.log(`   🌐 Using GitHubAssetClient.saveAsset()`);
+      console.log(`   🌐 Using Octokit API`);
       
-      await client.saveAsset(path, content);
+      const octokit = new Octokit({
+        auth: process.env.GITHUB_TOKEN
+      });
+      
+      await octokit.repos.createOrUpdateFileContents({
+        owner,
+        repo,
+        path,
+        message: `Create user prompt: ${filename}`,
+        content: Buffer.from(content).toString('base64'),
+        branch: process.env.GITHUB_BRANCH || 'main'
+      });
+      
       console.log(`   ✅ Successfully created prompt at: ${path}`);
       
       return {
@@ -178,7 +191,8 @@ export class UserPromptService {
     try {
       console.log(`✏️  Updating user prompt: ${filename}`);
       
-      const client = githubClient();
+      const [owner, repo] = process.env.GITHUB_REPO!.split('/');
+      const path = `${this.promptsFolder}/${filename}`;
       
       // Verify the file exists first
       console.log(`   🔍 Verifying prompt exists...`);
@@ -188,11 +202,33 @@ export class UserPromptService {
         throw new Error(`Prompt ${filename} not found`);
       }
       
-      const path = `${this.promptsFolder}/${filename}`;
       console.log(`   📍 Updating at path: ${path}`);
-      console.log(`   🌐 Using GitHubAssetClient.saveAsset()`);
+      console.log(`   🌐 Using Octokit API`);
       
-      await client.saveAsset(path, content);
+      const octokit = new Octokit({
+        auth: process.env.GITHUB_TOKEN
+      });
+      
+      // Get the current file SHA
+      const fileInfo = await octokit.repos.getContent({
+        owner,
+        repo,
+        path,
+        ref: process.env.GITHUB_BRANCH || 'main'
+      });
+      
+      if (!Array.isArray(fileInfo.data) && 'sha' in fileInfo.data) {
+        await octokit.repos.createOrUpdateFileContents({
+          owner,
+          repo,
+          path,
+          message: `Update user prompt: ${filename}`,
+          content: Buffer.from(content).toString('base64'),
+          sha: fileInfo.data.sha,
+          branch: process.env.GITHUB_BRANCH || 'main'
+        });
+      }
+      
       console.log(`   ✅ Successfully updated prompt at: ${path}`);
       
       return {
@@ -214,7 +250,8 @@ export class UserPromptService {
     try {
       console.log(`🗑️  Deleting user prompt: ${filename}`);
       
-      const client = githubClient();
+      const [owner, repo] = process.env.GITHUB_REPO!.split('/');
+      const path = `${this.promptsFolder}/${filename}`;
       
       // Verify the file exists first
       console.log(`   🔍 Verifying prompt exists...`);
@@ -224,11 +261,32 @@ export class UserPromptService {
         throw new Error(`Prompt ${filename} not found`);
       }
       
-      const path = `${this.promptsFolder}/${filename}`;
       console.log(`   📍 Deleting from path: ${path}`);
-      console.log(`   🌐 Using GitHubAssetClient.deleteAsset()`);
+      console.log(`   🌐 Using Octokit API`);
       
-      await client.deleteAsset(path);
+      const octokit = new Octokit({
+        auth: process.env.GITHUB_TOKEN
+      });
+      
+      // Get the current file SHA
+      const fileInfo = await octokit.repos.getContent({
+        owner,
+        repo,
+        path,
+        ref: process.env.GITHUB_BRANCH || 'main'
+      });
+      
+      if (!Array.isArray(fileInfo.data) && 'sha' in fileInfo.data) {
+        await octokit.repos.deleteFile({
+          owner,
+          repo,
+          path,
+          message: `Delete user prompt: ${filename}`,
+          sha: fileInfo.data.sha,
+          branch: process.env.GITHUB_BRANCH || 'main'
+        });
+      }
+      
       console.log(`   ✅ Successfully deleted prompt at: ${path}`);
     } catch (error: any) {
       console.error(`   ❌ Failed to delete user prompt ${filename}:`, error);

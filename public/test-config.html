@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Config.json</title>
+</head>
+<body>
+    <h1>Testing /config.json endpoint</h1>
+    <div id="result"></div>
+    
+    <script>
+        async function testConfig() {
+            const resultDiv = document.getElementById('result');
+            
+            try {
+                console.log('Fetching /config.json...');
+                const response = await fetch('/config.json');
+                
+                if (response.ok) {
+                    const config = await response.json();
+                    resultDiv.innerHTML = `
+                        <h2>Success!</h2>
+                        <pre>${JSON.stringify(config, null, 2)}</pre>
+                    `;
+                    console.log('Config loaded:', config);
+                } else {
+                    resultDiv.innerHTML = `
+                        <h2>Error</h2>
+                        <p>Status: ${response.status} ${response.statusText}</p>
+                    `;
+                    console.error('Failed to fetch config:', response.status, response.statusText);
+                }
+            } catch (error) {
+                resultDiv.innerHTML = `
+                    <h2>Error</h2>
+                    <p>${error.message}</p>
+                `;
+                console.error('Error fetching config:', error);
+            }
+        }
+        
+        // Test on page load
+        testConfig();
+    </script>
+</body>
+</html>

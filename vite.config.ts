@@ -22,10 +22,11 @@ export default defineConfig(({ mode }) => {
       proxy: {
         '/api': {
           target: env.VITE_API_URL || 'http://localhost:3001',
-          changeOrigin: true
+          changeOrigin: true,
+          rewrite: (path) => path // Keep the /api prefix
         },
         '/health': {
-          target: (env.VITE_API_URL || 'http://localhost:3001').replace('/api', ''),
+          target: env.VITE_API_URL || 'http://localhost:3001',
           changeOrigin: true
         }
       }

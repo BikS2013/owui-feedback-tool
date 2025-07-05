@@ -3,11 +3,13 @@ import { createLazyConfigService, createGitHubSource, createDatabaseSource } fro
 
 interface AgentConfig {
   agents: Array<{
-    id: string;
+    id?: string;
     name: string;
     description?: string;
-    endpoint: string;
-    enabled: boolean;
+    url?: string;
+    endpoint?: string;
+    enabled?: boolean;
+    database_connection_string?: string;
     configuration?: any;
   }>;
 }

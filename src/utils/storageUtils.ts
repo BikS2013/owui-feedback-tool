@@ -22,11 +22,11 @@ export const storageUtils = {
   
   // Synchronous fallback for components that can't handle async
   getApiUrlSync(): string {
-    // API URL is not part of the configuration anymore
-    // Always use the environment variable
+    // Note: This is a fallback and won't include runtime config
+    // Components should use getApiUrl() for proper runtime configuration
     const envUrl = import.meta.env.VITE_API_URL;
     if (!envUrl) {
-      console.error('API URL not configured. Please set VITE_API_URL in .env');
+      console.warn('API URL not available synchronously. Components should use getApiUrl() for runtime configuration.');
       return ''; // Return empty string to avoid breaking the UI
     }
     

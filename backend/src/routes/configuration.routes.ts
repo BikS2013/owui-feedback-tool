@@ -4,7 +4,8 @@ import { getClientConfigService, getClientConfiguration } from '../services/conf
 const router = Router();
 
 // Get full configuration for the current environment
-router.get('/configuration', async (req: Request, res: Response) => {
+// Also available at /config.json for compatibility
+router.get(['/configuration', '/config.json'], async (req: Request, res: Response) => {
   try {
     // Get configuration from the service
     const config = await getClientConfiguration();

@@ -153,7 +153,13 @@ router.get('/callback', async (req: Request, res: Response) => {
       throw new Error(`Token exchange failed: ${error}`);
     }
 
-    const tokens = await tokenResponse.json();
+    const tokens = await tokenResponse.json() as {
+      access_token: string;
+      token_type: string;
+      expires_in: number;
+      id_token?: string;
+      refresh_token?: string;
+    };
     
     // Return tokens to frontend
     // In production, you might want to:

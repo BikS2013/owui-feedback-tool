@@ -55,6 +55,9 @@ const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
     const allowedOrigins = getAllowedOrigins();
     
+    // Log CORS check for debugging
+    console.log(`CORS check - Origin: ${origin || 'none'}, Allowed: ${JSON.stringify(allowedOrigins)}`);
+    
     // Allow requests with no origin (like mobile apps or Postman)
     if (!origin) return callback(null, true);
     
@@ -65,16 +68,30 @@ const corsOptions: cors.CorsOptions = {
     if (Array.isArray(allowedOrigins) && allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      // Also check referer header as fallback
+      const referer = (global as any).currentRequest?.get('referer');
+      if (referer) {
+        const refererOrigin = new URL(referer).origin;
+        if (Array.isArray(allowedOrigins) && allowedOrigins.includes(refererOrigin)) {
+          callback(null, true);
+          return;
+        }
+      }
       callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Length', 'Content-Type'],
+  maxAge: 86400 // 24 hours
 };
 
 // Middleware
 app.use(cors(corsOptions));
+
+// Explicit OPTIONS handler for all routes
+app.options('*', cors(corsOptions));
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -167,7 +184,18 @@ app.use('/api/llm', requireAuth, llmRoutes);
 app.use('/api/agent', requireAuth, agentRoutes);
 app.use('/api/user-prompts', requireAuth, userPromptsRoutes);
 app.use('/api/debug', debugRoutes); // Debug routes might be conditionally protected
-app.use('/', configurationRoutes); // Configuration route - no auth required for initial config
+app.use('/api', configurationRoutes); // Configuration route - no auth required for initial config
+
+// Root-level config.json endpoint for frontend discovery
+app.get('/config.json', (req: express.Request, res: express.Response) => {
+  const protocol = req.protocol;
+  const host = req.get('host') || `localhost:${PORT}`;
+  const apiBaseUrl = process.env.API_BASE_URL || `${protocol}://${host}`;
+  
+  res.json({
+    API_BASE_URL: apiBaseUrl
+  });
+});
 
 // Error handling middleware
 app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
@@ -300,7 +328,7 @@ async function startServer() {
     // Track active connections for proper cleanup
     const connections = new Set<any>();
     
-    server.on('connection', (connection) => {
+    server.on('connection', (connection: any) => {
       connections.add(connection);
       connection.on('close', () => {
         connections.delete(connection);

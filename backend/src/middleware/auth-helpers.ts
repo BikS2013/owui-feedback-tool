@@ -23,7 +23,7 @@ export async function fetchUserInfo(token: string): Promise<NBGUserInfo> {
     throw new Error(`Failed to fetch user info: ${response.status} ${response.statusText}`);
   }
 
-  return response.json();
+  return response.json() as Promise<NBGUserInfo>;
 }
 
 /**
@@ -57,7 +57,7 @@ export async function exchangeReferenceToken(
     throw new Error(`Token exchange failed: ${response.status} ${error}`);
   }
 
-  return response.json();
+  return response.json() as Promise<{ access_token: string; token_type: string; expires_in: number }>;
 }
 
 /**
@@ -87,7 +87,12 @@ export async function introspectToken(token: string): Promise<{
     throw new Error(`Token introspection failed: ${response.status}`);
   }
 
-  return response.json();
+  return response.json() as Promise<{
+    active: boolean;
+    sub?: string;
+    exp?: number;
+    [key: string]: any;
+  }>;
 }
 
 /**
@@ -114,6 +119,12 @@ export function globalAuthMiddleware(
   res: Response,
   next: NextFunction
 ): void {
+  // Always skip auth for OPTIONS requests (CORS preflight)
+  if (req.method === 'OPTIONS') {
+    next();
+    return;
+  }
+
   // Skip auth if globally disabled
   if (!isAuthEnabled()) {
     // Set a mock auth object to prevent issues in downstream code

@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>API Call Verification</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>API Call Verification</h1>
+    
+    <div id="results"></div>
+    
+    <script type="module">
+        const results = document.getElementById('results');
+        
+        async function testApiCalls() {
+            // Test 1: Load config
+            try {
+                const configResponse = await fetch('/config.json');
+                const config = await configResponse.json();
+                
+                results.innerHTML += `
+                    <div class="test success">
+                        <h3>✓ Config.json loaded</h3>
+                        <pre>${JSON.stringify(config, null, 2)}</pre>
+                    </div>
+                `;
+                
+                const apiBaseUrl = config.api?.baseUrl || '';
+                
+                // Test 2: Direct API call
+                try {
+                    const apiUrl = `${apiBaseUrl}/api/agent`;
+                    results.innerHTML += `
+                        <div class="test">
+                            <h3>Testing direct API call to: ${apiUrl}</h3>
+                        </div>
+                    `;
+                    
+                    const response = await fetch(apiUrl);
+                    const data = await response.json();
+                    
+                    results.innerHTML += `
+                        <div class="test success">
+                            <h3>✓ Direct API call successful</h3>
+                            <p>Status: ${response.status}</p>
+                            <pre>${JSON.stringify(data, null, 2)}</pre>
+                        </div>
+                    `;
+                } catch (error) {
+                    results.innerHTML += `
+                        <div class="test error">
+                            <h3>✗ Direct API call failed</h3>
+                            <pre>${error.message}</pre>
+                        </div>
+                    `;
+                }
+                
+                // Test 3: Check what storageUtils returns
+                results.innerHTML += `
+                    <div class="test">
+                        <h3>Import Test</h3>
+                        <p>To test in browser console:</p>
+                        <pre>
+// First, load the config
+const configResponse = await fetch('/config.json');
+const config = await configResponse.json();
+console.log('Config API URL:', config.api?.baseUrl);
+
+// Then test the API
+const apiUrl = config.api?.baseUrl + '/api/agent';
+console.log('Testing:', apiUrl);
+const response = await fetch(apiUrl);
+console.log('Response:', await response.json());
+                        </pre>
+                    </div>
+                `;
+                
+            } catch (error) {
+                results.innerHTML += `
+                    <div class="test error">
+                        <h3>✗ Config loading failed</h3>
+                        <pre>${error.message}</pre>
+                    </div>
+                `;
+            }
+        }
+        
+        testApiCalls();
+    </script>
+</body>
+</html>

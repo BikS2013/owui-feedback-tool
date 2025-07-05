@@ -143,7 +143,7 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
   
   
   // Get configuration from environment variables
-  const [apiUrl, setApiUrl] = useState<string>(storageUtils.getApiUrlSync());
+  const [apiUrl, setApiUrl] = useState<string>('Loading...');
 
   // Function to load configuration
   const loadConfiguration = async (showSuccess = false) => {
@@ -160,7 +160,9 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
       console.log('[SettingsModal] Configuration loaded:', config);
       console.log('[SettingsModal] Configuration source:', configService.getConfigSource());
       
-      setApiUrl(storageUtils.getApiUrlSync());
+      // Get the actual runtime API URL
+      const runtimeApiUrl = await storageUtils.getApiUrl();
+      setApiUrl(runtimeApiUrl);
       setEnvironment(config.environment);
       
       // Determine config source
@@ -306,13 +308,14 @@ export function SettingsModal({ isOpen, onClose }: SettingsModalProps) {
                 </p>
               </div>
               
-              <div className="settings-field">
+              <div className="settings-field api-url-section">
                 <label>API Base URL</label>
-                <div className="settings-input readonly">
-                  {apiUrl}
+                <div className="settings-input readonly api-url-display">
+                  <strong>{apiUrl}</strong>
                 </div>
                 <p className="settings-help">
-                  Currently using the API URL shown above
+                  <strong>This is the backend API server URL that this application connects to.</strong><br/>
+                  All API calls are made to: <code>{apiUrl}/api/*</code>
                 </p>
               </div>
 

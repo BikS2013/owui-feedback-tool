@@ -111,6 +111,110 @@ router.get('/env', (req: any, res: any) => {
 
 /**
  * @swagger
+ * /api/debug/cors:
+ *   get:
+ *     summary: Get current CORS configuration and status
+ *     tags: [Debug]
+ *     responses:
+ *       200:
+ *         description: CORS configuration details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 configured:
+ *                   type: object
+ *                   properties:
+ *                     CORS_ORIGINS:
+ *                       type: string
+ *                       description: Raw CORS_ORIGINS environment variable
+ *                     CORS_ORIGIN:
+ *                       type: string
+ *                       description: Raw CORS_ORIGIN environment variable (legacy)
+ *                     allowedOrigins:
+ *                       oneOf:
+ *                         - type: string
+ *                           description: Wildcard '*' for all origins
+ *                         - type: array
+ *                           items:
+ *                             type: string
+ *                           description: List of allowed origins
+ *                     type:
+ *                       type: string
+ *                       description: Type of allowed origins (string or array)
+ *                 currentRequest:
+ *                   type: object
+ *                   properties:
+ *                     origin:
+ *                       type: string
+ *                       description: Origin header from current request
+ *                     isAllowed:
+ *                       type: boolean
+ *                       description: Whether current origin is allowed
+ *                 middleware:
+ *                   type: object
+ *                   properties:
+ *                     credentials:
+ *                       type: boolean
+ *                       description: Whether credentials are allowed
+ *                     methods:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       description: Allowed HTTP methods
+ *                     allowedHeaders:
+ *                       type: array
+ *                       items:
+ *                         type: string
+ *                       description: Allowed request headers
+ */
+router.get('/cors', (req: any, res: any) => {
+  const origins = process.env.CORS_ORIGINS || process.env.CORS_ORIGIN || 'http://localhost:5173';
+  const allowedOrigins = getAllowedOrigins();
+  const currentOrigin = req.get('origin') || req.get('referer') || 'no-origin';
+  
+  // Check if current origin is allowed
+  let isAllowed = false;
+  if (allowedOrigins === '*') {
+    isAllowed = true;
+  } else if (Array.isArray(allowedOrigins)) {
+    isAllowed = allowedOrigins.includes(currentOrigin);
+  }
+  
+  res.json({
+    configured: {
+      CORS_ORIGINS: process.env.CORS_ORIGINS || '(not set)',
+      CORS_ORIGIN: process.env.CORS_ORIGIN || '(not set)',
+      allowedOrigins: allowedOrigins,
+      type: Array.isArray(allowedOrigins) ? 'array' : typeof allowedOrigins,
+      rawValue: origins
+    },
+    currentRequest: {
+      origin: currentOrigin,
+      host: req.get('host'),
+      isAllowed: isAllowed,
+      headers: {
+        origin: req.get('origin') || '(not present)',
+        referer: req.get('referer') || '(not present)',
+        host: req.get('host') || '(not present)'
+      }
+    },
+    middleware: {
+      credentials: true,
+      methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization']
+    },
+    examples: {
+      curlTest: `curl -H "Origin: ${currentOrigin}" -I http://${req.get('host')}/api/debug/cors`,
+      allowedOriginsExample: Array.isArray(allowedOrigins) ? allowedOrigins : [allowedOrigins]
+    },
+    timestamp: new Date().toISOString()
+  });
+});
+
+/**
+ * @swagger
  * /api/debug/env/reload:
  *   post:
  *     summary: Reload environment settings from configuration repository
@@ -177,7 +281,7 @@ router.get('/env/test-load', async (req: any, res: any) => {
     }
     
     // Convert Map to object if it's a Map
-    let settingsObject = {};
+    let settingsObject: Record<string, any> = {};
     if (settings instanceof Map) {
       for (const [key, value] of settings) {
         settingsObject[key] = value;

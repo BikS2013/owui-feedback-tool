@@ -6,6 +6,7 @@ export class EnvironmentConfigurationService {
   private fetchPromise: Promise<EnvironmentConfiguration> | null = null;
   private detectedEnvironment: string | null = null;
   private configSource: 'runtime' | 'buildtime' | null = null;
+  private apiUrl: string | null = null;
 
   private constructor() {}
 
@@ -41,6 +42,11 @@ export class EnvironmentConfigurationService {
     this.detectedEnvironment = null;
     this.configSource = null;
     console.log('[EnvironmentConfig] Configuration cache cleared for reload');
+  }
+
+  setApiUrl(url: string): void {
+    this.apiUrl = url;
+    console.log('[EnvironmentConfig] API URL set to:', url);
   }
 
   private async loadConfiguration(): Promise<EnvironmentConfiguration> {
@@ -83,16 +89,22 @@ export class EnvironmentConfigurationService {
   
   private async fetchConfigurationFromAPI(): Promise<EnvironmentConfiguration | null> {
     try {
-      // Get API URL directly from environment variable to avoid circular dependency
-      const apiBaseUrl = import.meta.env.VITE_API_URL;
+      // Use dynamically set API URL if available, otherwise fall back to build-time config
+      const apiBaseUrl = this.apiUrl || import.meta.env.VITE_API_URL;
       
       if (!apiBaseUrl) {
         console.warn('[EnvironmentConfig] No API base URL available');
         return null;
       }
       
-      console.log(`[EnvironmentConfig] Fetching configuration from: ${apiBaseUrl}/configuration`);
-      const response = await fetch(`${apiBaseUrl}/configuration`, {
+      const configUrl = `${apiBaseUrl}/api/configuration`;
+      console.log(`[EnvironmentConfig] Fetching configuration from: ${configUrl}`);
+      console.log(`[EnvironmentConfig] Full URL construction:`, {
+        apiBaseUrl,
+        path: '/api/configuration',
+        fullUrl: configUrl
+      });
+      const response = await fetch(configUrl, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json'

@@ -1,6 +1,8 @@
 import { Pool, PoolClient } from 'pg';
 import { Agent } from '../types/agent.types.js';
 import { Thread, ThreadPaginatedResponse, Run, RunsPaginatedResponse, Checkpoint, CheckpointsPaginatedResponse } from '../types/thread.types.js';
+import { maskConnectionString } from '../utils/connectionStringMasker.js';
+import { formatConnectionDetails, getFormattedIPs, parsePostgresConnectionString } from '../utils/network.utils.js';
 
 export class DatabaseService {
   private pools: Map<string, Pool> = new Map();
@@ -20,6 +22,14 @@ export class DatabaseService {
       // Parse the connection string to check if it's Azure PostgreSQL
       const isAzure = agent.database_connection_string.includes('.database.azure.com');
       
+      // Log detailed connection information
+      console.log('\n=== Creating Database Connection Pool ===');
+      console.log(`Agent: ${agent.name}`);
+      console.log(`Connection String: ${maskConnectionString(agent.database_connection_string)}`);
+      console.log(`Connection Details: ${formatConnectionDetails(agent.database_connection_string)}`);
+      console.log(`Is Azure PostgreSQL: ${isAzure}`);
+      console.log('========================================\n');
+      
       const pool = new Pool({
         connectionString: agent.database_connection_string,
         max: 10, // Maximum number of clients in the pool
@@ -37,14 +47,32 @@ export class DatabaseService {
 
       // Handle pool errors
       pool.on('error', (err) => {
-        console.error(`Database pool error for agent ${agent.name}:`, err);
-        // Log additional details for Azure connection issues
+        console.error('\n=== Database Pool Error ===');
+        console.error(`Agent: ${agent.name}`);
+        console.error(`Error: ${err.message}`);
+        console.error(`Connection String: ${maskConnectionString(agent.database_connection_string)}`);
+        console.error(`Connection Details: ${formatConnectionDetails(agent.database_connection_string)}`);
+        console.error(`Backend Source IPs: ${getFormattedIPs()}`);
+        
+        // Log additional details for specific error types
         if (err.message.includes('timeout') || err.message.includes('ETIMEDOUT')) {
-          console.error('Connection timeout - possible causes:');
+          console.error('\nConnection timeout - possible causes:');
+          console.error('- Database server not reachable from backend IP addresses');
           console.error('- Azure PostgreSQL firewall rules may need to be updated');
           console.error('- Network connectivity issues');
           console.error('- SSL/TLS configuration mismatch');
+        } else if (err.message.includes('ECONNREFUSED')) {
+          const { host, port } = parsePostgresConnectionString(agent.database_connection_string);
+          console.error('\nConnection refused - possible causes:');
+          console.error(`- Database not running on ${host}:${port}`);
+          console.error('- Firewall blocking the connection');
+          console.error('- Wrong host or port in connection string');
+        } else if (err.message.includes('password') || err.message.includes('authentication')) {
+          console.error('\nAuthentication failed - possible causes:');
+          console.error('- Invalid username or password');
+          console.error('- User not authorized for this database');
         }
+        console.error('===========================\n');
       });
 
       // Monitor pool connections
@@ -85,7 +113,7 @@ export class DatabaseService {
     try {
       const result = await client.query(query, params);
       const duration = Date.now() - startTime;
-      this.logQuery(query, params, duration, result.rowCount);
+      this.logQuery(query, params, duration, result.rowCount ?? 0);
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
@@ -109,8 +137,9 @@ export class DatabaseService {
     fromDate?: Date,
     toDate?: Date
   ): Promise<ThreadPaginatedResponse> {
-    console.log(`Attempting to connect to database for agent: ${agent.name}`);
-    console.log(`Connection string: ${agent.database_connection_string.replace(/:[^:@]+@/, ':****@')}`); // Log with masked password
+    console.log(`\n📊 Attempting to fetch threads for agent: ${agent.name}`);
+    console.log(`Connection string: ${maskConnectionString(agent.database_connection_string)}`);
+    console.log(`Connection details: ${formatConnectionDetails(agent.database_connection_string)}`)
     
     const pool = this.getPool(agent);
     let client: PoolClient | null = null;
@@ -132,12 +161,15 @@ export class DatabaseService {
           break;
         } catch (error) {
           lastError = error as Error;
-          console.error(`Connection attempt ${connectionAttempts} failed:`, error);
+          console.error(`\n❌ Connection attempt ${connectionAttempts} failed:`);
+          console.error(`Error: ${(error as Error).message}`);
+          console.error(`Backend Source IPs: ${getFormattedIPs()}`);
+          console.error(`Target: ${formatConnectionDetails(agent.database_connection_string)}`);
           
           if (connectionAttempts < maxAttempts) {
             // Wait before retrying (exponential backoff)
             const waitTime = Math.min(1000 * Math.pow(2, connectionAttempts - 1), 5000);
-            console.log(`Waiting ${waitTime}ms before retry...`);
+            console.log(`⏳ Waiting ${waitTime}ms before retry...`);
             await new Promise(resolve => setTimeout(resolve, waitTime));
           }
         }
@@ -224,7 +256,11 @@ export class DatabaseService {
         },
       };
     } catch (error) {
-      console.error(`Error fetching threads for agent ${agent.name}:`, error);
+      console.error(`\n❌ Error fetching threads for agent ${agent.name}:`);
+      console.error(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(`Backend Source IPs: ${getFormattedIPs()}`);
+      console.error(`Connection String: ${maskConnectionString(agent.database_connection_string)}`);
+      console.error(`Target Details: ${formatConnectionDetails(agent.database_connection_string)}`);
       throw new Error(`Failed to fetch threads: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       if (client) {
@@ -233,23 +269,6 @@ export class DatabaseService {
     }
   }
 
-  async testConnection(agent: Agent): Promise<boolean> {
-    const pool = this.getPool(agent);
-    let client: PoolClient | null = null;
-
-    try {
-      client = await pool.connect();
-      await this.executeQuery(client, 'SELECT 1');
-      return true;
-    } catch (error) {
-      console.error(`Connection test failed for agent ${agent.name}:`, error);
-      return false;
-    } finally {
-      if (client) {
-        client.release();
-      }
-    }
-  }
 
   async getThreadDocuments(agent: Agent, threadId: string): Promise<any> {
     const pool = this.getPool(agent);
@@ -270,7 +289,11 @@ export class DatabaseService {
       
       return result.rows[0].documents || [];
     } catch (error) {
-      console.error(`Error fetching documents for thread ${threadId}:`, error);
+      console.error(`\n❌ Error fetching documents for thread ${threadId}:`);
+      console.error(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(`Backend Source IPs: ${getFormattedIPs()}`);
+      console.error(`Connection String: ${maskConnectionString(agent.database_connection_string)}`);
+      console.error(`Target Details: ${formatConnectionDetails(agent.database_connection_string)}`);
       throw new Error(`Failed to fetch documents: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       if (client) {
@@ -285,7 +308,8 @@ export class DatabaseService {
     page: number = 1,
     limit: number = 50
   ): Promise<RunsPaginatedResponse> {
-    console.log(`Fetching runs for thread: ${threadId} from agent: ${agent.name}`);
+    console.log(`\n📊 Fetching runs for thread: ${threadId} from agent: ${agent.name}`);
+    console.log(`Connection details: ${formatConnectionDetails(agent.database_connection_string)}`);
     
     const pool = this.getPool(agent);
     let client: PoolClient | null = null;
@@ -319,7 +343,7 @@ export class DatabaseService {
       
       const runsResult = await this.executeQuery(client, runsQuery, [threadId, limit, offset]);
       
-      const runs: Run[] = runsResult.rows.map(row => ({
+      const runs: Run[] = runsResult.rows.map((row: any) => ({
         run_id: row.run_id,
         thread_id: row.thread_id,
         created_at: row.created_at,
@@ -344,7 +368,11 @@ export class DatabaseService {
         },
       };
     } catch (error) {
-      console.error(`Error fetching runs for thread ${threadId}:`, error);
+      console.error(`\n❌ Error fetching runs for thread ${threadId}:`);
+      console.error(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(`Backend Source IPs: ${getFormattedIPs()}`);
+      console.error(`Connection String: ${maskConnectionString(agent.database_connection_string)}`);
+      console.error(`Target Details: ${formatConnectionDetails(agent.database_connection_string)}`);
       throw new Error(`Failed to fetch runs: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       if (client) {
@@ -359,7 +387,8 @@ export class DatabaseService {
     page: number = 1,
     limit: number = 50
   ): Promise<CheckpointsPaginatedResponse> {
-    console.log(`Fetching checkpoints for thread: ${threadId} from agent: ${agent.name}`);
+    console.log(`\n📊 Fetching checkpoints for thread: ${threadId} from agent: ${agent.name}`);
+    console.log(`Connection details: ${formatConnectionDetails(agent.database_connection_string)}`);
     
     const pool = this.getPool(agent);
     let client: PoolClient | null = null;
@@ -404,7 +433,11 @@ export class DatabaseService {
         },
       };
     } catch (error) {
-      console.error(`Error fetching checkpoints for thread ${threadId}:`, error);
+      console.error(`\n❌ Error fetching checkpoints for thread ${threadId}:`);
+      console.error(`Error: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error(`Backend Source IPs: ${getFormattedIPs()}`);
+      console.error(`Connection String: ${maskConnectionString(agent.database_connection_string)}`);
+      console.error(`Target Details: ${formatConnectionDetails(agent.database_connection_string)}`);
       throw new Error(`Failed to fetch checkpoints: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       if (client) {
@@ -433,7 +466,9 @@ export class DatabaseService {
     let client: PoolClient | null = null;
 
     try {
-      console.log(`Testing database connection for agent: ${agent.name}`);
+      console.log(`\n🔍 Testing database connection for agent: ${agent.name}`);
+      console.log(`Connection String: ${maskConnectionString(agent.database_connection_string)}`);
+      console.log(`Connection Details: ${formatConnectionDetails(agent.database_connection_string)}`);
       const startTime = Date.now();
       
       client = await pool.connect();
@@ -461,17 +496,23 @@ export class DatabaseService {
       };
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-      console.error(`Database connection test failed for agent ${agent.name}:`, error);
+      console.error(`\n❌ Database connection test failed for agent ${agent.name}:`);
+      console.error(`Error: ${errorMessage}`);
+      console.error(`Backend Source IPs: ${getFormattedIPs()}`);
+      console.error(`Connection String: ${maskConnectionString(agent.database_connection_string)}`);
+      console.error(`Target Details: ${formatConnectionDetails(agent.database_connection_string)}`);
       
       return {
         success: false,
         message: `Database connection failed: ${errorMessage}`,
         details: {
           error: errorMessage,
+          backendSourceIPs: getFormattedIPs(),
+          targetHost: parsePostgresConnectionString(agent.database_connection_string).host,
           suggestions: [
             'Check if the database server is accessible from your network',
             'Verify the connection string is correct',
-            'Ensure Azure PostgreSQL firewall rules allow your IP',
+            'Ensure Azure PostgreSQL firewall rules allow your IP addresses',
             'Check if SSL is required and properly configured',
             'Verify database credentials are correct'
           ]

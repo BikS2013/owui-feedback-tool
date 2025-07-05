@@ -12,9 +12,9 @@ import { requireAuth, optionalAuth, requireRole } from './token-validator.js';
 import authRouter from '../routes/auth.routes.js';
 
 // Import your existing routers
-import exportRouter from '../routes/export.routes.js';
-import agentRouter from '../routes/agent.routes.js';
-import llmRouter from '../routes/llm.routes.js';
+import { exportRoutes as exportRouter } from '../routes/export.routes.js';
+import { agentRoutes as agentRouter } from '../routes/agent.routes.js';
+import { llmRoutes as llmRouter } from '../routes/llm.routes.js';
 
 const app = express();
 

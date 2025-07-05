@@ -121,7 +121,10 @@ export function UploadModal({ isOpen, onClose }: UploadModalProps) {
     setIsLoadingAgents(true);
     setError(null);
     try {
-      const apiUrl = storageUtils.getApiUrlSync();
+      // Use async getApiUrl to ensure config is loaded
+      console.log('⏳ Waiting for API URL configuration...');
+      const apiUrl = await storageUtils.getApiUrl();
+      console.log('✅ API URL loaded:', apiUrl);
       const url = `${apiUrl}/api/agent`;
       console.log('📡 Fetching from:', url);
       

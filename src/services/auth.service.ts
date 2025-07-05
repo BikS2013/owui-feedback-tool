@@ -65,8 +65,10 @@ export class AuthService {
    * Check authentication status
    */
   static async checkAuthStatus(): Promise<AuthStatus> {
-    // Use sync version to avoid waiting for config during initial load
-    const apiUrl = storageUtils.getApiUrlSync();
+    // Wait for config to load to get proper API URL
+    console.log('⏳ [AuthService] Waiting for API URL configuration...');
+    const apiUrl = await storageUtils.getApiUrl();
+    console.log('✅ [AuthService] API URL loaded:', apiUrl);
     const token = this.getAccessToken();
 
     try {
@@ -257,18 +259,75 @@ export class AuthService {
     const originalFetch = window.fetch;
     
     window.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-      // Only add auth header to API calls
-      const url = typeof input === 'string' ? input : input.toString();
-      const apiUrl = storageUtils.getApiUrlSync(); // Use sync version to avoid deadlock
-      
-      if (url.startsWith(apiUrl)) {
-        init = this.addAuthHeader(init);
+      // Get the URL from the input
+      let url: string;
+      if (input instanceof Request) {
+        url = input.url;
+      } else if (input instanceof URL) {
+        url = input.toString();
+      } else {
+        url = input.toString();
       }
       
-      let response = await originalFetch(input, init);
+      // Detailed API URL construction logging
+      console.log('🔧 [Auth Interceptor] Processing fetch request:');
+      console.log('  📍 Original URL:', url);
+      
+      // Get the base API URL
+      const apiUrl = storageUtils.getApiUrlSync(); // Use sync version to avoid deadlock
+      console.log('  🏠 API Base URL from config:', apiUrl || '(empty - config not loaded)');
+      
+      // Check if this is a relative API path
+      if (url.startsWith('/api/')) {
+        console.log('  ⚠️ Relative API path detected:', url);
+        
+        if (!apiUrl) {
+          console.error('  ❌ Cannot construct full URL - API base URL is empty!');
+          console.log('  💡 This happens when config hasn\'t loaded yet');
+          console.log('  💡 The request will go to:', window.location.origin + url);
+          console.log('  🔧 Attempting to load API URL async...');
+          
+          // Try to load the API URL async before proceeding
+          try {
+            const asyncApiUrl = await storageUtils.getApiUrl();
+            if (asyncApiUrl) {
+              const fullUrl = asyncApiUrl + url;
+              console.log('  ✅ Async API URL loaded:', asyncApiUrl);
+              console.log('  🔗 Constructing full URL:', fullUrl);
+              url = fullUrl;
+              input = url; // Update the input with the full URL
+            }
+          } catch (error) {
+            console.error('  ❌ Failed to load API URL async:', error);
+          }
+        } else {
+          // Construct the full URL
+          const fullUrl = apiUrl + url;
+          console.log('  ✅ Full URL will be:', fullUrl);
+          console.log('  🔧 Updating request URL from', url, 'to', fullUrl);
+          url = fullUrl;
+          input = url; // Update the input with the full URL
+        }
+      } else if (url.startsWith('http')) {
+        console.log('  ✅ Absolute URL, no modification needed');
+      }
+      
+      // Check if we should add auth header
+      if (apiUrl && url.startsWith(apiUrl)) {
+        console.log('  🔐 Adding auth header to API request');
+        init = this.addAuthHeader(init);
+      } else {
+        console.log('  🔓 Not adding auth header (not an API request or API URL not loaded)');
+      }
+      
+      console.log('  🚀 Final fetch URL:', url);
+      
+      // Use the modified URL instead of the original input
+      let response = await originalFetch(url, init);
       
       // Handle 401 responses by trying to refresh token
-      if (response.status === 401 && url.startsWith(apiUrl)) {
+      if (response.status === 401 && apiUrl && url.startsWith(apiUrl)) {
+        console.log('  🔄 Got 401, attempting token refresh...');
         const refreshed = await this.refreshToken();
         
         if (refreshed) {
