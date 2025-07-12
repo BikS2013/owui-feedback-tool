@@ -101,3 +101,6 @@ test_data
 # To use custom configuration, create public/config.local.json
 # and it will be ignored by git
 public/config.local.json
+questions.json
+.gitignore
+threads.json
