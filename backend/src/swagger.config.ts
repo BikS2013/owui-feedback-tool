@@ -41,6 +41,10 @@ const options: swaggerJsdoc.Options = {
       {
         name: 'User Prompts',
         description: 'User prompt management endpoints'
+      },
+      {
+        name: 'System Prompts',
+        description: 'System prompt management endpoints'
       }
     ],
     components: {
@@ -164,7 +168,7 @@ const options: swaggerJsdoc.Options = {
       }
     }
   },
-  apis: ['./src/routes/*.ts', './src/index.ts']
+  apis: ['./src/routes/*.ts', './src/routes/*.swagger.ts', './src/index.ts']
 };
 
 export const swaggerSpec = swaggerJsdoc(options);

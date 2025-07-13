@@ -5,6 +5,7 @@ import * as dotenv from 'dotenv';
 import { getQuestionsCommand } from './commands/get-questions.js';
 import { getThreadsCommand } from './commands/get-threads.js';
 import { extractQuestionsCommand } from './commands/extract-questions.js';
+import { identifyTopicsCommand } from './commands/identify-topics.js';
 
 dotenv.config();
 
@@ -18,5 +19,6 @@ program
 program.addCommand(getQuestionsCommand);
 program.addCommand(getThreadsCommand);
 program.addCommand(extractQuestionsCommand);
+program.addCommand(identifyTopicsCommand);
 
 program.parse(process.argv);

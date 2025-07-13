@@ -168,6 +168,41 @@ router.post('/test', async (req: Request, res: Response): Promise<void> => {
     
     console.log(`🧪 Testing LLM configuration: ${configurationName}`);
     console.log('📋 Provider config:', JSON.stringify(provider, null, 2));
+    console.log(`   • Provider: ${provider.provider}`);
+    console.log(`   • Model: ${provider.model}`);
+    if (provider.endpoint) {
+      console.log(`   • Endpoint: ${provider.endpoint}`);
+    }
+    // Log the actual API key that will be used
+    let actualApiKey = provider.apiKey;
+    
+    // Check environment variables based on provider
+    if (!actualApiKey) {
+      switch (provider.provider) {
+        case 'openai':
+          actualApiKey = process.env.OPENAI_API_KEY;
+          break;
+        case 'azure-openai':
+          actualApiKey = process.env.AZURE_OPENAI_API_KEY;
+          break;
+        case 'anthropic':
+          actualApiKey = process.env.ANTHROPIC_API_KEY;
+          break;
+        case 'google':
+          actualApiKey = process.env.GOOGLE_GENAI_API_KEY;
+          break;
+      }
+    }
+    
+    if (actualApiKey) {
+      // Mask the API key - show first 4 and last 4 characters
+      const masked = actualApiKey.length > 8 
+        ? `${actualApiKey.substring(0, 4)}...${actualApiKey.substring(actualApiKey.length - 4)}`
+        : '****';
+      console.log(`   • API Key: ${masked} ${provider.apiKey ? '(from config)' : '(from env)'}`);
+    } else {
+      console.log(`   • API Key: ⚠️  Not found`);
+    }
     
     try {
       // Create the chat model
@@ -353,6 +388,46 @@ router.post('/execute-prompt-direct', async (req: Request, res: Response): Promi
     console.log(`   • LLM Configuration: ${llmConfiguration}`);
     console.log(`   • Prompt length: ${promptText.length} characters`);
     console.log(`   • Parameters provided: ${Object.keys(parameterValues).join(', ')}`);
+    
+    // Get the configuration details to log endpoint and model
+    const config = await getConfigurationByName(llmConfiguration);
+    if (config) {
+      console.log(`   • Provider: ${config.provider}`);
+      console.log(`   • Model: ${config.model}`);
+      if (config.endpoint) {
+        console.log(`   • Endpoint: ${config.endpoint}`);
+      }
+      // Log the actual API key that will be used
+      let actualApiKey = config.apiKey;
+      
+      // Check environment variables based on provider
+      if (!actualApiKey) {
+        switch (config.provider) {
+          case 'openai':
+            actualApiKey = process.env.OPENAI_API_KEY;
+            break;
+          case 'azure-openai':
+            actualApiKey = process.env.AZURE_OPENAI_API_KEY;
+            break;
+          case 'anthropic':
+            actualApiKey = process.env.ANTHROPIC_API_KEY;
+            break;
+          case 'google':
+            actualApiKey = process.env.GOOGLE_GENAI_API_KEY;
+            break;
+        }
+      }
+      
+      if (actualApiKey) {
+        // Mask the API key - show first 4 and last 4 characters
+        const masked = actualApiKey.length > 8 
+          ? `${actualApiKey.substring(0, 4)}...${actualApiKey.substring(actualApiKey.length - 4)}`
+          : '****';
+        console.log(`   • API Key: ${masked} ${config.apiKey ? '(from config)' : '(from env)'}`);
+      } else {
+        console.log(`   • API Key: ⚠️  Not found`);
+      }
+    }
     
     // Process the prompt with parameter replacement
     const processedPrompt = PromptLoader.replacePlaceholders(promptText, parameterValues as Record<string, string>);
@@ -640,6 +715,46 @@ router.post('/convert-to-filter', async (req: Request, res: Response): Promise<v
     console.log(`   • LLM Configuration: ${llmConfiguration}`);
     console.log(`   • Query: ${query}`);
     console.log(`   • Sample data provided: ${sampleData ? 'Yes' : 'No'}`);
+    
+    // Get the configuration details to log endpoint and model
+    const config = await getConfigurationByName(llmConfiguration);
+    if (config) {
+      console.log(`   • Provider: ${config.provider}`);
+      console.log(`   • Model: ${config.model}`);
+      if (config.endpoint) {
+        console.log(`   • Endpoint: ${config.endpoint}`);
+      }
+      // Log the actual API key that will be used
+      let actualApiKey = config.apiKey;
+      
+      // Check environment variables based on provider
+      if (!actualApiKey) {
+        switch (config.provider) {
+          case 'openai':
+            actualApiKey = process.env.OPENAI_API_KEY;
+            break;
+          case 'azure-openai':
+            actualApiKey = process.env.AZURE_OPENAI_API_KEY;
+            break;
+          case 'anthropic':
+            actualApiKey = process.env.ANTHROPIC_API_KEY;
+            break;
+          case 'google':
+            actualApiKey = process.env.GOOGLE_GENAI_API_KEY;
+            break;
+        }
+      }
+      
+      if (actualApiKey) {
+        // Mask the API key - show first 4 and last 4 characters
+        const masked = actualApiKey.length > 8 
+          ? `${actualApiKey.substring(0, 4)}...${actualApiKey.substring(actualApiKey.length - 4)}`
+          : '****';
+        console.log(`   • API Key: ${masked} ${config.apiKey ? '(from config)' : '(from env)'}`);
+      } else {
+        console.log(`   • API Key: ⚠️  Not found`);
+      }
+    }
     
     // Build the prompt with sample data if provided
     let prompt = '';

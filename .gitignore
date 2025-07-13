@@ -104,3 +104,5 @@ public/config.local.json
 questions.json
 .gitignore
 threads.json
+topics.json
+indicative-topics.json

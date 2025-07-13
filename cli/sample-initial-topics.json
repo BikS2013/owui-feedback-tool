@@ -1,0 +1,28 @@
+{
+  "topics": [
+    {
+      "topic": "Technical Support",
+      "description": "Questions related to technical issues, debugging, error resolution, and system troubleshooting"
+    },
+    {
+      "topic": "Feature Request",
+      "description": "Questions about new features, enhancements, or suggestions for product improvements"
+    },
+    {
+      "topic": "Documentation",
+      "description": "Questions about documentation, tutorials, guides, or how-to instructions"
+    },
+    {
+      "topic": "API Usage",
+      "description": "Questions related to API endpoints, authentication, integration, and usage patterns"
+    },
+    {
+      "topic": "Configuration",
+      "description": "Questions about system configuration, settings, environment setup, and deployment"
+    },
+    {
+      "topic": "Performance",
+      "description": "Questions about system performance, optimization, speed improvements, and resource usage"
+    }
+  ]
+}

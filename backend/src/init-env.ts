@@ -19,8 +19,7 @@ async function initializeEnvironment() {
     // Only import what we need for environment loading
     const { loadEnvironmentSettings } = await import('./services/config/environmentSettingsService.js');
     
-    console.log('🔄 Loading environment settings from configuration...');
-    console.log(`   Asset key: ${process.env.ENVIRONMENT_SETTINGS_ASSET_KEY}`);
+    console.log('🔄 Loading environment settings from GitHub configuration repository...');
     
     await loadEnvironmentSettings();
     console.log('✅ Environment initialization complete');

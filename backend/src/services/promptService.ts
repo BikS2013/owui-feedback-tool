@@ -1,7 +1,7 @@
 import { githubClient } from './config/config-clients.js';
 import { Octokit } from '@octokit/rest';
 
-interface UserPrompt {
+interface Prompt {
   name: string;  // This is now the full filename with extension
   description?: string;
   content: string;
@@ -11,31 +11,29 @@ interface UserPrompt {
 }
 
 /**
- * Service for managing user prompts stored in GitHub
+ * Generic service for managing prompts stored in GitHub
  */
-export class UserPromptService {
+export class PromptService {
   private promptsFolder: string;
+  private serviceName: string;
 
-  constructor() {
-    const folder = process.env.USER_PROMPTS_FOLDER;
-    if (!folder) {
-      throw new Error('USER_PROMPTS_FOLDER environment variable is required');
-    }
-    this.promptsFolder = folder;
+  constructor(promptsFolder: string, serviceName: string) {
+    this.promptsFolder = promptsFolder;
+    this.serviceName = serviceName;
     
     // Debug: Log initialization
-    console.log('🔍 UserPromptService initialized:');
+    console.log(`🔍 ${this.serviceName} Service initialized:`);
     console.log(`   📁 Prompts folder: ${this.promptsFolder}`);
     console.log(`   🌐 GitHub repo: ${process.env.GITHUB_REPO}`);
     console.log(`   🌿 Branch: ${process.env.GITHUB_BRANCH || 'main'}`);
   }
 
   /**
-   * List all user prompts in the configured folder
+   * List all prompts in the configured folder
    */
-  async listPrompts(): Promise<UserPrompt[]> {
+  async listPrompts(): Promise<Prompt[]> {
     try {
-      console.log('📋 Listing user prompts...');
+      console.log(`📋 Listing ${this.serviceName.toLowerCase()}...`);
       console.log(`   🔍 Looking in: ${this.promptsFolder}`);
       
       const client = githubClient();
@@ -59,7 +57,7 @@ export class UserPromptService {
           ref: process.env.GITHUB_BRANCH || 'main'
         });
         
-        const prompts: UserPrompt[] = [];
+        const prompts: Prompt[] = [];
         
         if (Array.isArray(response.data)) {
           console.log(`   📂 Found ${response.data.length} items in folder`);
@@ -86,7 +84,7 @@ export class UserPromptService {
       } catch (error: any) {
         if (error.status === 404) {
           // Folder doesn't exist, return empty array
-          console.warn(`   ❌ User prompts folder '${this.promptsFolder}' not found in repository`);
+          console.warn(`   ❌ ${this.serviceName} folder '${this.promptsFolder}' not found in repository`);
           console.warn(`   📍 Full path attempted: ${owner}/${repo}/${this.promptsFolder}`);
           console.warn(`   💡 Please ensure the folder exists in the repository`);
           return [];
@@ -96,17 +94,17 @@ export class UserPromptService {
         throw error;
       }
     } catch (error: any) {
-      console.error('Failed to list user prompts:', error);
-      throw new Error(`Failed to list user prompts: ${error.message}`);
+      console.error(`Failed to list ${this.serviceName.toLowerCase()}:`, error);
+      throw new Error(`Failed to list ${this.serviceName.toLowerCase()}: ${error.message}`);
     }
   }
 
   /**
-   * Get a specific user prompt by filename
+   * Get a specific prompt by filename
    */
-  async getPrompt(filename: string): Promise<UserPrompt | null> {
+  async getPrompt(filename: string): Promise<Prompt | null> {
     try {
-      console.log(`📄 Getting user prompt: ${filename}`);
+      console.log(`📄 Getting ${this.serviceName.toLowerCase()}: ${filename}`);
       console.log(`   🔍 Looking in folder: ${this.promptsFolder}`);
       
       const client = githubClient();
@@ -139,17 +137,17 @@ export class UserPromptService {
       console.log(`   ⚠️  Prompt not found: ${filename}`);
       return null;
     } catch (error: any) {
-      console.error(`Failed to get user prompt ${filename}:`, error);
-      throw new Error(`Failed to get user prompt: ${error.message}`);
+      console.error(`Failed to get ${this.serviceName.toLowerCase()} ${filename}:`, error);
+      throw new Error(`Failed to get ${this.serviceName.toLowerCase()}: ${error.message}`);
     }
   }
 
   /**
-   * Create a new user prompt
+   * Create a new prompt
    */
-  async createPrompt(filename: string, content: string): Promise<UserPrompt> {
+  async createPrompt(filename: string, content: string): Promise<Prompt> {
     try {
-      console.log(`📝 Creating user prompt: ${filename}`);
+      console.log(`📝 Creating ${this.serviceName.toLowerCase()}: ${filename}`);
       console.log(`   📁 Folder: ${this.promptsFolder}`);
       
       const [owner, repo] = process.env.GITHUB_REPO!.split('/');
@@ -165,7 +163,7 @@ export class UserPromptService {
         owner,
         repo,
         path,
-        message: `Create user prompt: ${filename}`,
+        message: `Create ${this.serviceName.toLowerCase()}: ${filename}`,
         content: Buffer.from(content).toString('base64'),
         branch: process.env.GITHUB_BRANCH || 'main'
       });
@@ -179,17 +177,17 @@ export class UserPromptService {
         createdAt: new Date().toISOString()
       };
     } catch (error: any) {
-      console.error(`   ❌ Failed to create user prompt ${filename}:`, error);
-      throw new Error(`Failed to create user prompt: ${error.message}`);
+      console.error(`   ❌ Failed to create ${this.serviceName.toLowerCase()} ${filename}:`, error);
+      throw new Error(`Failed to create ${this.serviceName.toLowerCase()}: ${error.message}`);
     }
   }
 
   /**
-   * Update an existing user prompt
+   * Update an existing prompt
    */
-  async updatePrompt(filename: string, content: string): Promise<UserPrompt> {
+  async updatePrompt(filename: string, content: string): Promise<Prompt> {
     try {
-      console.log(`✏️  Updating user prompt: ${filename}`);
+      console.log(`✏️  Updating ${this.serviceName.toLowerCase()}: ${filename}`);
       
       const [owner, repo] = process.env.GITHUB_REPO!.split('/');
       const path = `${this.promptsFolder}/${filename}`;
@@ -222,7 +220,7 @@ export class UserPromptService {
           owner,
           repo,
           path,
-          message: `Update user prompt: ${filename}`,
+          message: `Update ${this.serviceName.toLowerCase()}: ${filename}`,
           content: Buffer.from(content).toString('base64'),
           sha: fileInfo.data.sha,
           branch: process.env.GITHUB_BRANCH || 'main'
@@ -238,17 +236,17 @@ export class UserPromptService {
         updatedAt: new Date().toISOString()
       };
     } catch (error: any) {
-      console.error(`   ❌ Failed to update user prompt ${filename}:`, error);
-      throw new Error(`Failed to update user prompt: ${error.message}`);
+      console.error(`   ❌ Failed to update ${this.serviceName.toLowerCase()} ${filename}:`, error);
+      throw new Error(`Failed to update ${this.serviceName.toLowerCase()}: ${error.message}`);
     }
   }
 
   /**
-   * Delete a user prompt
+   * Delete a prompt
    */
   async deletePrompt(filename: string): Promise<void> {
     try {
-      console.log(`🗑️  Deleting user prompt: ${filename}`);
+      console.log(`🗑️  Deleting ${this.serviceName.toLowerCase()}: ${filename}`);
       
       const [owner, repo] = process.env.GITHUB_REPO!.split('/');
       const path = `${this.promptsFolder}/${filename}`;
@@ -281,7 +279,7 @@ export class UserPromptService {
           owner,
           repo,
           path,
-          message: `Delete user prompt: ${filename}`,
+          message: `Delete ${this.serviceName.toLowerCase()}: ${filename}`,
           sha: fileInfo.data.sha,
           branch: process.env.GITHUB_BRANCH || 'main'
         });
@@ -289,8 +287,8 @@ export class UserPromptService {
       
       console.log(`   ✅ Successfully deleted prompt at: ${path}`);
     } catch (error: any) {
-      console.error(`   ❌ Failed to delete user prompt ${filename}:`, error);
-      throw new Error(`Failed to delete user prompt: ${error.message}`);
+      console.error(`   ❌ Failed to delete ${this.serviceName.toLowerCase()} ${filename}:`, error);
+      throw new Error(`Failed to delete ${this.serviceName.toLowerCase()}: ${error.message}`);
     }
   }
 
@@ -313,42 +311,97 @@ export class UserPromptService {
   }
 }
 
-// Export lazy-initialized singleton instance
-let _userPromptService: UserPromptService | null = null;
+// Factory functions for creating specific prompt services
+export const createUserPromptService = () => {
+  const folder = process.env.USER_PROMPTS_FOLDER;
+  if (!folder) {
+    throw new Error('USER_PROMPTS_FOLDER environment variable is required');
+  }
+  return new PromptService(folder, 'User Prompts');
+};
+
+export const createSystemPromptService = () => {
+  const folder = process.env.SYSTEM_PROMPTS_FOLDER;
+  if (!folder) {
+    throw new Error('SYSTEM_PROMPTS_FOLDER environment variable is required');
+  }
+  return new PromptService(folder, 'System Prompts');
+};
+
+// Export lazy-initialized singleton instances
+let _userPromptService: PromptService | null = null;
+let _systemPromptService: PromptService | null = null;
 
 export const userPromptService = {
   listPrompts: async () => {
     if (!_userPromptService) {
-      _userPromptService = new UserPromptService();
+      _userPromptService = createUserPromptService();
     }
     return _userPromptService.listPrompts();
   },
   
   getPrompt: async (filename: string) => {
     if (!_userPromptService) {
-      _userPromptService = new UserPromptService();
+      _userPromptService = createUserPromptService();
     }
     return _userPromptService.getPrompt(filename);
   },
   
   createPrompt: async (filename: string, content: string) => {
     if (!_userPromptService) {
-      _userPromptService = new UserPromptService();
+      _userPromptService = createUserPromptService();
     }
     return _userPromptService.createPrompt(filename, content);
   },
   
   updatePrompt: async (filename: string, content: string) => {
     if (!_userPromptService) {
-      _userPromptService = new UserPromptService();
+      _userPromptService = createUserPromptService();
     }
     return _userPromptService.updatePrompt(filename, content);
   },
   
   deletePrompt: async (filename: string) => {
     if (!_userPromptService) {
-      _userPromptService = new UserPromptService();
+      _userPromptService = createUserPromptService();
     }
     return _userPromptService.deletePrompt(filename);
+  }
+};
+
+export const systemPromptService = {
+  listPrompts: async () => {
+    if (!_systemPromptService) {
+      _systemPromptService = createSystemPromptService();
+    }
+    return _systemPromptService.listPrompts();
+  },
+  
+  getPrompt: async (filename: string) => {
+    if (!_systemPromptService) {
+      _systemPromptService = createSystemPromptService();
+    }
+    return _systemPromptService.getPrompt(filename);
+  },
+  
+  createPrompt: async (filename: string, content: string) => {
+    if (!_systemPromptService) {
+      _systemPromptService = createSystemPromptService();
+    }
+    return _systemPromptService.createPrompt(filename, content);
+  },
+  
+  updatePrompt: async (filename: string, content: string) => {
+    if (!_systemPromptService) {
+      _systemPromptService = createSystemPromptService();
+    }
+    return _systemPromptService.updatePrompt(filename, content);
+  },
+  
+  deletePrompt: async (filename: string) => {
+    if (!_systemPromptService) {
+      _systemPromptService = createSystemPromptService();
+    }
+    return _systemPromptService.deletePrompt(filename);
   }
 };

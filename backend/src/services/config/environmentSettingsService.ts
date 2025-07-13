@@ -40,10 +40,13 @@ export const getEnvironmentSettingsService = createLazyConfigService<Environment
     // Process parsed configuration
     service.configs.set('content', data);
     
-    // Apply environment variables
+    // Apply environment variables - always override
     for (const [key, value] of Object.entries(data)) {
-      if (!process.env[key]) {
-        process.env[key] = value;
+      const isOverride = process.env[key] !== undefined;
+      process.env[key] = value;
+      if (isOverride) {
+        console.log(`🔄 Overriding environment variable: ${key}`);
+      } else {
         console.log(`✅ Set environment variable: ${key}`);
       }
     }
@@ -53,6 +56,17 @@ export const getEnvironmentSettingsService = createLazyConfigService<Environment
 // Load environment settings on startup
 export async function loadEnvironmentSettings(): Promise<void> {
   try {
+    // Log which GitHub repo is being used for configuration
+    const githubRepo = process.env.GITHUB_REPO;
+    const assetKey = process.env.ENVIRONMENT_SETTINGS_ASSET_KEY;
+    const branch = process.env.GITHUB_BRANCH || 'main';
+    
+    console.log('🔍 Loading environment settings from GitHub:');
+    console.log(`   📦 Repository: ${githubRepo || '(not configured)'}`);
+    console.log(`   🌿 Branch: ${branch}`);
+    console.log(`   📄 Asset key: ${assetKey || '(not configured)'}`);
+    console.log(`   🔗 Full path: ${githubRepo}/${assetKey} (branch: ${branch})`);
+    
     const service = getEnvironmentSettingsService();
     const settings = await service.getConfig('content');
     

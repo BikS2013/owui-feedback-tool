@@ -11,7 +11,8 @@ import { llmRoutes } from './routes/llm.routes.js';
 import { agentRoutes } from './routes/agent.routes.js';
 import { debugRoutes } from './routes/debug.routes.js';
 import configurationRoutes from './routes/configuration.routes.js';
-import { userPromptsRoutes } from './routes/userPrompts.routes.js';
+import { createPromptRoutes } from './routes/createPromptRoutes.js';
+import { userPromptService, systemPromptService } from './services/promptService.js';
 import { swaggerSpec } from './swagger.config.js';
 import { consoleController } from './utils/console-controller.js';
 import { databaseService } from './services/database.service.js';
@@ -177,12 +178,17 @@ app.get('/signout-callback-nbg', (req, res) => {
 // Apply global auth middleware - checks if auth is required
 app.use(globalAuthMiddleware);
 
+// Create prompt route instances
+const userPromptsRoutes = createPromptRoutes('User Prompts', userPromptService);
+const systemPromptsRoutes = createPromptRoutes('System Prompts', systemPromptService);
+
 // Routes - now with auth protection where needed
 app.use('/api/export', requireAuth, exportRoutes);
 app.use('/api/github', requireAuth, githubRoutes);
 app.use('/api/llm', requireAuth, llmRoutes);
 app.use('/api/agent', requireAuth, agentRoutes);
 app.use('/api/user-prompts', requireAuth, userPromptsRoutes);
+app.use('/api/system-prompts', requireAuth, systemPromptsRoutes);
 app.use('/api/debug', debugRoutes); // Debug routes might be conditionally protected
 app.use('/api', configurationRoutes); // Configuration route - no auth required for initial config
 
