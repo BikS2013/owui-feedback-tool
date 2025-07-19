@@ -13,6 +13,7 @@ import { debugRoutes } from './routes/debug.routes.js';
 import configurationRoutes from './routes/configuration.routes.js';
 import { createPromptRoutes } from './routes/createPromptRoutes.js';
 import { userPromptService, systemPromptService } from './services/promptService.js';
+import assetRoutes from './routes/asset.routes.js';
 import { swaggerSpec } from './swagger.config.js';
 import { consoleController } from './utils/console-controller.js';
 import { databaseService } from './services/database.service.js';
@@ -189,6 +190,7 @@ app.use('/api/llm', requireAuth, llmRoutes);
 app.use('/api/agent', requireAuth, agentRoutes);
 app.use('/api/user-prompts', requireAuth, userPromptsRoutes);
 app.use('/api/system-prompts', requireAuth, systemPromptsRoutes);
+app.use('/api', requireAuth, assetRoutes); // Asset routes for retrieving configuration assets
 app.use('/api/debug', debugRoutes); // Debug routes might be conditionally protected
 app.use('/api', configurationRoutes); // Configuration route - no auth required for initial config
 
@@ -329,6 +331,9 @@ async function startServer() {
     console.log(`   • POST http://${HOST}:${PORT}/api/user-prompts`);
     console.log(`   • PUT  http://${HOST}:${PORT}/api/user-prompts/:promptId`);
     console.log(`   • DELETE http://${HOST}:${PORT}/api/user-prompts/:promptId`);
+    console.log('   ── Assets (Protected) ──');
+    console.log(`   • GET  http://${HOST}:${PORT}/api/asset/:asset_key`);
+    console.log(`   • GET  http://${HOST}:${PORT}/api/asset`);
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
     // Track active connections for proper cleanup

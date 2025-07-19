@@ -733,6 +733,109 @@ Test database connection for a specific agent.
 
 ---
 
+## Asset API Routes
+
+Base path: `/api/asset`
+
+The Asset API provides secure access to configuration assets from either GitHub or database sources with prefix-based access control.
+
+### Security
+
+Access to assets is restricted based on the `API_ACCESSIBLE_ASSETS_PREFIX` environment variable. Only asset keys that start with the configured prefix are accessible through this API.
+
+**Example:**
+- If `API_ACCESSIBLE_ASSETS_PREFIX=public/`, only assets like `public/config.json`, `public/settings.yaml` are accessible
+- Requests for `private/secrets.json` would be denied with a 403 error
+
+### GET /api/asset/:asset_key
+
+Retrieves an asset by its key from either GitHub or database sources.
+
+**Parameters:**
+- `asset_key` (path parameter): The asset key to retrieve. Must be URL-encoded if it contains special characters like `/`.
+  - Example: `public/config.json` → `public%2Fconfig.json`
+  - Example: `settings/app config.yaml` → `settings%2Fapp%20config.yaml`
+
+**Query Parameters:**
+- `source` (optional): Specify the source to retrieve from (`github` or `database`). Defaults to GitHub with automatic fallback to database.
+
+**Response:**
+```json
+{
+  "assetKey": "public/config.json",
+  "source": "github",
+  "content": {
+    "key": "value"
+  },
+  "metadata": {
+    "size": 1234,
+    "contentType": "application/json",
+    "lastModified": "2025-01-13T10:30:00Z"
+  }
+}
+```
+
+**Example:**
+```bash
+# Retrieve from any available source (URL-encoded path)
+curl -X GET http://localhost:3001/api/asset/public%2Fconfig.json
+
+# Retrieve specifically from database
+curl -X GET http://localhost:3001/api/asset/public%2Fconfig.json?source=database
+
+# Using curl with automatic URL encoding
+curl -X GET --url-query "http://localhost:3001/api/asset/public/config.json"
+```
+
+**Status Codes:**
+- `200 OK`: Asset retrieved successfully
+- `403 Forbidden`: Asset key does not match allowed prefix
+- `404 Not Found`: Asset not found in any source
+- `500 Internal Server Error`: Server error
+
+### GET /api/asset
+
+Lists available assets from configured sources.
+
+**Query Parameters:**
+- `source` (optional): Filter by source (`github`, `database`, or `all`). Defaults to all.
+- `prefix` (optional): Filter assets by key prefix
+
+**Response:**
+```json
+{
+  "assets": [
+    {
+      "key": "public/config.json",
+      "source": "github",
+      "type": "json",
+      "size": 1234
+    },
+    {
+      "key": "public/settings.yaml",
+      "source": "database",
+      "type": "yaml",
+      "size": 567
+    }
+  ],
+  "total": 2
+}
+```
+
+**Note:** This endpoint currently returns a placeholder response. Full implementation requires list methods in GitHub and Database clients.
+
+**Environment Variables:**
+- `API_ACCESSIBLE_ASSETS_PREFIX`: Prefix that asset keys must start with to be accessible
+  - Use normal (unencoded) format: `public/` not `public%2F`
+  - The API handles URL encoding/decoding automatically
+  - Example: Set to `public/` to allow only `public/config.json`, `public/settings.yaml`, etc.
+- `GITHUB_REPO`: GitHub repository for assets (format: owner/repo)
+- `GITHUB_TOKEN`: GitHub access token
+- `GITHUB_BRANCH`: Branch to use (default: main)
+- `DATABASE_URL`: Database connection string for asset storage
+
+---
+
 ## Error Handling
 
 All endpoints follow a consistent error response format:
