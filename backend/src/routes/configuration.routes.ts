@@ -6,18 +6,32 @@ const router = Router();
 // Get full configuration for the current environment
 // Also available at /config.json for compatibility
 router.get(['/configuration', '/config.json'], async (req: Request, res: Response) => {
+  const endpoint = req.path;
+  console.log(`\n🔍 GET /api${endpoint}`);
+  console.log(`   • Request from: ${req.ip || req.connection.remoteAddress}`);
+  console.log(`   • User-Agent: ${req.get('user-agent')}`);
+  
   try {
     // Get configuration from the service
+    console.log(`   📋 Fetching client configuration...`);
     const config = await getClientConfiguration();
     
     if (!config) {
+      console.log(`   ❌ Client configuration not available`);
       throw new Error('Client configuration not available');
     }
+    
+    console.log(`   ✅ Configuration retrieved successfully`);
+    console.log(`   📊 Config details:`);
+    console.log(`      • Environment: ${config.environment}`);
+    console.log(`      • Version: ${config.version}`);
+    console.log(`      • API Base URL: ${config.api?.baseUrl || 'not set'}`);
+    console.log(`      • Response size: ${JSON.stringify(config).length} bytes`);
     
     // Return the configuration as-is (no defaults or fallbacks)
     res.json(config);
   } catch (error) {
-    console.error('Error fetching configuration:', error);
+    console.error(`   ❌ Error fetching configuration:`, error);
     const errorMessage = error instanceof Error ? error.message : 'Failed to fetch configuration';
     res.status(500).json({ 
       error: errorMessage,

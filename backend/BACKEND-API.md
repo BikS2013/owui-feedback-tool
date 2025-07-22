@@ -33,6 +33,28 @@ Health check endpoint to verify server status.
 
 ---
 
+## Configuration Endpoint
+
+### GET /config.json
+
+Root-level configuration endpoint for frontend discovery. Returns the API base URL in a format compatible with the frontend's configuration loader.
+
+**Response:**
+```json
+{
+  "api": {
+    "baseUrl": "http://localhost:3001"
+  }
+}
+```
+
+**Notes:**
+- The `baseUrl` is determined from the `API_BASE_URL` environment variable or auto-detected from the request
+- This endpoint is used by the frontend to discover the API location at runtime
+- No authentication required
+
+---
+
 ## Export Routes
 
 Base path: `/api/export`

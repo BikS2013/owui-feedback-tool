@@ -38,8 +38,8 @@ RUN npm run build
 # Stage 2: Production image with nginx
 FROM nginx:alpine
 
-# Install gettext for envsubst
-RUN apk add --no-cache gettext
+# Install gettext for envsubst and sed for fallback substitution
+RUN apk add --no-cache gettext sed
 
 # Copy built application from builder stage
 COPY --from=builder /app/dist /usr/share/nginx/html
@@ -56,5 +56,9 @@ ENV API_BASE_URL=http://localhost:3001
 # Expose port 80
 EXPOSE 80
 
-# Use shell form to allow environment variable substitution
-CMD sh -c "envsubst '\$API_BASE_URL' < /etc/nginx/templates/default.conf.template > /etc/nginx/conf.d/default.conf && nginx -g 'daemon off;'"
+# Copy the entrypoint script
+COPY docker-entrypoint.sh /docker-entrypoint.sh
+RUN chmod +x /docker-entrypoint.sh
+
+# Use shell form of CMD for better environment variable handling in Azure
+CMD ["/bin/sh", "-c", "/docker-entrypoint.sh"]

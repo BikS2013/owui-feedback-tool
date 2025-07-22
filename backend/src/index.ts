@@ -196,12 +196,28 @@ app.use('/api', configurationRoutes); // Configuration route - no auth required 
 
 // Root-level config.json endpoint for frontend discovery
 app.get('/config.json', (req: express.Request, res: express.Response) => {
+  console.log(`\n🔍 GET /config.json (root-level endpoint)`);
+  console.log(`   • Request from: ${req.ip || req.connection.remoteAddress}`);
+  console.log(`   • User-Agent: ${req.get('user-agent')}`);
+  
   const protocol = req.protocol;
   const host = req.get('host') || `localhost:${PORT}`;
-  const apiBaseUrl = process.env.API_BASE_URL || `${protocol}://${host}`;
+  const envApiBaseUrl = process.env.API_BASE_URL;
+  const detectedApiBaseUrl = `${protocol}://${host}`;
+  const apiBaseUrl = envApiBaseUrl || detectedApiBaseUrl;
+  
+  console.log(`   📋 Configuration details:`);
+  console.log(`      • Protocol: ${protocol}`);
+  console.log(`      • Host: ${host}`);
+  console.log(`      • API_BASE_URL env: ${envApiBaseUrl || 'not set'}`);
+  console.log(`      • Auto-detected URL: ${detectedApiBaseUrl}`);
+  console.log(`      • Final API Base URL: ${apiBaseUrl}`);
+  console.log(`   ✅ Returning minimal config for frontend discovery`);
   
   res.json({
-    API_BASE_URL: apiBaseUrl
+    api: {
+      baseUrl: apiBaseUrl
+    }
   });
 });
 
