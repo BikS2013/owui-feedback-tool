@@ -23,11 +23,32 @@ All endpoints follow RESTful conventions and return JSON responses.
 
 ## Agent Management Endpoints
 
+### Agent Configuration Retrieval Process
+
+The agent configuration is stored as a YAML file in the GitHub registry. When API endpoints need to return agent information, they follow this process:
+
+1. **Asset Retrieval**: The API retrieves the YAML configuration file from the GitHub registry using the asset key specified in the `AGENT_CONFIG_ASSET_KEY` environment variable.
+
+2. **YAML Parsing**: The retrieved YAML content is parsed to extract the agent configurations.
+
+3. **Data Transformation**: The parsed YAML data is converted to the API response format, which includes:
+   - Extracting agent names, URLs, and database connection strings
+   - Masking sensitive information (database credentials)
+   - Formatting the data according to the API's JSON response structure
+
+4. **Caching**: The configuration is cached in memory to avoid repeated GitHub API calls for subsequent requests.
+
 ### 1. Get All Agents
 
-Retrieves a list of all configured agents with masked database connection strings for security.
+Retrieves a list of all configured agents with masked database connection strings for security. This endpoint internally fetches the agent configuration from GitHub registry and transforms it to the expected response format.
 
 **Endpoint:** `GET /api/agent`
+
+**Internal Process:**
+1. Fetches the YAML configuration from GitHub using `AGENT_CONFIG_ASSET_KEY`
+2. Parses the YAML to extract agent definitions
+3. Transforms each agent entry to include masked connection strings
+4. Returns the formatted JSON response
 
 **Response:**
 ```json
@@ -55,9 +76,15 @@ Retrieves a list of all configured agents with masked database connection string
 
 ### 2. Get Agent by Name
 
-Retrieves details for a specific agent by name.
+Retrieves details for a specific agent by name. Like the list endpoint, this internally fetches the configuration from GitHub and filters for the requested agent.
 
 **Endpoint:** `GET /api/agent/:name`
+
+**Internal Process:**
+1. Fetches the YAML configuration from GitHub using `AGENT_CONFIG_ASSET_KEY`
+2. Parses the YAML and searches for the agent with matching name
+3. Transforms the single agent entry with masked connection string
+4. Returns the formatted JSON response or 404 if not found
 
 **Parameters:**
 - `name` (path parameter): The name of the agent
@@ -83,9 +110,15 @@ Retrieves details for a specific agent by name.
 
 ### 3. Reload Agent Configuration
 
-Reloads the agent configuration from the configured source (local file or GitHub).
+Forces a fresh retrieval of the agent configuration from the GitHub registry, clearing any cached data.
 
 **Endpoint:** `POST /api/agent/reload`
+
+**Internal Process:**
+1. Clears the in-memory cache of agent configurations
+2. Fetches the latest YAML configuration from GitHub using `AGENT_CONFIG_ASSET_KEY`
+3. Parses and validates the new configuration
+4. Updates the cache with the fresh data
 
 **Response:**
 ```json
@@ -407,33 +440,147 @@ Common error codes:
 
 ### Agent Configuration File
 
-Agents are configured in `backend/agent-config.yaml`:
+The agent configuration is stored as a YAML file in the GitHub registry and accessed via the `AGENT_CONFIG_ASSET_KEY`. The YAML structure is:
 
 ```yaml
 agents:
-  - name: "Customer Facing"
+  - name: "Agent 1 - Name"
     url: "http://localhost:3001/api/agent1"
-    database_connection_string: "postgresql://user:password@localhost:5432/agent1_db"
+    database_connection_string: "postgresql://username:password@working-postgresql.com:5432/agent1_data"
   
-  - name: "Internal Support"
-    url: "http://localhost:3001/api/agent2"
-    database_connection_string: "postgresql://user:password@localhost:5432/agent2_db"
+  - name: "Agent 2 - Name"
+    url: "http://localhost:3002/api/agent2"
+    database_connection_string: "postgresql://username:password@working-postgresql.com:5432/agent2_data"
 ```
+
+#### YAML to API Response Transformation
+
+When the API retrieves this YAML configuration, it performs the following transformations:
+
+1. **Connection String Masking**: The database connection strings are processed to hide sensitive credentials:
+   - Username: Shows first and last character with asterisks (e.g., `user` → `u**r`)
+   - Password: Completely masked with asterisks
+   - Example: `postgresql://user:password@localhost:5432/db` → `postgresql://u**r:********@localhost:5432/db`
+
+2. **Response Structure**: The YAML array is wrapped in a standard API response format:
+   ```json
+   {
+     "success": true,
+     "agents": [...],  // Transformed agent array
+     "count": 2        // Total number of agents
+   }
+   ```
+
+3. **Error Handling**: If the YAML is malformed or the asset cannot be retrieved, appropriate error responses are generated with detailed error messages.
+
+4. **Single Agent Queries**: When requesting a specific agent by name, the API filters the YAML array and returns only the matching agent in a singular response structure.
 
 ### Environment Variables
 
-- `AGENT_CONFIG_ASSET_KEY`: Asset key for loading agent configuration from GitHub repository
-- `GITHUB_REPO`: GitHub repository for asset loading (format: `owner/repo`)
-- `GITHUB_TOKEN`: GitHub token for accessing private repositories
-- `GITHUB_DATA_FOLDER`: Folder path in GitHub repository for data files
+- `AGENT_CONFIG_ASSET_KEY`: **Required** - The asset key that identifies the YAML configuration file in the GitHub registry. This key is used to retrieve the agent configuration file that contains all agent definitions, URLs, and database connection strings.
+- `CONFIG_GITHUB_REPO`: GitHub repository for asset loading (format: `owner/repo`)
+- `CONFIG_GITHUB_TOKEN`: GitHub token for accessing private repositories
+- `CONFIG_GITHUB_BRANCH`: the GitHub repository branch used for assets and configuration data
 
 ### Database Schema
 
-The agent databases are expected to follow the LangGraph schema with the following key tables:
-- `threads`: Contains thread metadata and messages
-- `runs`: Execution history for each thread
-- `checkpoints`: State snapshots during execution
-- `documents`: Retrieved documents for RAG operations
+The agent databases follow the LangGraph schema. When an API endpoint receives an `agentName` parameter, it:
+1. Looks up the agent configuration from the cached YAML data
+2. Retrieves the agent's `database_connection_string`
+3. Establishes a connection pool to that specific database
+4. Executes queries against the agent's database
+
+#### Thread Table Schema
+
+Used by: `GET /api/agent/threads` and `GET /api/agent/thread/:threadId/documents`
+
+**Table Structure:**
+```sql
+thread (
+  thread_id: UUID,
+  created_at: TIMESTAMP,
+  updated_at: TIMESTAMP,
+  metadata: JSONB,
+  status: TEXT,
+  config: JSONB,
+  values: JSONB,      -- Contains messages, retrieved_docs, and other thread data
+  interrupts: JSONB
+)
+```
+
+**Data Transformations:**
+- UUIDs are cast to strings in API responses
+- The `values` field contains the conversation messages and retrieved documents
+- When `include_retrieved_docs=false`, the `retrieved_docs` property is removed from the `values` object
+- Timestamps are returned in ISO 8601 format
+
+#### Run Table Schema
+
+Used by: `GET /api/agent/thread/:threadId/runs`
+
+**Table Structure:**
+```sql
+run (
+  run_id: UUID,
+  thread_id: UUID,
+  created_at: TIMESTAMP,
+  updated_at: TIMESTAMP,
+  status: TEXT,
+  metadata: JSONB,
+  kwargs: JSONB,           -- Aliased as 'config' in API response
+  assistant_id: TEXT,
+  multitask_strategy: TEXT
+)
+```
+
+**Data Transformations:**
+- UUIDs are cast to strings
+- The `kwargs` field is renamed to `config` in the API response
+- Results are filtered by `thread_id` and ordered by `created_at DESC`
+
+#### Checkpoints Table Schema
+
+Used by: `GET /api/agent/thread/:threadId/checkpoints`
+
+**Table Structure:**
+```sql
+checkpoints (
+  thread_id: UUID,
+  checkpoint_id: UUID,
+  run_id: UUID,
+  parent_checkpoint_id: UUID,
+  checkpoint: JSONB,      -- Contains the actual checkpoint state
+  metadata: JSONB,
+  checkpoint_ns: TEXT     -- Namespace for checkpoint organization
+)
+```
+
+**Data Transformations:**
+- UUIDs are cast to strings
+- The `checkpoint` field contains the full state snapshot
+- Results are filtered by `thread_id`
+
+#### Database Connection Process
+
+1. **Agent Lookup**: When an API request includes `agentName`, the system:
+   - Searches the cached agent configuration for a matching name
+   - Retrieves the agent's `database_connection_string`
+   - Returns 404 if the agent is not found
+
+2. **Connection Pooling**: Each agent has its own database connection pool:
+   - Pools are created on first use and cached
+   - Pool configuration includes SSL settings, timeouts, and retry logic
+   - Connection strings are masked in logs for security
+
+3. **Query Execution**: Queries are executed against the agent-specific database:
+   - All queries include proper error handling
+   - Pagination is implemented using LIMIT and OFFSET
+   - Total counts are calculated separately for pagination metadata
+
+4. **Response Formatting**: Database results are transformed into standardized API responses:
+   - Consistent pagination structure across all endpoints
+   - Proper error messages without exposing sensitive connection details
+   - Success flags and appropriate HTTP status codes
 
 ### Security Considerations
 
